@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="weatherViewModel"
+            type="com.project.farmingapp.viewmodel.WeatherViewModel" />
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/futuristic_screen_bg"
+            android:fillViewport="true">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="24dp">
+
+                <!-- Top bar: city + icon -->
+                <LinearLayout
+                    android:id="@+id/topBar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingTop="20dp"
+                    android:paddingBottom="8dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_location_pin"
+                        app:tint="@color/colorPrimary" />
+
+                    <TextView
+                        android:id="@+id/weatherCity"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="Colombo"
+                        android:textColor="@color/fontColor"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/lato" />
+
+                    <TextView
+                        android:id="@+id/weatherDateToday"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/fontColor"
+                        android:textSize="12sp"
+                        android:alpha="0.7"
+                        android:text="Today" />
+                </LinearLayout>
+
+                <!-- Hero card: big current weather -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/heroCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="8dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="12dp"
+                    app:strokeColor="@color/colorPrimary"
+                    app:strokeWidth="1dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/topBar">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="24dp">
+
+                        <!-- Big temp -->
+                        <TextView
+                            android:id="@+id/heroTemp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--°C"
+                            android:textColor="@color/colorPrimary"
+                            android:textSize="72sp"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/lato"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <!-- Weather icon -->
+                        <ImageView
+                            android:id="@+id/heroIcon"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@drawable/ic_launcher_foreground"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <!-- Condition text -->
+                        <TextView
+                            android:id="@+id/heroCondition"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Loading..."
+                            android:textColor="@color/fontColor"
+                            android:textSize="18sp"
+                            android:alpha="0.85"
+                            app:layout_constraintEnd_toStartOf="@id/heroIcon"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/heroTemp" />
+
+                        <!-- Feels like -->
+                        <TextView
+                            android:id="@+id/heroFeelsLike"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Feels like --°C"
+                            android:textColor="@color/fontColor"
+                            android:textSize="13sp"
+                            android:alpha="0.6"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/heroCondition" />
+
+                        <!-- Divider -->
+                        <View
+                            android:id="@+id/heroDivider"
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="16dp"
+                            android:background="@color/colorPrimary"
+                            android:alpha="0.2"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/heroFeelsLike" />
+
+                        <!-- Stats row -->
+                        <LinearLayout
+                            android:id="@+id/statsRow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="16dp"
+                            android:weightSum="3"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/heroDivider">
+
+                            <!-- Humidity -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center">
+                                <ImageView
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_humidity"
+                                    app:tint="@color/colorPrimary" />
+                                <TextView
+                                    android:id="@+id/heroHumidity"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="--%"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Humidity"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="11sp"
+                                    android:alpha="0.6" />
+                            </LinearLayout>
+
+                            <!-- Wind -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center">
+                                <ImageView
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_baseline_trending_up_24"
+                                    app:tint="@color/colorPrimary" />
+                                <TextView
+                                    android:id="@+id/heroWind"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="-- km/h"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Wind"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="11sp"
+                                    android:alpha="0.6" />
+                            </LinearLayout>
+
+                            <!-- Min / Max -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:gravity="center">
+                                <ImageView
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_high_temp"
+                                    app:tint="@color/colorPrimary" />
+                                <TextView
+                                    android:id="@+id/heroMinMax"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="--/--°C"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Min/Max"
+                                    android:textColor="@color/fontColor"
+                                    android:textSize="11sp"
+                                    android:alpha="0.6" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Section: Today Hourly -->
+                <TextView
+                    android:id="@+id/hourlyLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="24dp"
+                    android:text="Hourly Forecast"
+                    android:textColor="@color/fontColor"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/heroCard" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/currentWeatherRcycl"
+                    android:layout_width="0dp"
+                    android:layout_height="130dp"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:paddingHorizontal="12dp"
+                    android:layoutAnimation="@anim/layout_stagger_fade"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/hourlyLabel" />
+
+                <!-- Section: 5-Day Forecast -->
+                <TextView
+                    android:id="@+id/forecastLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="20dp"
+                    android:layout_marginTop="24dp"
+                    android:text="5-Day Forecast"
+                    android:textColor="@color/fontColor"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/currentWeatherRcycl" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/forecastCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
+                    android:layout_marginTop="10dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="6dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/forecastLabel">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rcylrWeather"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:paddingVertical="8dp"
+                        android:layoutAnimation="@anim/layout_stagger_fade"
+                        tools:listitem="@layout/single_weather" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+</layout>

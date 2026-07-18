@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand (same green on dark — intentional; high contrast) -->
+    <color name="colorPrimary">#6DC84A</color>
+    <color name="colorPrimaryDark">#0D2008</color>
+    <color name="colorAccent">#6DC84A</color>
+
+    <!-- Semantic surface / background (Dark Night) -->
+    <color name="background">#0D1A08</color>
+    <color name="surface">#162218</color>
+    <color name="surfaceVariant">#1E3020</color>
+
+    <!-- Text (off-white with green tint for warmth) -->
+    <color name="fontColor">#E0EFDA</color>
+    <color name="onPrimary">#0D1A08</color>
+
+    <!-- Accents (unchanged) -->
+    <color name="colorThird">#FC7557</color>
+    <color name="greenDark">#7DE04A</color>
+
+    <!-- Legacy palette night overrides -->
+    <color name="white">#FFFFFF</color>
+    <color name="greenlite">#663D6B2A</color>
+    <color name="secondary">#1C2E18</color>
+    <color name="semiTransparentColor">#803B4A36</color>
+    <color name="secondary2">#3D6B4F</color>
+    <color name="secondary3">#162218</color>
+
+    <!-- Chip state -->
+    <color name="chip">
+        <selector xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:state_checked="true"  android:color="@color/colorPrimary" />
+            <item android:state_checked="false" android:color="@color/surfaceVariant" />
+        </selector>
+    </color>
+</resources>

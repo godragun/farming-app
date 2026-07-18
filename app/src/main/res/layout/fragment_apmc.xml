@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.apmc.ApmcFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/futuristic_screen_bg">
+
+        <TextView
+            android:id="@+id/apmcSearchBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="20dp"
+            android:text="Province : "
+            android:textColor="@color/fontColor"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/apmcSearchBar2"
+            app:layout_constraintEnd_toStartOf="@id/guide1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <Spinner
+            android:id="@+id/spinner1"
+            android:layout_width="150dp"
+            android:layout_height="0dp"
+
+            android:layout_marginStart="20dp"
+            android:spinnerMode="dialog"
+            app:layout_constraintBottom_toBottomOf="@id/apmcSearchBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guide1"
+            app:layout_constraintTop_toTopOf="@id/apmcSearchBar" />
+
+        <TextView
+            android:id="@+id/apmcSearchBar2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="20dp"
+            android:text="District : "
+            android:textColor="@color/fontColor"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@id/hr1Apmc"
+
+            app:layout_constraintEnd_toStartOf="@id/guide1"
+            app:layout_constraintTop_toBottomOf="@id/apmcSearchBar" />
+
+        <Spinner
+            android:id="@+id/spinner2"
+            android:layout_width="150dp"
+            android:layout_height="21dp"
+            android:layout_marginStart="20dp"
+            android:spinnerMode="dialog"
+
+            app:layout_constraintBottom_toBottomOf="@id/apmcSearchBar2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/guide1"
+            app:layout_constraintTop_toTopOf="@id/apmcSearchBar2" />
+
+        <!--        <androidx.appcompat.widget.SearchView-->
+        <!--            android:id="@+id/apmcSearchBar"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:layout_marginVertical="10dp"-->
+        <!--            app:layout_constraintBottom_toTopOf="@id/hr1Apmc"-->
+        <!--            app:layout_constraintEnd_toEndOf="parent"-->
+        <!--            app:layout_constraintStart_toStartOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent" />-->
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.39" />
+
+        <TextView
+            android:id="@+id/dateTextApmc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Last Updated: "
+            android:textColor="@color/fontColor"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/dateValueTextApmc"
+            app:layout_constraintTop_toBottomOf="@id/hr1Apmc" />
+
+        <TextView
+            android:id="@+id/dateValueTextApmc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="17dp"
+            android:layout_marginVertical="5dp"
+            android:text="29/01/2021"
+            android:textColor="@color/fontColor"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/dateTextApmc"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            app:layout_constraintTop_toTopOf="@id/dateTextApmc" />
+
+        <View
+            android:id="@+id/hr1Apmc"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginTop="12dp"
+            android:background="@color/fontColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/apmcSearchBar2" />
+
+        <TextView
+            android:id="@+id/textAPMCWarning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Please select province and district"
+            android:textColor="@color/fontColor"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dateTextApmc" />
+
+        <TextView
+            android:id="@+id/agriSuitabilityText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/modern_glass_card"
+            android:padding="10dp"
+            android:text="Select a district to see satellite map and planting insights."
+            android:textColor="@color/fontColor"
+            android:textSize="13sp"
+            app:layout_constraintTop_toBottomOf="@id/textAPMCWarning"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/cropZoneToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="8dp"
+            android:text="Best crop zones"
+            android:textColor="@color/fontColor"
+            app:layout_constraintTop_toBottomOf="@id/agriSuitabilityText"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cropZoneLegendGroup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="10dp"
+            app:singleLine="true"
+            app:layout_constraintStart_toEndOf="@id/cropZoneToggle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/cropZoneToggle"
+            app:layout_constraintBottom_toBottomOf="@id/cropZoneToggle">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipZoneHigh"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:clickable="false"
+                android:text="High"
+                android:textColor="@android:color/white"
+                app:chipBackgroundColor="#4CAF50" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipZoneMedium"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:clickable="false"
+                android:text="Medium"
+                android:textColor="@android:color/white"
+                app:chipBackgroundColor="#FBC02D" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipZoneLow"
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="false"
+                android:clickable="false"
+                android:text="Low"
+                android:textColor="@android:color/white"
+                app:chipBackgroundColor="#E53935" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/mapCard"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="10dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="3dp"
+            app:layout_constraintTop_toBottomOf="@id/cropZoneToggle"
+            app:layout_constraintBottom_toTopOf="@id/districtStatsCard"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/satelliteMapContainer"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <WebView
+                    android:id="@+id/satelliteFallbackWebView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/districtStatsCard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="2dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/modern_glass_card"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/districtStatsTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="District Stats"
+                    android:textColor="@color/fontColor"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/districtRainfallText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Rainfall: -- mm/year"
+                    android:textColor="@color/fontColor"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/districtSoilText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Soil: --"
+                    android:textColor="@color/fontColor"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/districtBestCropsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Best crops: --"
+                    android:textColor="@color/fontColor"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleAPMC"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_margin="7dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/dateTextApmc"
+            tools:listitem="@layout/apmc_single_list" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</FrameLayout>

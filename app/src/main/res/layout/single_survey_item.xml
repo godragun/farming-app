@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/surveyItemNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Survey #001"
+                android:textColor="@color/colorPrimary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/surveyItemSyncBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✔ Synced"
+                android:textColor="@color/colorPrimary"
+                android:textSize="12sp"
+                android:background="@drawable/modern_glass_card"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp" />
+        </LinearLayout>
+
+        <!-- Crop + location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/surveyItemCrop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🌾 Rice"
+                android:textColor="@color/fontColor"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/surveyItemLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📍 Colombo"
+                android:textColor="@color/fontColor"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Farmer + saved time -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/surveyItemFarmer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="👤 Nimal"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/surveyItemTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🕐 2:30 PM"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Action buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/surveyItemSyncBtn"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Sync"
+                android:textSize="13sp"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/colorPrimary" />
+
+            <Button
+                android:id="@+id/surveyItemViewBtn"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="View"
+                android:textSize="13sp"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/colorPrimaryDark" />
+
+            <Button
+                android:id="@+id/surveyItemDeleteBtn"
+                android:layout_width="48dp"
+                android:layout_height="36dp"
+                android:text="✕"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/colorThird" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <link rel="stylesheet" href="https://appassets.androidplatform.net/assets/leaflet/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; background: #0d1117; overflow: hidden; }
+    #map { width: 100%; height: 100%; display: block; }
+    .leaflet-container { background: #0d1117; }
+    .leaflet-tile { image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://appassets.androidplatform.net/assets/leaflet/leaflet.js"></script>
+  <script>
+    var map = null;
+    var districtPolygon = null;
+    var zoneCircles = [];
+    var mapInitialized = false;
+    var functionQueue = [];
+
+    console.log('=== Leaflet Map Script Loaded ===');
+
+    // Initialize map when Leaflet loads
+    function initMap() {
+      console.log('initMap() called, checking Leaflet availability...');
+      
+      if (typeof L === 'undefined') {
+        console.log('Leaflet NOT loaded yet, waiting...');
+        setTimeout(initMap, 100);
+        return;
+      }
+
+      console.log('Leaflet found: ' + L.version);
+
+      if (mapInitialized) {
+        console.log('Map already initialized');
+        return;
+      }
+
+      try {
+        console.log('Creating map container...');
+        map = L.map('map', {
+          center: [7.8731, 80.7718],
+          zoom: 7,
+          zoomControl: true,
+          attributionControl: true,
+          dragging: true,
+          zoomAnimation: true,
+          fadeAnimation: true,
+          markerZoomAnimation: true,
+          preferCanvas: true
+        });
+
+        console.log('Map created:', map ? 'SUCCESS' : 'FAILED');
+
+        // Add tiles through the appassets /tiles/ proxy so WebView never needs
+        // to fetch external tile images directly (more reliable across devices).
+        console.log('Adding Esri satellite layer...');
+        var satelliteUrl = 'https://appassets.androidplatform.net/tiles/{z}/{y}/{x}';
+        console.log('Tile URL: ' + satelliteUrl);
+        
+        var satelliteLayer = L.tileLayer(satelliteUrl, {
+          attribution: 'Esri',
+          maxZoom: 18,
+          minZoom: 3,
+          crossOrigin: true,
+          tms: false,
+          maxNativeZoom: 18
+        });
+        
+        satelliteLayer.on('load', function() {
+          console.log('Satellite layer loaded');
+        });
+        
+        satelliteLayer.on('error', function(err) {
+          console.error('Satellite layer error:', err);
+        });
+        
+        satelliteLayer.on('tileload', function() {
+          console.log('Tile loaded');
+        });
+        
+        satelliteLayer.on('tileerror', function(err) {
+          console.error('Tile error:', err);
+        });
+        
+        satelliteLayer.addTo(map);
+        console.log('Satellite layer added to map');
+        
+        mapInitialized = true;
+        console.log('=== Map Initialization Complete ===');
+
+        // Process any queued function calls
+        while (functionQueue.length > 0) {
+          console.log('Processing queued function...');
+          var fn = functionQueue.shift();
+          fn();
+        }
+      } catch (e) {
+        console.error('Map initialization error:', e);
+        console.error('Stack: ' + e.stack);
+      }
+    }
+
+    // Auto-init when page loads
+    console.log('Attaching load event listeners...');
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded fired');
+        initMap();
+      });
+    } else {
+      console.log('Document already loaded - calling initMap immediately');
+      initMap();
+    }
+
+    // Queue functions if map not ready
+    function queueIfNotReady(fn) {
+      if (!mapInitialized || !map) {
+        console.log('Map not ready, queueing function');
+        functionQueue.push(fn);
+      } else {
+        console.log('Map ready, executing function immediately');
+        fn();
+      }
+    }
+
+    function clearOverlays() {
+      if (districtPolygon) {
+        map.removeLayer(districtPolygon);
+        districtPolygon = null;
+      }
+      zoneCircles.forEach(function(c) {
+        if (map.hasLayer(c)) {
+          map.removeLayer(c);
+        }
+      });
+      zoneCircles = [];
+    }
+
+    function clearZoneCirclesOnly() {
+      zoneCircles.forEach(function(c) {
+        if (map && map.hasLayer(c)) {
+          map.removeLayer(c);
+        }
+      });
+      zoneCircles = [];
+    }
+
+    function showDistrictBoundary(boundaryJson) {
+      queueIfNotReady(function() {
+        clearOverlays();
+        try {
+          var pts = JSON.parse(boundaryJson);
+          districtPolygon = L.polygon(pts, {
+            color: '#66BB6A',
+            stroke: true,
+            opacity: 0.95,
+            fillColor: '#3CB371',
+            fill: true,
+            fillOpacity: 0.2,
+            weight: 3,
+            className: 'district-boundary'
+          }).addTo(map);
+          map.fitBounds(districtPolygon.getBounds(), { padding: [40, 40] });
+        } catch(e) {
+          console.error('Error showing boundary:', e);
+        }
+      });
+    }
+
+    function showCropZones(zonesJson) {
+      queueIfNotReady(function() {
+        try {
+          // IMPORTANT: don't clear district boundary when showing zones.
+          // Only clear the zone circles so the boundary border remains visible.
+          clearZoneCirclesOnly();
+          var zones = JSON.parse(zonesJson);
+          zones.forEach(function(z) {
+            var color, label;
+            if (z.quality === 'HIGH') {
+              color = '#43A047';
+              label = 'HIGH Quality';
+            } else if (z.quality === 'MEDIUM') {
+              color = '#FFA000';
+              label = 'MEDIUM Quality';
+            } else {
+              color = '#E53935';
+              label = 'LOW Quality';
+            }
+
+            var circle = L.circle([z.lat, z.lon], {
+              radius: z.radius,
+              color: color,
+              stroke: true,
+              opacity: 0.95,
+              fillColor: color,
+              fill: true,
+              fillOpacity: 0.35,
+              weight: 2.5,
+              className: 'crop-zone'
+            }).addTo(map);
+
+            circle.bindPopup(label + '<br/>Radius: ' + Math.round(z.radius / 1000) + ' km');
+            zoneCircles.push(circle);
+          });
+        } catch(e) {
+          console.error('Error showing zones:', e);
+        }
+      });
+    }
+
+    function clearZones() {
+      queueIfNotReady(function() {
+        clearZoneCirclesOnly();
+      });
+    }
+
+    function showSriLankaOverview() {
+      queueIfNotReady(function() {
+        clearOverlays();
+        map.setView([7.8731, 80.7718], 7);
+      });
+    }
+
+    function setView(lat, lon, zoom) {
+      queueIfNotReady(function() {
+        map.setView([lat, lon], zoom);
+      });
+    }
+
+    // Start initialization
+    initMap();
+  </script>
+</body>
+</html>

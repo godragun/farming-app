@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand -->
+    <color name="colorPrimary">#5DAE3A</color>
+    <color name="colorPrimaryDark">#3D8020</color>
+    <color name="colorAccent">#5DAE3A</color>
+
+    <!-- Semantic surface / background (DayNight-aware) -->
+    <color name="background">#F2FBE8</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surfaceVariant">#E8F5DC</color>
+
+    <!-- Text -->
+    <color name="fontColor">#1E3010</color>
+    <color name="onPrimary">#FFFFFF</color>
+
+    <!-- Accents -->
+    <color name="colorThird">#FC7557</color>
+    <color name="greenDark">#2E7D0F</color>
+
+    <!-- Legacy palette (kept for layout refs) -->
+    <color name="white">#FFFFFF</color>
+    <color name="greenlite">#F56ADA23</color>
+    <color name="secondary">#E2F2DA</color>
+    <color name="semiTransparentColor">#80FFFFFF</color>
+    <color name="secondary2">#69BE89</color>
+    <color name="secondary3">#C6DABF</color>
+
+    <!-- Chip state (inline selector) -->
+    <color name="chip">
+        <selector xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:state_checked="true"  android:color="@color/colorPrimary" />
+            <item android:state_checked="false" android:color="@color/surface" />
+        </selector>
+    </color>
+</resources>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/futuristic_screen_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Sync bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/unsyncedCountText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0 unsynced surveys"
+                android:textColor="@color/fontColor"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/syncAllBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Sync All"
+                android:paddingHorizontal="16dp"
+                android:backgroundTint="@color/colorPrimary" />
+        </LinearLayout>
+
+        <!-- Sync status banner -->
+        <TextView
+            android:id="@+id/syncStatusBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="16dp"
+            android:background="@color/colorPrimary"
+            android:visibility="gone" />
+
+        <!-- Empty state -->
+        <LinearLayout
+            android:id="@+id/emptySurveysState"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📋"
+                android:textSize="56sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No surveys yet"
+                android:textColor="@color/fontColor"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tap Start Survey on the dashboard\nto collect your first field data"
+                android:textColor="@color/colorPrimaryDark"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- Survey list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/savedSurveysRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingTop="8dp"
+            android:paddingBottom="80dp"
+            android:clipToPadding="false" />
+
+    </LinearLayout>
+
+    <!-- FAB: New Survey -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/newSurveyFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:src="@drawable/add_icon"
+        android:contentDescription="New Survey"
+        app:tint="@color/white"
+        app:backgroundTint="@color/colorPrimary"
+        app:fabSize="normal" />
+
+</FrameLayout>

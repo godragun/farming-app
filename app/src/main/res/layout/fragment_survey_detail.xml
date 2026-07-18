@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/futuristic_screen_bg">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Hero status card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/survey_hero_bg"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/detailSurveyTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Survey #001"
+                            android:textColor="@color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detailSurveyDate"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Saved today"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="13sp"
+                            android:layout_marginTop="4dp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/detailSyncBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⏳ Pending"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:background="@drawable/modern_glass_card"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Data fields card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Survey Data"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="14dp" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="👤 Farmer" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailFarmerName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="📍 Location" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailLocation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="🌾 Crop" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailCropType" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="🌍 Soil" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailSoilCondition" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="💧 Irrigation" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailIrrigation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="📊 Yield" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailYield" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Pest notes (full width) -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🐛 Pest / Disease Notes"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/detailPestNotes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="-"
+                        android:textColor="@color/fontColor"
+                        android:textSize="14sp"
+                        android:background="@color/surfaceVariant"
+                        android:padding="10dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Photo card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/detailPhotoCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surface"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📷 Crop Photo"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="10dp" />
+
+                    <ImageView
+                        android:id="@+id/detailPhotoPreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="centerCrop"
+                        android:adjustViewBounds="true" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Audio card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/detailAudioCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surface"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎤 Voice Note"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="10dp" />
+
+                    <Button
+                        android:id="@+id/detailPlayAudioBtn"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="▶  Play Voice Note"
+                        android:backgroundTint="@color/colorPrimary" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Sync Now button -->
+            <Button
+                android:id="@+id/detailSyncNowBtn"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Sync Now"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:backgroundTint="@color/colorPrimary"
+                android:layout_marginBottom="80dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>
