@@ -14,5 +14,44 @@
     <string name="select_image">රූපය තෝරන්න</string>
     <string name="upload">උඩුගත කරන්න</string>
     <string name="language_sinhala">සිංහල</string>
-    <string name="language_english">English</string>
+    <!-- Navigation Drawer -->
+    <string name="nav_field_survey">ක්ෂේත්‍ර සමීක්ෂණය</string>
+    <string name="nav_saved_surveys">සුරකින ලද සමීක්ෂණ</string>
+    <string name="nav_ecommerce">ඊ-වාණිජ්‍යය</string>
+    <string name="nav_apmc_updates">APMC වෙළඳපල යාවත්කාලීන</string>
+    <string name="nav_weather_forecast">කාලගුණ අනාවැකිය</string>
+    <string name="nav_crop_articles">බෝග ලිපි</string>
+    <string name="nav_my_orders">මගේ ඇණවුම්</string>
+    <string name="nav_agri_chatbot">කෘෂි චැට්බොට්</string>
+    <string name="nav_create_post">පළ කිරීමක් සාදන්න</string>
+    <string name="nav_community_network">ප්‍රජා ජාලය</string>
+    <string name="nav_settings">සැකසුම්</string>
+    <string name="nav_log_out">ඉවත් වන්න</string>
+
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_home">මුල් පිටුව</string>
+    <string name="bottom_nav_posts">පළ කිරීම්</string>
+    <string name="bottom_nav_apmc">APMC</string>
+    <string name="bottom_nav_ecommerce">ඊ-වාණිජ්‍යය</string>
+
+    <!-- Dashboard -->
+    <string name="dash_weather_wind_placeholder">සුළඟ : - km/h</string>
+    <string name="dash_weather_humidity_placeholder">ආර්ද්‍රතාවය : - %</string>
+    <string name="dash_survey_start_title">ක්ෂේත්‍ර සමීක්ෂණය ආරම්භ කරන්න</string>
+    <string name="dash_survey_label">ක්ෂේත්‍ර දත්ත එකතු කිරීම</string>
+    <string name="dash_survey_desc">බෝග දත්ත එකතු කිරීම, ඡායාරූප ගැනීම, හඬ සටහන් පටිගත කිරීම — සියල්ල නොබැඳිව.</string>
+    <string name="dash_survey_start_btn">සමීක්ෂණය අරඹන්න →</string>
+    <string name="dash_survey_view_btn">සුරකින ලද දේ බලන්න</string>
+    <string name="dash_articles_title">ලිපි</string>
+    <string name="dash_article_pineapple">අන්නාසි</string>
+    <string name="dash_article_tea">තේ</string>
+    <string name="dash_article_potato">අර්තාපල්</string>
+    <string name="dash_article_all_topics">සියලු මාතෘකා</string>
+    <string name="dash_satellite_view">චන්ද්‍රිකා දර්ශනය</string>
+    <string name="dash_products_title">නිෂ්පාදන</string>
+
+    <!-- Settings -->
+    <string name="settings_title">සැකසුම්</string>
+    <string name="settings_dark_mode">අඳුරු තේමාව</string>
+    <string name="settings_sinhala_language">සිංහල භාෂාව</string>
 </resources>

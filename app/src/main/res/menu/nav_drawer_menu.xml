@@ -5,60 +5,60 @@
         <item
             android:id="@+id/miItemSurvey"
             android:icon="@drawable/ic_baseline_edit_24"
-            android:title="Field Survey" />
+            android:title="@string/nav_field_survey" />
         <item
             android:id="@+id/miItemSavedSurveys"
             android:icon="@drawable/ic_baseline_check_24"
-            android:title="Saved Surveys" />
+            android:title="@string/nav_saved_surveys" />
     </group>
 
     <group android:id="@+id/navGroupMain">
         <item
             android:id="@+id/miItem1"
             android:icon="@drawable/ic_baseline_shopping_cart_24"
-            android:title="E-Commerce" />
+            android:title="@string/nav_ecommerce" />
         <item
             android:id="@+id/miItem2"
             android:icon="@drawable/ic_baseline_trending_up_24"
-            android:title="APMC Market Updates" />
+            android:title="@string/nav_apmc_updates" />
         <item
             android:id="@+id/miItem5"
             android:icon="@drawable/ic_humidity"
-            android:title="Weather Forecast" />
+            android:title="@string/nav_weather_forecast" />
         <item
             android:id="@+id/miItem6"
             android:icon="@drawable/ic_low_temp"
-            android:title="Crop Articles" />
+            android:title="@string/nav_crop_articles" />
         <item
             android:id="@+id/miItem7"
             android:icon="@drawable/ic_baseline_check_24"
-            android:title="My Orders" />
+            android:title="@string/nav_my_orders" />
         <item
             android:id="@+id/miItem9"
             android:icon="@drawable/ic_baseline_edit_24"
-            android:title="Agri Chatbot" />
+            android:title="@string/nav_agri_chatbot" />
     </group>
 
     <group android:id="@+id/navGroupSocial">
         <item
             android:id="@+id/miItem3"
             android:icon="@drawable/ic_baseline_photo_camera_24"
-            android:title="Create Post" />
+            android:title="@string/nav_create_post" />
         <item
             android:id="@+id/miItem4"
             android:icon="@drawable/post_logo"
-            android:title="Community Network" />
+            android:title="@string/nav_community_network" />
     </group>
 
     <group android:id="@+id/navGroupSettings">
         <item
             android:id="@+id/miItemSettings"
             android:icon="@drawable/ic_baseline_edit_24"
-            android:title="Settings" />
+            android:title="@string/nav_settings" />
         <item
             android:id="@+id/miItem8"
             android:icon="@drawable/ic_baseline_delete_forever_24"
-            android:title="Log Out" />
+            android:title="@string/nav_log_out" />
     </group>
 
 </menu>

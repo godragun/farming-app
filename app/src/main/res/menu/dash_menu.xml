@@ -2,16 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/bottomNavHome"
-        android:title="Home"
+        android:title="@string/bottom_nav_home"
         android:icon="@drawable/dash_home" />
     <item android:id="@+id/bottomNavPost"
-        android:title="Posts"
+        android:title="@string/bottom_nav_posts"
         android:icon="@drawable/post_logo" />
     <item android:id="@+id/bottomNavAPMC"
-        android:title="APMC"
+        android:title="@string/bottom_nav_apmc"
         android:icon="@drawable/ic_baseline_trending_up_24" />
     <item android:id="@+id/bottomNavEcomm"
-        android:title="E-Commerce"
+        android:title="@string/bottom_nav_ecommerce"
         android:icon="@drawable/buy" />
 
 

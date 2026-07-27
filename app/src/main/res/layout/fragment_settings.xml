@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Settings"
+        android:text="@string/settings_title"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="32dp" />
@@ -19,7 +19,7 @@
         android:id="@+id/switchDarkMode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Dark Mode"
+        android:text="@string/settings_dark_mode"
         android:textSize="18sp"
         android:padding="16dp"
         android:layout_marginBottom="16dp" />
@@ -28,7 +28,7 @@
         android:id="@+id/switchLanguage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sinhala Language"
+        android:text="@string/settings_sinhala_language"
         android:textSize="18sp"
         android:padding="16dp" />
 

@@ -14,5 +14,44 @@
     <string name="select_image">Select Image</string>
     <string name="upload">Upload</string>
     <string name="language_sinhala">සිංහල</string>
-    <string name="language_english">English</string>
+    <!-- Navigation Drawer -->
+    <string name="nav_field_survey">Field Survey</string>
+    <string name="nav_saved_surveys">Saved Surveys</string>
+    <string name="nav_ecommerce">E-Commerce</string>
+    <string name="nav_apmc_updates">APMC Market Updates</string>
+    <string name="nav_weather_forecast">Weather Forecast</string>
+    <string name="nav_crop_articles">Crop Articles</string>
+    <string name="nav_my_orders">My Orders</string>
+    <string name="nav_agri_chatbot">Agri Chatbot</string>
+    <string name="nav_create_post">Create Post</string>
+    <string name="nav_community_network">Community Network</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_log_out">Log Out</string>
+
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_posts">Posts</string>
+    <string name="bottom_nav_apmc">APMC</string>
+    <string name="bottom_nav_ecommerce">E-Commerce</string>
+
+    <!-- Dashboard -->
+    <string name="dash_weather_wind_placeholder">Wind : - km/h</string>
+    <string name="dash_weather_humidity_placeholder">Humidity : - %</string>
+    <string name="dash_survey_start_title">Start Field Survey</string>
+    <string name="dash_survey_label">Field Data Collection</string>
+    <string name="dash_survey_desc">Collect crop data, capture photos, record voice notes — all offline.</string>
+    <string name="dash_survey_start_btn">Start Survey →</string>
+    <string name="dash_survey_view_btn">View Saved</string>
+    <string name="dash_articles_title">Articles</string>
+    <string name="dash_article_pineapple">Pineapple</string>
+    <string name="dash_article_tea">Tea</string>
+    <string name="dash_article_potato">Potato</string>
+    <string name="dash_article_all_topics">All topics</string>
+    <string name="dash_satellite_view">Satellite View</string>
+    <string name="dash_products_title">Products</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_dark_mode">Dark Mode</string>
+    <string name="settings_sinhala_language">Sinhala Language (සිංහල)</string>
 </resources>
