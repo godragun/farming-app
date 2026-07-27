@@ -52,9 +52,9 @@
 
     <group android:id="@+id/navGroupSettings">
         <item
-            android:id="@+id/miItem10"
-            android:icon="@drawable/ic__keyboard_arrow_down"
-            android:title="Switch Dark / Light Mode" />
+            android:id="@+id/miItemSettings"
+            android:icon="@drawable/ic_baseline_edit_24"
+            android:title="Settings" />
         <item
             android:id="@+id/miItem8"
             android:icon="@drawable/ic_baseline_delete_forever_24"

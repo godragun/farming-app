@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Button selectImageButton;
     private Button uploadImageButton;
-    private Button toggleLanguageButton;
     private ImageView previewImageView;
     private ProgressBar uploadProgressBar;
 
@@ -44,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
         selectImageButton = findViewById(R.id.buttonSelectImage);
         uploadImageButton = findViewById(R.id.buttonUploadImage);
-        toggleLanguageButton = findViewById(R.id.buttonToggleLanguage);
         previewImageView = findViewById(R.id.imageViewPreview);
         uploadProgressBar = findViewById(R.id.progressUpload);
 
@@ -87,22 +85,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupClicks() {
         selectImageButton.setOnClickListener(view -> checkGalleryPermissionThenOpen());
         uploadImageButton.setOnClickListener(view -> uploadSelectedImage());
-        toggleLanguageButton.setOnClickListener(view -> toggleLanguage());
-    }
-
-    private void toggleLanguage() {
-        Locale current = getResources().getConfiguration().locale;
-        String lang = current.getLanguage().equals("si") ? "en" : "si";
-        setLocale(lang);
-    }
-
-    private void setLocale(String lang) {
-        Locale locale = new Locale(lang);
-        Locale.setDefault(locale);
-        Configuration config = new Configuration();
-        config.locale = locale;
-        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-        recreate();
     }
 
     private void checkGalleryPermissionThenOpen() {

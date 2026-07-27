@@ -6,14 +6,6 @@
     android:padding="16dp">
 
     <Button
-        android:id="@+id/buttonToggleLanguage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/language_sinhala"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
         android:id="@+id/buttonSelectImage"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -21,7 +13,7 @@
         app:layout_constraintEnd_toStartOf="@+id/buttonUploadImage"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToggleLanguage" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/buttonUploadImage"
@@ -30,7 +22,7 @@
         android:text="@string/upload"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/buttonSelectImage"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToggleLanguage" />
+        app:layout_constraintTop_toTopOf="@id/buttonSelectImage" />
 
     <ImageView
         android:id="@+id/imageViewPreview"

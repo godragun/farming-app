@@ -208,9 +208,6 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
                 .into(logoIv)
         }
 
-        // Sync dark/light label with current state
-        binding.navView.menu.findItem(R.id.miItem10)?.title =
-            if (darkModeEnabled) "Switch to Light Mode" else "Switch to Dark Mode"
 
         ecommerceItemFragment=EcommerceItemFragment()
         dashboardFragment = dashboardFragment()
@@ -404,8 +401,8 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             R.id.miItemSavedSurveys -> {
                 openScreen(SavedSurveysFragment(), "savedSurveysFrag")
             }
-            R.id.miItem10 -> {
-                toggleThemeMode()
+            R.id.miItemSettings -> {
+                openScreen(com.project.farmingapp.view.settings.SettingsFragment(), "settingsFrag")
             }
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START)
@@ -639,27 +636,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
         chatbotFab.visibility = if (shouldHideFab) View.GONE else View.VISIBLE
     }
 
-    private fun toggleThemeMode() {
-        darkModeEnabled = !darkModeEnabled
-        getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("darkModeEnabled", darkModeEnabled)
-            .apply()
-        AppCompatDelegate.setDefaultNightMode(
-            if (darkModeEnabled) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        )
-        // Update the menu label so the user sees what mode will be active next tap
-        binding.navView.menu.findItem(R.id.miItem10)?.title =
-            if (darkModeEnabled) "Switch to Light Mode" else "Switch to Dark Mode"
-        Toast.makeText(
-            this,
-            if (darkModeEnabled) "Dark mode enabled" else "Light mode enabled",
-            Toast.LENGTH_SHORT
-        ).show()
-
-        // Night mode changes recreate Activities; force a clean recreation in-place.
-        window.decorView.post { recreate() }
-    }
+    // toggleThemeMode removed to fix ANR and use SettingsFragment instead
 
     /**
      * Theme switches can recreate the Activity before FirebaseAuth finishes restoring session.
