@@ -50,7 +50,7 @@
                         android:id="@+id/weatherCityTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="-"
+                        android:text="@string/auto_fragment_dashboard_str_49_49"
                         android:textColor="@color/fontColor"
                         android:textSize="21sp"
                         android:textStyle="bold"
@@ -64,7 +64,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"
-                        android:text="- C"
+                        android:text="@string/auto_fragment_dashboard_c_50"
                         android:textColor="@color/fontColor"
                         android:textSize="21sp"
                         android:textStyle="bold"
@@ -123,7 +123,7 @@
                         android:id="@+id/surveyHeroEmoji"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🌾"
+                        android:text="@string/auto_fragment_dashboard_str_51_51"
                         android:textSize="40sp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
@@ -466,7 +466,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="TVC Tractor"-->
+<!--                        android:text="@string/auto_fragment_dashboard_tvc_tractor_52"-->
 <!--                        android:textSize="14sp"-->
 <!--                        app:layout_constraintBottom_toTopOf="@id/someID"-->
 <!--                        android:textStyle="bold"-->
@@ -478,7 +478,7 @@
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
 <!--                        android:id="@+id/someID"-->
-<!--                        android:text="$994"-->
+<!--                        android:text="@string/auto_fragment_dashboard_994_53"-->
 <!--                        android:textColor="@color/colorPrimary"-->
 <!--                        app:layout_constraintBottom_toBottomOf="parent"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
@@ -518,7 +518,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="TVC Tractor"-->
+<!--                        android:text="@string/auto_fragment_dashboard_tvc_tractor_52"-->
 <!--                        android:textSize="14sp"-->
 <!--                        android:textStyle="bold"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
@@ -528,7 +528,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="$994"-->
+<!--                        android:text="@string/auto_fragment_dashboard_994_53"-->
 <!--                        android:textColor="@color/colorPrimary"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
 <!--                        app:layout_constraintTop_toBottomOf="@id/ecommName2" />-->
@@ -567,7 +567,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="TVC Tractor"-->
+<!--                        android:text="@string/auto_fragment_dashboard_tvc_tractor_52"-->
 <!--                        android:textSize="14sp"-->
 <!--                        android:textStyle="bold"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
@@ -577,7 +577,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="$994"-->
+<!--                        android:text="@string/auto_fragment_dashboard_994_53"-->
 <!--                        android:textColor="@color/colorPrimary"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
 <!--                        app:layout_constraintTop_toBottomOf="@id/ecommName3" />-->
@@ -616,7 +616,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="TVC Tractor"-->
+<!--                        android:text="@string/auto_fragment_dashboard_tvc_tractor_52"-->
 <!--                        android:textSize="14sp"-->
 <!--                        android:textStyle="bold"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
@@ -626,7 +626,7 @@
 <!--                        android:layout_width="wrap_content"-->
 <!--                        android:layout_height="wrap_content"-->
 <!--                        android:paddingHorizontal="10dp"-->
-<!--                        android:text="$994"-->
+<!--                        android:text="@string/auto_fragment_dashboard_994_53"-->
 <!--                        android:textColor="@color/colorPrimary"-->
 <!--                        app:layout_constraintStart_toStartOf="parent"-->
 <!--                        app:layout_constraintTop_toBottomOf="@id/ecommName4" />-->

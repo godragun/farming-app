@@ -9,7 +9,7 @@
     <TextView
         android:id="@+id/attributeTitle"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="Size: "
+        android:text="@string/auto_single_selection_attributes_ecomm_size_191"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_width="wrap_content"
         android:textStyle="bold"
@@ -51,14 +51,14 @@
                     android:layout_height="wrap_content"
                     android:padding="7dp"
 
-                    android:text="3.5 Kg"
+                    android:text="@string/auto_single_selection_attributes_ecomm_3_5_kg_192"
 
                     />
                 <TextView
                     android:id="@+id/attribute1Price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$1672"
+                    android:text="@string/auto_single_selection_attributes_ecomm_1672_193"
 
                     android:textColor="#fff"
                     android:textStyle="bold"
@@ -90,13 +90,13 @@
                     android:layout_height="wrap_content"
                     android:padding="7dp"
 
-                    android:text="3.5 Kg"
+                    android:text="@string/auto_single_selection_attributes_ecomm_3_5_kg_192"
 
                     />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$1672"
+                    android:text="@string/auto_single_selection_attributes_ecomm_1672_193"
                     android:textColor="@color/fontColor"
                     android:id="@+id/attribute2Price"
                     />
@@ -126,13 +126,13 @@
                     android:layout_height="wrap_content"
                     android:padding="7dp"
 
-                    android:text="3.5 Kg"
+                    android:text="@string/auto_single_selection_attributes_ecomm_3_5_kg_192"
 
                     />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$1672"
+                    android:text="@string/auto_single_selection_attributes_ecomm_1672_193"
                     android:textColor="@color/fontColor"
                     android:id="@+id/attribute3Price"
                     />

@@ -28,7 +28,7 @@
                 app:layout_constraintTop_toBottomOf="@id/recimg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ABCD..."/>
+                android:text="@string/auto_similarproductlist_abcd_176"/>
             <TextView
                 android:id="@+id/recPrice"
                 android:textSize="18dp"
@@ -36,7 +36,7 @@
                app:layout_constraintTop_toBottomOf="@id/recimg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$120"/>
+                android:text="@string/auto_similarproductlist_120_177"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
 

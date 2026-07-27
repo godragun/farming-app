@@ -41,7 +41,7 @@
                             android:id="@+id/detailSurveyTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Survey #001"
+                            android:text="@string/auto_fragment_survey_detail_survey_001_100"
                             android:textColor="@color/white"
                             android:textSize="20sp"
                             android:textStyle="bold" />
@@ -50,7 +50,7 @@
                             android:id="@+id/detailSurveyDate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Saved today"
+                            android:text="@string/auto_fragment_survey_detail_saved_today_101"
                             android:textColor="#CCFFFFFF"
                             android:textSize="13sp"
                             android:layout_marginTop="4dp" />
@@ -60,7 +60,7 @@
                         android:id="@+id/detailSyncBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="⏳ Pending"
+                        android:text="@string/auto_fragment_survey_detail_pending_102"
                         android:textColor="@color/white"
                         android:textSize="12sp"
                         android:background="@drawable/modern_glass_card"
@@ -87,47 +87,47 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Survey Data"
+                        android:text="@string/auto_fragment_survey_detail_survey_data_103"
                         android:textColor="@color/colorPrimary"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="14dp" />
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="👤 Farmer" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailFarmerName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_farmer_104" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailFarmerName" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="📍 Location" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailLocation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_location_105" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailLocation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="🌾 Crop" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailCropType" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_crop_106" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailCropType" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="🌍 Soil" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailSoilCondition" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_soil_107" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailSoilCondition" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="💧 Irrigation" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailIrrigation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_irrigation_108" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailIrrigation" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="10dp">
-                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="📊 Yield" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/detailYield" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textColor="@color/fontColor" android:textSize="14sp" />
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="@string/auto_fragment_survey_detail_yield_109" android:textColor="@color/colorPrimaryDark" android:textSize="13sp" android:textStyle="bold" />
+                        <TextView android:id="@+id/detailYield" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/auto_fragment_dashboard_str_49_49" android:textColor="@color/fontColor" android:textSize="14sp" />
                     </LinearLayout>
 
                     <!-- Pest notes (full width) -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🐛 Pest / Disease Notes"
+                        android:text="@string/auto_fragment_survey_detail_pest_disease_notes_110"
                         android:textColor="@color/colorPrimaryDark"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -137,7 +137,7 @@
                         android:id="@+id/detailPestNotes"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="-"
+                        android:text="@string/auto_fragment_dashboard_str_49_49"
                         android:textColor="@color/fontColor"
                         android:textSize="14sp"
                         android:background="@color/surfaceVariant"
@@ -165,7 +165,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="📷 Crop Photo"
+                        android:text="@string/auto_fragment_survey_detail_crop_photo_111"
                         android:textColor="@color/colorPrimary"
                         android:textSize="15sp"
                         android:textStyle="bold"
@@ -200,7 +200,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎤 Voice Note"
+                        android:text="@string/auto_fragment_survey_detail_voice_note_112"
                         android:textColor="@color/colorPrimary"
                         android:textSize="15sp"
                         android:textStyle="bold"
@@ -210,7 +210,7 @@
                         android:id="@+id/detailPlayAudioBtn"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="▶  Play Voice Note"
+                        android:text="@string/auto_fragment_survey_detail_play_voice_note_113"
                         android:backgroundTint="@color/colorPrimary" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -220,7 +220,7 @@
                 android:id="@+id/detailSyncNowBtn"
                 android:layout_width="match_parent"
                 android:layout_height="52dp"
-                android:text="Sync Now"
+                android:text="@string/auto_fragment_survey_detail_sync_now_114"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:backgroundTint="@color/colorPrimary"

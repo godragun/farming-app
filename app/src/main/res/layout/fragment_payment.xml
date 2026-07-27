@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginVertical="14dp"
-            android:text="Order Payment"
+            android:text="@string/auto_activity_razor_pay_order_payment_9"
             app:layout_constraintBottom_toTopOf="@id/addressEditPayment"
 
             android:textColor="#000"
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Items: 0  |  Total: LKR 0"
+            android:text="@string/auto_fragment_payment_items_0_total_lkr_0_87"
             android:textStyle="bold"
             app:layout_constraintTop_toBottomOf="@id/paymentFragTitle"
             app:layout_constraintStart_toStartOf="parent"
@@ -115,7 +115,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="7dp"
             android:layout_marginVertical="7dp"
-            android:text="Payment Method"
+            android:text="@string/auto_fragment_payment_payment_method_88"
             android:textColor="@color/colorThird"
             android:textSize="18dp"
 
@@ -144,21 +144,21 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="E-Wallet" />
+                android:text="@string/auto_fragment_payment_e_wallet_89" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/paymentMethodDebit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Debit Card" />
+                android:text="@string/auto_fragment_payment_debit_card_90" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/paymentMethodCod"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Cash on Delivery" />
+                android:text="@string/auto_fragment_payment_cash_on_delivery_91" />
 
         </RadioGroup>
 
@@ -275,7 +275,7 @@
             android:layout_marginVertical="7dp"
             android:backgroundTint="@color/colorThird"
             android:background="@drawable/round_borderless_general"
-            android:text="Order Now"
+            android:text="@string/auto_fragment_payment_order_now_92"
             android:textAllCaps="false"
             android:textColor="#fff"
             android:textStyle="bold"

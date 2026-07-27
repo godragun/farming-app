@@ -49,7 +49,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Location"
+                            android:text="@string/auto_fragment_survey_form_location_115"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -59,7 +59,7 @@
                         android:id="@+id/surveyLocationText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Fetching location…"
+                        android:text="@string/auto_fragment_survey_form_fetching_location_116"
                         android:textColor="@color/fontColor"
                         android:textSize="14sp"
                         android:layout_marginBottom="10dp" />
@@ -98,7 +98,7 @@
                         android:id="@+id/refreshLocationBtn"
                         android:layout_width="wrap_content"
                         android:layout_height="36dp"
-                        android:text="Refresh Location"
+                        android:text="@string/auto_fragment_survey_form_refresh_location_117"
                         android:textSize="13sp"
                         android:paddingHorizontal="16dp"
                         android:backgroundTint="@color/colorPrimary" />
@@ -137,7 +137,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Farmer Name"
+                            android:text="@string/auto_fragment_survey_form_farmer_name_118"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -189,7 +189,7 @@
                         <TextView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:text="🌱"
+                            android:text="@string/auto_fragment_survey_form_str_119_119"
                             android:textSize="16sp"
                             android:gravity="center"
                             android:layout_marginEnd="8dp" />
@@ -197,7 +197,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Crop Type"
+                            android:text="@string/auto_fragment_survey_form_crop_type_120"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -250,7 +250,7 @@
                         <TextView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:text="🌍"
+                            android:text="@string/auto_fragment_survey_form_str_121_121"
                             android:textSize="16sp"
                             android:gravity="center"
                             android:layout_marginEnd="8dp" />
@@ -258,7 +258,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Soil Condition"
+                            android:text="@string/auto_fragment_survey_form_soil_condition_122"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -275,28 +275,28 @@
                             android:id="@+id/chipSoilSandy"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Sandy"
+                            android:text="@string/auto_fragment_survey_form_sandy_123"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSoilClay"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Clay"
+                            android:text="@string/auto_fragment_survey_form_clay_124"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSoilLoamy"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Loamy"
+                            android:text="@string/auto_fragment_survey_form_loamy_125"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSoilOther"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Other"
+                            android:text="@string/auto_activity_razor_pay_other_13"
                             style="@style/ChipFuturistic" />
                     </com.google.android.material.chip.ChipGroup>
 
@@ -349,7 +349,7 @@
                         <TextView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:text="💧"
+                            android:text="@string/auto_fragment_survey_form_str_126_126"
                             android:textSize="16sp"
                             android:gravity="center"
                             android:layout_marginEnd="8dp" />
@@ -357,7 +357,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Irrigation Type"
+                            android:text="@string/auto_fragment_survey_form_irrigation_type_127"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -374,28 +374,28 @@
                             android:id="@+id/chipIrrigRainfed"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Rain-fed"
+                            android:text="@string/auto_fragment_survey_form_rain_fed_128"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipIrrigDrip"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Drip"
+                            android:text="@string/auto_fragment_survey_form_drip_129"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipIrrigManual"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Manual"
+                            android:text="@string/auto_fragment_survey_form_manual_130"
                             style="@style/ChipFuturistic" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipIrrigCanal"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Canal"
+                            android:text="@string/auto_fragment_survey_form_canal_131"
                             style="@style/ChipFuturistic" />
                     </com.google.android.material.chip.ChipGroup>
                 </LinearLayout>
@@ -426,7 +426,7 @@
                         <TextView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:text="🐛"
+                            android:text="@string/auto_fragment_survey_form_str_132_132"
                             android:textSize="16sp"
                             android:gravity="center"
                             android:layout_marginEnd="8dp" />
@@ -434,7 +434,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Pest / Disease Notes"
+                            android:text="@string/auto_fragment_survey_form_pest_disease_notes_133"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -495,7 +495,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Estimated Yield (kg)"
+                            android:text="@string/auto_fragment_survey_form_estimated_yield_kg_134"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -555,7 +555,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Crop Photo"
+                            android:text="@string/auto_fragment_survey_form_crop_photo_135"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -566,7 +566,7 @@
                         android:id="@+id/capturePhotoBtn"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:text="+ Capture Photo"
+                        android:text="@string/auto_fragment_survey_form_capture_photo_136"
                         android:backgroundTint="@color/colorPrimary"
                         android:visibility="visible" />
 
@@ -597,7 +597,7 @@
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
                                 android:layout_marginEnd="6dp"
-                                android:text="Retake"
+                                android:text="@string/auto_fragment_survey_form_retake_137"
                                 android:textSize="13sp"
                                 android:backgroundTint="@color/colorPrimary" />
 
@@ -606,7 +606,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="36dp"
                                 android:layout_weight="1"
-                                android:text="Remove"
+                                android:text="@string/auto_fragment_survey_form_remove_138"
                                 android:textSize="13sp"
                                 android:backgroundTint="@color/colorThird" />
                         </LinearLayout>
@@ -639,7 +639,7 @@
                         <TextView
                             android:layout_width="22dp"
                             android:layout_height="22dp"
-                            android:text="🎤"
+                            android:text="@string/auto_fragment_survey_form_str_139_139"
                             android:textSize="16sp"
                             android:gravity="center"
                             android:layout_marginEnd="8dp" />
@@ -648,7 +648,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Voice Note"
+                            android:text="@string/auto_fragment_survey_form_voice_note_140"
                             android:textColor="@color/fontColor"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -674,7 +674,7 @@
                             android:layout_height="48dp"
                             android:layout_weight="1"
                             android:layout_marginEnd="8dp"
-                            android:text="⏺  Record"
+                            android:text="@string/auto_fragment_survey_form_record_141"
                             android:backgroundTint="@color/colorThird" />
 
                         <Button
@@ -683,7 +683,7 @@
                             android:layout_height="48dp"
                             android:layout_weight="1"
                             android:layout_marginEnd="8dp"
-                            android:text="▶  Play"
+                            android:text="@string/auto_fragment_survey_form_play_142"
                             android:backgroundTint="@color/colorPrimary"
                             android:enabled="false" />
 
@@ -691,7 +691,7 @@
                             android:id="@+id/deleteAudioBtn"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
-                            android:text="✕"
+                            android:text="@string/auto_fragment_survey_form_str_143_143"
                             android:backgroundTint="@color/colorThird"
                             android:visibility="gone" />
                     </LinearLayout>
@@ -700,7 +700,7 @@
                         android:id="@+id/audioStatusText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="No recording yet"
+                        android:text="@string/auto_fragment_survey_form_no_recording_yet_144"
                         android:textColor="@color/colorPrimaryDark"
                         android:textSize="12sp"
                         android:layout_marginTop="8dp" />
@@ -720,7 +720,7 @@
                     android:layout_height="52dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
-                    android:text="Save Offline"
+                    android:text="@string/auto_fragment_survey_form_save_offline_145"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:backgroundTint="@color/colorPrimaryDark" />
@@ -730,7 +730,7 @@
                     android:layout_width="0dp"
                     android:layout_height="52dp"
                     android:layout_weight="1"
-                    android:text="Submit &amp; Sync"
+                    android:text="@string/auto_fragment_survey_form_submit_amp_sync_146"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:backgroundTint="@color/colorPrimary" />

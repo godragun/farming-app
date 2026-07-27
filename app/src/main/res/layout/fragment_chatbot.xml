@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/rounder_border_general"
         android:padding="12dp"
-        android:text="Agri Chatbot - Ask about crops, weather, pests, fertilizer"
+        android:text="@string/auto_fragment_chatbot_agri_chatbot_ask_abo_47"
         android:textColor="@color/fontColor"
         android:textStyle="bold" />
 
@@ -50,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Send"
+            android:text="@string/auto_fragment_chatbot_send_48"
             android:textAllCaps="false" />
     </LinearLayout>
 

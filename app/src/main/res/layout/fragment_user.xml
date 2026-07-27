@@ -101,7 +101,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginVertical="14dp"
-            android:text="Senidu"
+            android:text="@string/auto_fragment_user_senidu_150"
             android:textColor="@color/fontColor"
             android:textSize="21sp"
             android:textStyle="bold"
@@ -125,7 +125,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginVertical="14dp"
-            android:text="Posts: 0"
+            android:text="@string/auto_fragment_user_posts_0_151"
             android:textColor="@color/fontColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/userCityUserProfileFrag"
@@ -133,7 +133,7 @@
 
         <TextView
             android:id="@+id/userEmailUserProfileFrag"
-            android:text="harendrathennakoon@gmail.com"
+            android:text="@string/auto_fragment_user_harendrathennakoon_g_152"
             app:layout_constraintTop_toBottomOf="@id/userImageCardUserFrag"
             app:layout_constraintStart_toStartOf="@id/userImageCardUserFrag"
             android:textColor="@color/fontColor"
@@ -161,7 +161,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginVertical="14dp"
-            android:text="About"
+            android:text="@string/auto_fragment_user_about_153"
             android:textColor="@color/fontColor"
             android:textSize="17sp"
             android:textStyle="bold"
@@ -186,7 +186,7 @@
 <!--            android:layout_height="wrap_content"-->
 <!--            android:layout_marginTop="7dp"-->
 <!--            android:layout_marginEnd="25dp"-->
-<!--            android:text="Add About Information"-->
+<!--            android:text="@string/auto_fragment_user_add_about_informatio_154"-->
 <!--            android:textColor="@color/fontColor"-->
 <!--            android:textSize="16sp"-->
 <!--            app:layout_constraintEnd_toEndOf="parent"-->
@@ -233,7 +233,7 @@
             android:layout_width="50dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="25dp"
-            android:text="✔"
+            android:text="@string/auto_fragment_user_str_155_155"
             app:layout_constraintBottom_toBottomOf="@+id/aboutValueEditUserProfileFrag"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/aboutValueEditUserProfileFrag"
@@ -245,7 +245,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginVertical="14dp"
-            android:text="Posts"
+            android:text="@string/auto_fragment_user_posts_156"
             android:textColor="@color/fontColor"
             android:textSize="17sp"
             android:textStyle="bold"

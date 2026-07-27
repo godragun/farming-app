@@ -42,7 +42,7 @@
 
                 android:justificationMode="inter_word"
                 android:maxLines="3"
-                android:text="This is the title"
+                android:text="@string/auto_user_profile_posts_single_this_is_the_title_205"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/userPostUploadTimeUserProfileFrag"
@@ -53,7 +53,7 @@
                 android:id="@+id/userPostUploadTimeUserProfileFrag"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2 Hours Ago"
+                android:text="@string/auto_user_profile_posts_single_2_hours_ago_206"
                 android:textSize="8sp"
                 android:textColor="@color/fontColor"
                 app:layout_constraintBottom_toBottomOf="parent"

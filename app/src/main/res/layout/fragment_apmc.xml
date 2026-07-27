@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
             android:layout_marginEnd="20dp"
-            android:text="Province : "
+            android:text="@string/auto_fragment_apmc_province_24"
             android:textColor="@color/fontColor"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
             android:layout_marginEnd="20dp"
-            android:text="District : "
+            android:text="@string/auto_fragment_apmc_district_25"
             android:textColor="@color/fontColor"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -89,7 +89,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="Last Updated: "
+            android:text="@string/auto_fragment_apmc_last_updated_26"
             android:textColor="@color/fontColor"
             android:textSize="15sp"
             android:textStyle="bold"
@@ -102,7 +102,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="17dp"
             android:layout_marginVertical="5dp"
-            android:text="29/01/2021"
+            android:text="@string/auto_fragment_apmc_29_01_2021_27"
             android:textColor="@color/fontColor"
             android:textSize="15sp"
             android:textStyle="bold"
@@ -126,7 +126,7 @@
             android:id="@+id/textAPMCWarning"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Please select province and district"
+            android:text="@string/auto_fragment_apmc_please_select_provin_28"
             android:textColor="@color/fontColor"
             android:textSize="18sp"
             android:textStyle="bold|italic"
@@ -143,7 +143,7 @@
             android:layout_marginTop="8dp"
             android:background="@drawable/modern_glass_card"
             android:padding="10dp"
-            android:text="Select a district to see satellite map and planting insights."
+            android:text="@string/auto_fragment_apmc_select_a_district_to_29"
             android:textColor="@color/fontColor"
             android:textSize="13sp"
             app:layout_constraintTop_toBottomOf="@id/textAPMCWarning"
@@ -156,7 +156,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginTop="8dp"
-            android:text="Best crop zones"
+            android:text="@string/auto_fragment_apmc_best_crop_zones_30"
             android:textColor="@color/fontColor"
             app:layout_constraintTop_toBottomOf="@id/agriSuitabilityText"
             app:layout_constraintStart_toStartOf="parent" />
@@ -180,7 +180,7 @@
                 android:layout_height="wrap_content"
                 android:checkable="false"
                 android:clickable="false"
-                android:text="High"
+                android:text="@string/auto_fragment_apmc_high_31"
                 android:textColor="@android:color/white"
                 app:chipBackgroundColor="#4CAF50" />
 
@@ -191,7 +191,7 @@
                 android:layout_height="wrap_content"
                 android:checkable="false"
                 android:clickable="false"
-                android:text="Medium"
+                android:text="@string/auto_fragment_apmc_medium_32"
                 android:textColor="@android:color/white"
                 app:chipBackgroundColor="#FBC02D" />
 
@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:checkable="false"
                 android:clickable="false"
-                android:text="Low"
+                android:text="@string/auto_fragment_apmc_low_33"
                 android:textColor="@android:color/white"
                 app:chipBackgroundColor="#E53935" />
         </com.google.android.material.chip.ChipGroup>
@@ -261,7 +261,7 @@
                     android:id="@+id/districtStatsTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="District Stats"
+                    android:text="@string/auto_fragment_apmc_district_stats_34"
                     android:textColor="@color/fontColor"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -271,7 +271,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Rainfall: -- mm/year"
+                    android:text="@string/auto_fragment_apmc_rainfall_mm_year_35"
                     android:textColor="@color/fontColor"
                     android:textSize="12sp" />
 
@@ -280,7 +280,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Soil: --"
+                    android:text="@string/auto_fragment_apmc_soil_36"
                     android:textColor="@color/fontColor"
                     android:textSize="12sp" />
 
@@ -289,7 +289,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Best crops: --"
+                    android:text="@string/auto_fragment_apmc_best_crops_37"
                     android:textColor="@color/fontColor"
                     android:textSize="12sp" />
             </LinearLayout>

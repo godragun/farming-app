@@ -41,7 +41,7 @@
             android:backgroundTint="#CC2E7D0F"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:text="In Stock"
+            android:text="@string/auto_single_cart_item_in_stock_180"
             android:textColor="@color/white"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="2"
-                android:text="Premium organic fertilizer"
+                android:text="@string/auto_single_ecomm_item_premium_organic_fert_187"
                 android:textColor="@color/fontColor"
                 android:textSize="13sp"
                 android:textStyle="bold"
@@ -81,7 +81,7 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Agri Lanka"
+                android:text="@string/auto_activity_login_agri_lanka_3"
                 android:textColor="@color/colorPrimary"
                 android:textSize="11sp" />
 
@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Rs. 1200"
+                android:text="@string/auto_single_ecomm_item_rs_1200_188"
                 android:textColor="@color/colorThird"
                 android:textSize="16sp"
                 android:textStyle="bold" />

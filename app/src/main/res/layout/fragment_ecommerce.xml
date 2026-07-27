@@ -85,7 +85,7 @@ android:layout_marginVertical="7dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 android:layout_marginLeft="12dp"
-        android:text="ALL"
+        android:text="@string/auto_fragment_ecommerce_all_54"
         android:textColor="@color/fontColor"
 
 
@@ -98,7 +98,7 @@ android:layout_marginLeft="12dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:text="FERTILIZER"
+        android:text="@string/auto_fragment_ecommerce_fertilizer_55"
         android:textColor="@color/fontColor"
 
         />
@@ -108,7 +108,7 @@ android:layout_marginLeft="12dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:text="PESTISIDE"
+        android:text="@string/auto_fragment_ecommerce_pestiside_56"
         android:textColor="@color/fontColor"
 
         />
@@ -118,7 +118,7 @@ android:layout_marginLeft="12dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:text="MACHINE"
+        android:text="@string/auto_fragment_ecommerce_machine_57"
         android:textColor="@color/fontColor"
 
         />
@@ -128,7 +128,7 @@ android:layout_marginLeft="12dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
 
-        android:text="SEED"
+        android:text="@string/auto_fragment_ecommerce_seed_58"
         android:textColor="@color/fontColor"
 
         />

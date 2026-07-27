@@ -166,6 +166,14 @@ class SocialMediaPostsFragment : Fragment() {
                 uploadedAt = System.currentTimeMillis() - 80 * 60 * 60 * 1000L,
                 imageRes = R.drawable.method2,
                 imageAssetName = AgriAssetPaths.NEW_PLANTATION_WAY_POST
+            ),
+            OfflinePostItem(
+                name = "ගොවි උපකාරකයා",
+                title = "කාබනික පොහොර භාවිතය",
+                description = "ඔබේ භෝග සඳහා කාබනික පොහොර භාවිතා කිරීමෙන් පසෙහි සාරවත් බව වැඩි කර අස්වැන්න වර්ධනය කර ගත හැක.",
+                uploadedAt = System.currentTimeMillis() - 1 * 60 * 60 * 1000L,
+                imageRes = R.drawable.plant3,
+                imageAssetName = null
             )
         )
         val mergedPosts = LocalPostDraftStore.allDrafts() + staticPosts

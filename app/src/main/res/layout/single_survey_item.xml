@@ -27,7 +27,7 @@
                 android:id="@+id/surveyItemNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Survey #001"
+                android:text="@string/auto_fragment_survey_detail_survey_001_100"
                 android:textColor="@color/colorPrimary"
                 android:textSize="16sp"
                 android:textStyle="bold"
@@ -37,7 +37,7 @@
                 android:id="@+id/surveyItemSyncBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="✔ Synced"
+                android:text="@string/auto_single_survey_item_synced_196"
                 android:textColor="@color/colorPrimary"
                 android:textSize="12sp"
                 android:background="@drawable/modern_glass_card"
@@ -58,7 +58,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🌾 Rice"
+                android:text="@string/auto_single_survey_item_rice_197"
                 android:textColor="@color/fontColor"
                 android:textSize="14sp" />
 
@@ -67,7 +67,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📍 Colombo"
+                android:text="@string/auto_single_survey_item_colombo_198"
                 android:textColor="@color/fontColor"
                 android:textSize="14sp" />
         </LinearLayout>
@@ -85,7 +85,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="👤 Nimal"
+                android:text="@string/auto_single_survey_item_nimal_199"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="12sp" />
 
@@ -94,7 +94,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🕐 2:30 PM"
+                android:text="@string/auto_single_survey_item_2_30_pm_200"
                 android:textColor="@color/colorPrimaryDark"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -111,7 +111,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Sync"
+                android:text="@string/auto_single_survey_item_sync_201"
                 android:textSize="13sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/colorPrimary" />
@@ -122,7 +122,7 @@
                 android:layout_height="36dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="View"
+                android:text="@string/auto_single_survey_item_view_202"
                 android:textSize="13sp"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/colorPrimaryDark" />
@@ -131,7 +131,7 @@
                 android:id="@+id/surveyItemDeleteBtn"
                 android:layout_width="48dp"
                 android:layout_height="36dp"
-                android:text="✕"
+                android:text="@string/auto_fragment_survey_form_str_143_143"
                 android:textColor="@android:color/white"
                 android:backgroundTint="@color/colorThird" />
         </LinearLayout>

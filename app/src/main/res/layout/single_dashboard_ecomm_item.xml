@@ -51,7 +51,7 @@
                 android:maxLines="1"
                 android:paddingHorizontal="10dp"
                 android:layout_marginTop="7dp"
-                android:text="TVC Tractor"
+                android:text="@string/auto_fragment_dashboard_tvc_tractor_52"
                 android:textColor="@color/fontColor"
                 android:lineSpacingExtra="5dp"
                 android:textSize="17sp"
@@ -65,7 +65,7 @@
                 android:textSize="17sp"
                 android:id="@+id/itemPrice"
                 android:layout_marginBottom="7dp"
-                android:text="$994"
+                android:text="@string/auto_fragment_dashboard_994_53"
                 android:textStyle="bold"
                 android:textColor="@color/colorThird"
                 />
