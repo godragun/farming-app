@@ -11,4 +11,8 @@
     <string name="next_intro">Next</string>
     <string name="get_started_intro">Get Started</string>
     <string name="satellite_map_preview_description">Interactive satellite map: pan and zoom. Esri World Imagery.</string>
+    <string name="select_image">Select Image</string>
+    <string name="upload">Upload</string>
+    <string name="language_sinhala">සිංහල</string>
+    <string name="language_english">English</string>
 </resources>
