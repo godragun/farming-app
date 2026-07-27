@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.project.farmingapp.R
@@ -32,9 +33,13 @@ class SettingsFragment : Fragment() {
 
         val prefs = requireActivity().getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
         val isDark = prefs.getBoolean("darkModeEnabled", false)
+        val currentLang = prefs.getString("language", "en")
+
+        // Temporarily remove listener to avoid ANR loop
+        switchDarkMode.setOnCheckedChangeListener(null)
         switchDarkMode.isChecked = isDark
 
-        val currentLang = prefs.getString("language", "en")
+        switchLanguage.setOnCheckedChangeListener(null)
         switchLanguage.isChecked = currentLang == "si"
 
         switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
@@ -42,26 +47,15 @@ class SettingsFragment : Fragment() {
             AppCompatDelegate.setDefaultNightMode(
                 if (isChecked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
             )
-            // No manual recreate() here to avoid ANR. 
-            // AppCompatDelegate handles recreating the activity if needed.
         }
 
         switchLanguage.setOnCheckedChangeListener { _, isChecked ->
             val lang = if (isChecked) "si" else "en"
             prefs.edit().putString("language", lang).apply()
             
-            // Apply language
-            val locale = Locale(lang)
-            Locale.setDefault(locale)
-            val config = Configuration(resources.configuration)
-            config.setLocale(locale)
-            
-            requireActivity().baseContext.resources.updateConfiguration(
-                config,
-                requireActivity().baseContext.resources.displayMetrics
-            )
-            
-            requireActivity().recreate()
+            // Apply language using the modern AndroidX API
+            val localeList = LocaleListCompat.create(Locale(lang))
+            AppCompatDelegate.setApplicationLocales(localeList)
         }
     }
 }
