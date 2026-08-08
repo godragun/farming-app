@@ -78,7 +78,7 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 Local folder: `C:\Users\VICTUS\Desktop\farming app backend`  
 GitHub (private): https://github.com/godragun/farming-app-backend  
 
-A copy may still exist under `ai-backend/` in this Android repo for convenience — prefer the standalone backend repo for deployment.
+AI Python code lives **only** in that repo — not inside this Android project.
 
 | Module | Status |
 |--------|--------|
@@ -249,11 +249,10 @@ Farming-App/                    # Android Studio APK (this repo)
 │   ├── model/          # Repositories, WeatherApi, ai/AgriAiApi
 │   ├── supabase/       # Supabase Auth/DB/HTTP helpers
 │   └── utilities/      # AuthHelper, LeafletMapWebViewHelper, …
-├── ai-backend/         # Optional local copy — prefer standalone backend repo
 ├── supabase/           # schema.sql, policies.sql
 └── README.md
 
-# Separate private repo (hosting):
+# Separate private repo (AI hosting):
 # C:\Users\VICTUS\Desktop\farming app backend
 # → https://github.com/godragun/farming-app-backend
 ```
