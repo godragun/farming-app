@@ -14,8 +14,8 @@ object LocalPostDraftStore {
                 title = title,
                 description = description.ifBlank { "No description" },
                 uploadedAt = System.currentTimeMillis(),
-                imageRes = R.drawable.plant3,
-                imageAssetName = null
+                imageRes = R.drawable.disease,
+                imageAssetName = com.project.farmingapp.utilities.AgriAssetPaths.PLANTS_I_GREW_POST
             )
         )
     }
