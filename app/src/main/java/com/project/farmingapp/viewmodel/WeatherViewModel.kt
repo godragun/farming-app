@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.firestore.DocumentSnapshot
 import com.project.farmingapp.adapter.WeatherAdapter
 import com.project.farmingapp.model.WeatherApi
 import com.project.farmingapp.model.WeatherRepository

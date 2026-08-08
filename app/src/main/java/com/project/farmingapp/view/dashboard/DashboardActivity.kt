@@ -51,15 +51,14 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import com.project.farmingapp.R
 import com.project.farmingapp.adapter.CurrentWeatherAdapter
 import com.project.farmingapp.adapter.WeatherAdapter
 import com.project.farmingapp.databinding.ActivityDashboardBinding
 import com.project.farmingapp.utilities.AgriAssetPaths
 import com.project.farmingapp.utilities.AuthHelper
+import com.project.farmingapp.supabase.SupabaseAuth
+import com.project.farmingapp.supabase.SupabaseSession
 import com.project.farmingapp.model.WeatherApi
 import com.project.farmingapp.model.data.Weather
 import com.project.farmingapp.model.data.WeatherList
@@ -123,8 +122,6 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
     private lateinit var chatbotFab: FloatingActionButton
 
 
-    val firebaseFireStore = FirebaseFirestore.getInstance()
-    val firebaseAuth = FirebaseAuth.getInstance()
     var userName = ""
     var data: WeatherRootList? = null
     var firstTime: Boolean? = null
@@ -174,7 +171,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
          weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
 
         viewModel2 = ViewModelProvider(this)[UserProfilePostsViewModel::class.java]
-//        viewModel2.getAllPosts(firebaseAuth.currentUser!!.email.toString())
+//        viewModel2.getAllPosts(AuthHelper.requireEmail())
 
         // Avoid deprecated GoogleApiClient location APIs on main thread (ANR risk).
         // Dashboard uses FusedLocationProviderClient asynchronously instead.
@@ -192,7 +189,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             header.findViewById<TextView>(R.id.cityTextNavHeader).text = "City: "
             header.findViewById<TextView>(R.id.navBarUserPostCount).text = "Posts Count: 0"
         } else {
-            viewModel.getUserData(firebaseAuth.currentUser!!.email as String)
+            viewModel.getUserData(SupabaseSession.email ?: AuthHelper.requireEmail())
         }
 
         binding.navView.setNavigationItemSelectedListener(this)
@@ -281,7 +278,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             val city = it.get("city")
             userName = it.get("name")?.toString() ?: ""
 
-//            val allPosts = viewModel2.liveData3.value as ArrayList<DocumentSnapshot>
+//            val allPosts = viewModel2.liveData3.value as ArrayList<RemoteDocument>
 
             if(city == null){
                 something.findViewById<TextView>(R.id.cityTextNavHeader).text ="City: "
@@ -376,7 +373,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
                 builder.setTitle("Log Out")
                     .setMessage("Do you want to log out?")
                     .setPositiveButton("Yes") { dialogInterface, i ->
-                        firebaseAuth.signOut()
+                        SupabaseAuth.signOut(this@DashboardActivity)
                         AuthHelper.exitGuestMode(this@DashboardActivity)
                         Toast.makeText(this, "Logged Out", Toast.LENGTH_LONG).show()
                         Intent(this, LoginActivity::class.java).also {
@@ -639,7 +636,7 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
     // toggleThemeMode removed to fix ANR and use SettingsFragment instead
 
     /**
-     * Theme switches can recreate the Activity before FirebaseAuth finishes restoring session.
+     * Theme switches can recreate the Activity before session prefs are re-synced.
      * Do a short retry before redirecting to login, otherwise user appears "logged out".
      */
     private fun ensureSignedInOrRedirect() {

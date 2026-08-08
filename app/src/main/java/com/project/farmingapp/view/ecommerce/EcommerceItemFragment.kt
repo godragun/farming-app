@@ -16,12 +16,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import android.widget.ImageView
 import androidx.viewpager2.widget.ViewPager2
-import com.google.firebase.database.FirebaseDatabase
 import com.project.farmingapp.adapter.ProductImageAdapter
 import com.project.farmingapp.R
 import com.project.farmingapp.adapter.AttributesNormalAdapter
 import com.project.farmingapp.adapter.AttributesSelectionAdapter
-import com.project.farmingapp.model.data.CartItem
+import com.project.farmingapp.supabase.RemoteDocument
+import com.project.farmingapp.supabase.SupabaseDb
 import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.CellClickListener
 import com.project.farmingapp.databinding.FragmentEcommerceItemBinding
@@ -30,8 +30,10 @@ import com.project.farmingapp.utilities.formatLkr
 import com.project.farmingapp.utilities.parseAmount
 import com.project.farmingapp.utilities.pulseTapFeedback
 import com.project.farmingapp.viewmodel.EcommViewModel
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
 // TODO: Rename parameter arguments, choose names that match
@@ -50,11 +52,12 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
     private lateinit var viewmodel: EcommViewModel
     private var param2: String? = null
     private var selectionAttribute = mutableMapOf<String, Any>()
-    private var currentItemId: Any?= null
-    lateinit var realtimeDatabase: FirebaseDatabase
+    private var currentItemId: Any? = null
     val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
     private var _binding: FragmentEcommerceItemBinding? = null
     private val binding get() = _binding!!
+    private val executor = Executors.newSingleThreadExecutor()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -62,11 +65,6 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
             param2 = it.getString(ARG_PARAM2)
         }
         viewmodel = ViewModelProvider(requireActivity())[EcommViewModel::class.java]
-
-        realtimeDatabase = FirebaseDatabase.getInstance()
-
-
-
     }
 
     override fun onCreateView(
@@ -278,7 +276,7 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
     }
 
     private fun bindOnlineProduct(
-        specificData: com.google.firebase.firestore.DocumentSnapshot
+        specificData: RemoteDocument
     ) {
         currentItemId = specificData.id
 
@@ -434,8 +432,9 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
     private fun addItemToCart(itemId: String, quantity: Int) {
         val safeQuantity = quantity.coerceAtLeast(1)
         val currentDateTime = sdf.format(Date())
+        val timeMs = System.currentTimeMillis()
 
-        // Guest/demo and offline fallback: keep cart functional without Firebase writes.
+        // Guest/demo and offline fallback: keep cart functional without remote writes.
         if (AuthHelper.guestMode) {
             LocalCartStore.addOrUpdate(requireContext(), itemId, safeQuantity, currentDateTime)
             Toast.makeText(activity!!.applicationContext, "Item Added", Toast.LENGTH_SHORT).show()
@@ -446,26 +445,38 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
             return
         }
 
-        val realtimeRef = realtimeDatabase.getReference(AuthHelper.requireUid()).child("cart").child(itemId)
-        realtimeRef.setValue(CartItem(safeQuantity, currentDateTime))
-            .addOnSuccessListener {
-                Toast.makeText(activity!!.applicationContext, "Item Added", Toast.LENGTH_SHORT).show()
-                binding.progressEcommItem.visibility = View.GONE
-                binding.loadingText.visibility = View.GONE
-                binding.addToCart.isClickable = true
-                openCartScreen()
+        val uid = AuthHelper.requireUid()
+        executor.execute {
+            try {
+                val row = JSONObject()
+                    .put("uid", uid)
+                    .put("product_id", itemId)
+                    .put("quantity", safeQuantity)
+                    .put("time_ms", timeMs)
+                SupabaseDb.upsert("cart_items", row, onConflict = "uid,product_id")
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    Toast.makeText(activity!!.applicationContext, "Item Added", Toast.LENGTH_SHORT).show()
+                    binding.progressEcommItem.visibility = View.GONE
+                    binding.loadingText.visibility = View.GONE
+                    binding.addToCart.isClickable = true
+                    openCartScreen()
+                }
+            } catch (_: Exception) {
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    LocalCartStore.addOrUpdate(requireContext(), itemId, safeQuantity, currentDateTime)
+                    Toast.makeText(
+                        activity!!.applicationContext,
+                        "Saved to local cart (offline mode)",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    binding.progressEcommItem.visibility = View.GONE
+                    binding.loadingText.visibility = View.GONE
+                    binding.addToCart.isClickable = true
+                    openCartScreen()
+                }
             }
-            .addOnFailureListener {
-                LocalCartStore.addOrUpdate(requireContext(), itemId, safeQuantity, currentDateTime)
-                Toast.makeText(
-                    activity!!.applicationContext,
-                    "Saved to local cart (offline mode)",
-                    Toast.LENGTH_SHORT
-                ).show()
-                binding.progressEcommItem.visibility = View.GONE
-                binding.loadingText.visibility = View.GONE
-                binding.addToCart.isClickable = true
-                openCartScreen()
-            }
+        }
     }
 }

@@ -29,7 +29,7 @@
 
 An Android fieldwork application built for Sri Lankan **research assistants and data collectors**. It includes **satellite map overlays**, **GPS-based weather**, **offline-first field surveys** (photo + voice notes), agriculture articles, an input catalog/cost baseline module, and a field observation log.
 
-This repository is built to be **demo-friendly**: core UI keeps working even when Firebase or third‑party APIs are unavailable (offline products, offline articles, demo weather, guest mode).
+This repository is built to be **demo-friendly**: core UI keeps working even when Supabase or third‑party APIs are unavailable (offline products, offline articles, demo weather, guest mode).
 
 ---
 
@@ -76,11 +76,11 @@ The app is designed to work in Sri Lanka specifically — currency is LKR, the d
 | Language | Kotlin |
 | UI | XML layouts + ViewBinding / DataBinding |
 | Architecture | MVVM (ViewModel + LiveData) |
-| Cloud backend | Firebase Firestore |
+| Cloud backend | Supabase (PostgreSQL + PostgREST) |
 | Local database | Room (SQLite) |
-| Auth | Firebase Authentication (email + Google Sign-In) |
-| File Storage | Firebase Storage (profile/background images, post images) |
-| Media storage (survey uploads) | Supabase Storage (OkHttp upload helper) |
+| Auth | Supabase Auth (email + Google Sign-In via ID token) |
+| File Storage | Supabase Storage bucket `media` (profiles, posts, surveys) |
+| AI backend (planned) | Python FastAPI (disease / voice / suitability) |
 | Weather | OpenWeatherMap API via Retrofit |
 | Image loading | Glide, Picasso |
 | Build system | Gradle (Kotlin DSL) |
@@ -88,6 +88,17 @@ The app is designed to work in Sri Lanka specifically — currency is LKR, the d
 | Target SDK | API 34 |
 
 The app follows a single-Activity / multi-Fragment pattern. `DashboardActivity` is the main host and all screens (weather, e-commerce, community, etc.) are `Fragment`s swapped in and out of a single `frame_layout` container. Navigation state is preserved correctly across configuration changes (theme switches, rotations).
+
+### Backend: Supabase (not Firebase)
+
+Auth, database, and file storage now use **Supabase**:
+
+1. Run `supabase/schema.sql` in the Supabase SQL editor (creates `users`, `posts`, `products`, `article_fruits`, `surveys`, `cart_items`, `orders`, …).
+2. Ensure Storage bucket `media` exists and apply `supabase/policies.sql`.
+3. Android client code lives under `app/src/main/java/com/project/farmingapp/supabase/`.
+4. Guest demo login: any email + password `guest`.
+
+Google Sign-In still needs a Google OAuth web client id (`default_web_client_id`); the ID token is exchanged with Supabase Auth (not Firebase).
 
 ---
 
@@ -97,7 +108,7 @@ The app follows a single-Activity / multi-Fragment pattern. `DashboardActivity` 
 The home screen is the main hub. It shows:
 - A **live weather card** — current temperature, humidity, wind speed, and a weather icon pulled from OpenWeatherMap based on device GPS. Falls back to Colombo coordinates if location is unavailable.
 - A **satellite map preview** (Leaflet inside a `WebView`) that is reliable across devices. Tapping it opens the full-screen satellite experience in the APMC screen.
-- A **product grid** — 4 randomly selected products from the e-commerce catalog (or offline demo products if Firebase is unavailable).
+- A **product grid** — 4 randomly selected products from the e-commerce catalog (or offline demo products if Supabase is unavailable).
 - **Category shortcuts** to Agriculture Articles.
 - A **cart button** in the top corner for quick access to the cart.
 - A **floating chatbot button** (bottom-right) that opens the Agri Chatbot from any screen except the social feed and chatbot itself.
@@ -117,17 +128,17 @@ A full shopping flow:
 - **Cart** — list of selected items with quantities, totals in LKR, and a checkout button.
 - **Checkout / Payment** — pre-payment summary screen feeding into a Razorpay payment activity.
 - **My Orders** — history of placed orders.
-- When Firebase is unavailable, a built-in set of offline demo products is shown so the UI is always usable.
+- When Supabase is unavailable, a built-in set of offline demo products is shown so the UI is always usable.
 
 ### 4. Market Prices (APMC)
 Displays agricultural commodity market prices. Useful for research assistants when capturing **economic context** alongside field yields.
 
-In the article detail screen, each crop/article also shows a **Market price trend** line chart (MPAndroidChart). If the Firestore article document contains a `marketPrices: [..]` field, it will be used; otherwise a stable offline fallback series is shown.
+In the article detail screen, each crop/article also shows a **Market price trend** line chart (MPAndroidChart). If the Supabase `article_fruits` row contains a `market_prices` / `marketPrices` field, it will be used; otherwise a stable offline fallback series is shown.
 
 ### 5. Field Observation & Anomaly Log (Social Feed)
 A research-focused observation log:
 - **Post list** — scrollable list of community posts, each optionally with an image.
-- **Create post** — text and image posts. Images are uploaded to Firebase Storage before the post is saved to Firestore.
+- **Create post** — text and image posts. Images are uploaded to Supabase Storage before the post is saved to the Supabase `posts` table.
 - Posts are saved locally as drafts via `LocalPostDraftStore` so nothing is lost if the app is closed mid-composition.
 - User's own posts are visible on their profile and can be deleted from there.
 
@@ -135,7 +146,7 @@ A research-focused observation log:
 Educational content section:
 - **Article list** — overview of agriculture topics.
 - **Fruits / Crops sub-section** — crop-specific articles (e.g. rice, tea, coconut, vegetables).
-- Content sourced from Firestore.
+- Content sourced from the Supabase `article_fruits` table (with offline article fallbacks).
 - The article detail screen (`FruitsFragment`) includes a **Market price trend** chart and fixed layouts to avoid text overlap on smaller devices.
 
 ### 7. Field Classification Assistant
@@ -147,7 +158,7 @@ A lightweight, rule-based classification helper:
 
 ### 8. User Profile
 Every registered user has a profile page:
-- Profile photo and background cover image (uploaded to Firebase Storage).
+- Profile photo and background cover image (uploaded to Supabase Storage).
 - Display name, city, and a short bio — all editable inline.
 - Post count and a scrollable list of the user's own community posts.
 - Tap any of your own posts to view or delete them.
@@ -163,11 +174,11 @@ Three ways to get in:
 
 | Method | How it works |
 |---|---|
-| Email + Password | Standard Firebase Auth. Signup creates a Firestore user document. |
-| Google Sign-In | OAuth via Firebase + Google Sign-In SDK. |
-| Guest / Offline mode | Skips Firebase entirely. Uses a fixed demo identity (`harendrathennakoon@gmail.com`). All UI screens open normally. |
+| Email + Password | Supabase Auth. Signup creates a row in the `users` table. |
+| Google Sign-In | Google Sign-In SDK ID token exchanged with Supabase Auth. |
+| Guest / Offline mode | Password `guest` (or offline path). Uses a fixed demo identity (`harendrathennakoon@gmail.com`). All UI screens open normally. |
 
-Password reset is available from the login screen (sends a Firebase reset email).
+Password reset is available from the login screen (Supabase Auth recover email).
 
 The `AuthHelper` singleton manages the signed-in state across the app. It persists guest mode to SharedPreferences so the app survives restarts without asking you to log in again.
 
@@ -175,13 +186,13 @@ The `AuthHelper` singleton manages the signed-in state across the app. It persis
 
 ## Offline / Guest Mode
 
-The app is built to run even without a live Firebase connection:
+The app is built to run even without a live Supabase connection:
 
-- **Guest mode** — tap "Continue as Guest" on the login screen. All screens open. Firebase-dependent data (your real posts, orders, profile) won't load, but the layout and navigation are fully testable.
-- **Offline e-commerce** — if Firestore returns empty results, a hardcoded set of demo agricultural products is shown automatically. Product detail, cart, and checkout flows all work with these demo products.
+- **Guest mode** — use password `guest` on login. All screens open. Cloud-backed data (your real posts, orders, profile) may not sync, but the layout and navigation are fully testable.
+- **Offline e-commerce** — if Supabase returns empty results, a hardcoded set of demo agricultural products is shown automatically. Product detail, cart, and checkout flows all work with these demo products.
 - **Offline weather** — if the OpenWeatherMap API call fails, a demo weather dataset is displayed so the weather card and screen always show something.
 - **Draft posts** — community post drafts are saved locally so they survive app restarts.
-- **Cart persistence** — cart items are stored in `LocalCartStore` (SharedPreferences) so the cart survives app restarts without needing Firebase.
+- **Cart persistence** — cart items are stored in `LocalCartStore` (SharedPreferences) and/or Supabase `cart_items` when signed in.
 
 ---
 
@@ -198,7 +209,8 @@ Toggling the theme causes Android to recreate `DashboardActivity` to apply the n
 ### Requirements
 - Android Studio Hedgehog (2023.1) or newer
 - A physical device or emulator running **API 33 or 34** (API 36 emulators have known instability issues with this project)
-- A `google-services.json` file in `app/` — get this from your Firebase project console
+- A `google-services.json` / `default_web_client_id` — only needed for Google Sign-In (Google Cloud OAuth client)
+- Supabase project with schema from `supabase/schema.sql` and Storage policies from `supabase/policies.sql`
 
 ### Steps
 1. Clone or download this repository.
@@ -208,7 +220,7 @@ Toggling the theme causes Android to recreate `DashboardActivity` to apply the n
 5. Open **Device Manager**, create/start an emulator (API 33 or 34 recommended).
 6. Run the `app` configuration.
 
-> **No Firebase?** You can still run the app. On the login screen, tap "Continue as Guest" to enter offline/guest mode. All UI screens, offline products, demo weather data, and the chatbot will work without any Firebase setup.
+> **No Supabase setup?** You can still run the app. On the login screen, tap "Continue as Guest" to enter offline/guest mode. All UI screens, offline products, demo weather data, and the chatbot will work without configuring Supabase tables.
 
 ### Fixing a Stuck Emulator
 If you see `Timed out after 300 seconds waiting for emulator to come online`, run these from PowerShell inside the `scripts/` folder:
@@ -242,7 +254,7 @@ app/src/main/
 │   │   ├── AuthRepository.kt
 │   │   └── data/                        # Data classes (Weather, Orders, etc.)
 │   ├── utilities/                       # Helpers and extensions
-│   │   ├── AuthHelper.kt                # Singleton for auth state (guest + Firebase)
+│   │   ├── AuthHelper.kt                # Singleton for auth state (guest + Supabase)
 │   │   ├── LocalCartStore.kt            # SharedPreferences-backed cart persistence
 │   │   ├── MicroInteractions.kt         # Tap feedback animations
 │   │   └── ViewUtils.kt
@@ -280,9 +292,9 @@ app/src/main/
 
 | Service | Purpose | Notes |
 |---|---|---|
-| Firebase Authentication | User login (email + Google) | Required for real accounts; guest mode bypasses this |
-| Firebase Firestore | Products, posts, user data, orders, articles | App falls back to offline data if unavailable |
-| Firebase Storage | Profile photos, background images, post images | Only used when signed in as a real user |
+| Supabase Auth | User login (email + Google ID token) | Required for real accounts; guest mode bypasses this |
+| Supabase Database | Products, posts, users, surveys, cart, orders, articles | App falls back to offline data if unavailable |
+| Supabase Storage | Profile photos, posts, survey media (`media` bucket) | Used for uploads when signed in / syncing |
 | OpenWeatherMap | 5-day / 3-hour weather forecast | API key configured in the weather ViewModel; demo fallback if unavailable |
 | Google Maps (WebView) | Satellite map tile on home screen | Uses `google_maps_key` from strings |
 | Razorpay | Payment processing for orders | Runs in `RazorPayActivity` |
@@ -292,14 +304,14 @@ app/src/main/
 
 ## Acknowledgements & References
 
-This project was built by **[godragun](https://github.com/godragun)** as an academic project. During development, the following open-source GitHub repositories were studied for guidance on architecture patterns, Firebase integration, and UI structure. No code was directly copied — these projects served as learning references.
+This project was built by **[godragun](https://github.com/godragun)** as an academic project. During development, the following open-source GitHub repositories were studied for guidance on architecture patterns, Supabase integration, and UI structure. No code was directly copied — these projects served as learning references.
 
 | Repository | Author | What I learned from it |
 |---|---|---|
-| [farming-app (hetsuthar028)](https://github.com/hetsuthar028) | hetsuthar028 | MVVM structure, Firebase Firestore integration patterns, e-commerce flow |
+| [farming-app (hetsuthar028)](https://github.com/hetsuthar028) | hetsuthar028 | MVVM structure, Supabase Database integration patterns, e-commerce flow |
 | [farming-app (sirvi3014)](https://github.com/sirvi3014) | sirvi3014 | UI layout approaches, navigation drawer setup, weather API integration |
 
-All new features in this repository — the **Field Survey offline module** (Room database, MediaRecorder, FileProvider, Firestore sync), the **light mode crash fix**, the **chatbot FAB visibility logic**, and this documentation — were designed and implemented independently.
+All new features in this repository — the **Field Survey offline module** (Room database, MediaRecorder, FileProvider, Supabase sync), the **light mode crash fix**, the **chatbot FAB visibility logic**, and this documentation — were designed and implemented independently.
 
 ---
 
@@ -310,7 +322,7 @@ All new features in this repository — the **Field Survey offline module** (Roo
 - **First-run intro** — shown until `intro_schema_version` in `MyPrefs` matches `IntroActivity.INTRO_SCHEMA_VERSION`. To force the tour again, clear app data or remove/adjust that int (and optionally `firstTime`).
 - **Dashboard satellite preview** — **Leaflet** runs inside a `WebView` and loads Leaflet JS/CSS from local app assets (no CDN). Tile images are fetched via a `/tiles/…` proxy handled by `LeafletMapWebViewHelper` (OkHttp + caching) for consistent behavior across devices.
 - **OpenWeather JSON** — forecast `main.humidity`, `temp_min`, and `temp_max` are numeric in JSON; the Kotlin model must use numeric types so Gson can parse responses (see `WeatherMain.kt`).
-- **Google Sign-In** — requires a valid `google-services.json` and a correctly configured OAuth client ID in Firebase Console. Without it, Google Sign-In will fail at runtime (email login and guest mode will still work).
+- **Google Sign-In** — requires a valid `google-services.json` and a correctly configured OAuth client ID in Supabase Console. Without it, Google Sign-In will fail at runtime (email login and guest mode will still work).
 - **API 36 emulators** — known to be unstable with this project. Use API 33 or 34.
 - **Razorpay** — a valid Razorpay key must be configured for payment to complete. The pre-payment and cart flows work without it.
 
@@ -363,7 +375,7 @@ USER INTERACTION
       ↓  observes LiveData      ↑ calls functions
    VIEWMODEL
       ↓  requests data          ↑ returns data
-   MODEL (Repository → Firebase / Room / Retrofit)
+   MODEL (Repository → Supabase / Room / Retrofit)
 ```
 
 ### How It Works in This App — Concrete Example
@@ -404,9 +416,9 @@ This app uses **one Activity (`DashboardActivity`) as a host** and every screen 
 
 **Flow:**
 ```
-LoginActivity → FirebaseAuth.signInWithEmailAndPassword()
+LoginActivity → SupabaseAuth.signInWithEmailAndPassword()
                         OR
-             → GoogleSignIn → FirebaseAuth.signInWithCredential()
+             → GoogleSignIn → SupabaseAuth.signInWithCredential()
                         OR
              → "Guest" button → AuthHelper.enterGuestMode()
                         ↓
@@ -415,9 +427,9 @@ LoginActivity → FirebaseAuth.signInWithEmailAndPassword()
 
 - `AuthViewModel` holds the business logic (login, signup, Google sign-in).
 - `AuthHelper` is a Kotlin `object` (singleton) that holds the guest mode flag in memory AND in `SharedPreferences` so it survives app restarts.
-- On every screen that needs a user identity (social feed, profile, orders), the code calls `AuthHelper.requireEmail()` — it returns either the real Firebase email or `guest@offline.local`.
+- On every screen that needs a user identity (social feed, profile, orders), the code calls `AuthHelper.requireEmail()` — it returns either the real Supabase email or `guest@offline.local`.
 
-**Key point for examiner:** "I used a singleton `AuthHelper` class to centralise all authentication state so no Fragment needs to directly import Firebase Auth — it just asks `AuthHelper`."
+**Key point for examiner:** "I used a singleton `AuthHelper` class to centralise all authentication state so no Fragment needs to directly import Supabase Auth — it just asks `AuthHelper`."
 
 ---
 
@@ -446,7 +458,7 @@ WeatherFragment / DashboardFragment → UI updates
 
 **Flow:**
 ```
-Firestore collection "products"
+Supabase table "products"
         ↓ EcommViewModel.loadAllEcommItems()
         ↓ or getSpecificCategoryItems("fertilizer")
 EcommerceFragment → RecyclerView (EcommerceAdapter)
@@ -458,13 +470,13 @@ LocalCartStore (SharedPreferences) ← stored offline
 PrePaymentFragment → RazorPayActivity
 ```
 
-- Products are stored in **Firebase Firestore** and fetched as `DocumentSnapshot` objects.
-- If Firestore returns empty (no internet or no data), `OfflineEcommerceData` provides a hardcoded list of demo products so the shopping flow never breaks.
-- The cart is stored in **SharedPreferences** (`LocalCartStore`) — this means the cart persists even if the app is killed, with no Firebase needed.
-- Category filtering is done by querying Firestore with a `.whereEqualTo("type", category)` clause.
+- Products are stored in **Supabase Database** and fetched as `RemoteDocument` objects.
+- If Supabase returns empty (no internet or no data), `OfflineEcommerceData` provides a hardcoded list of demo products so the shopping flow never breaks.
+- The cart is stored in **SharedPreferences** (`LocalCartStore`) — this means the cart persists even if the app is killed, with no Supabase needed.
+- Category filtering is done by querying Supabase with a `.whereEqualTo("type", category)` clause.
 - Search filtering is done **client-side** — the full list is loaded and filtered in memory using Kotlin's `.filter { }` function.
 
-**Key point for examiner:** "I separated online and offline adapters — `EcommerceAdapter` for Firestore data and `OfflineEcommerceAdapter` for demo data — so both render identically to the user."
+**Key point for examiner:** "I separated online and offline adapters — `EcommerceAdapter` for Supabase data and `OfflineEcommerceAdapter` for demo data — so both render identically to the user."
 
 ---
 
@@ -489,14 +501,14 @@ SavedSurveysFragment → shows updated list
         ↓ user taps "Sync"
 FieldSurveyRepository.syncAll()
   → checks internet (ConnectivityManager)
-  → if online: Firestore.collection("field_surveys").set(doc)
+  → if online: Supabase.collection("field_surveys").set(doc)
   → marks isSynced = true in Room
 ```
 
 - **Room** is Android's official SQLite ORM (Object Relational Mapper). It maps a Kotlin data class (`FieldSurvey`) to a database table via the `@Entity` annotation.
 - **DAO (Data Access Object)** — `FieldSurveyDao` provides `@Insert`, `@Update`, `@Delete`, and `@Query` functions. Room generates all the SQL at compile time.
 - `getAllSurveys()` returns a `LiveData<List<FieldSurvey>>` — Room automatically re-queries the database whenever data changes and posts the new list to LiveData, so the UI updates without any manual refresh.
-- The `isSynced` boolean flag in the `FieldSurvey` entity tracks whether this record has been uploaded to Firestore.
+- The `isSynced` boolean flag in the `FieldSurvey` entity tracks whether this record has been uploaded to Supabase.
 - `syncAll()` only uploads records where `isSynced = false`, then marks them synced. If there is no internet, a `SyncResult.NoInternet` is returned and the data stays safe in Room.
 
 ---
@@ -506,17 +518,17 @@ FieldSurveyRepository.syncAll()
 ```
 SMCreatePostFragment
   → image picked from gallery (Intent.ACTION_PICK)
-  → FirebaseStorage.upload(image) → returns download URL
-  → Firestore.collection("posts").add({ text, imageUrl, email, timestamp })
+  → SupabaseStorage.upload(image) → returns download URL
+  → Supabase.collection("posts").add({ text, imageUrl, email, timestamp })
         ↓
 SocialMediaPostsFragment
-  → Firestore.collection("posts").get() → list of posts
+  → Supabase.collection("posts").get() → list of posts
   → SMPostListAdapter → RecyclerView
 ```
 
 - Post drafts (text only) are saved to `LocalPostDraftStore` (SharedPreferences) so if the user closes the app while writing, the draft is restored.
 - Image uploads happen asynchronously — a progress bar is shown during upload.
-- Each post is a Firestore document with fields: author email, text, image URL, timestamp.
+- Each post is a Supabase row with fields: author email, text, image URL, timestamp.
 
 ---
 
@@ -583,18 +595,18 @@ This app follows an **offline-first** strategy:
 3. **Sync when online** — when the user taps "Submit & Sync" or "Sync All", the app:
    - Checks internet via `ConnectivityManager.getNetworkCapabilities()`
    - If offline: returns `SyncResult.NoInternet` — user is informed, data stays safe
-   - If online: uploads each unsynced survey to Firestore, then marks `isSynced = true` in Room
+   - If online: uploads each unsynced survey to Supabase, then marks `isSynced = true` in Room
 
 ```
 No Internet?          Yes Internet?
      ↓                      ↓
-Show warning        Upload to Firestore
+Show warning        Upload to Supabase
 Keep in Room        Mark isSynced = true in Room
                     Update LiveData → UI reflects "Synced"
 ```
 
 ### Conflict Handling
-Each device generates surveys independently, so **local Room IDs are not safe across devices**. To prevent multi-device overwrites, every survey also has a globally unique `remoteId` (UUID) that is used as the Firestore document ID. This enables multiple devices to submit without overwriting each other.
+Each device generates surveys independently, so **local Room IDs are not safe across devices**. To prevent multi-device overwrites, every survey also has a globally unique `remoteId` (UUID) that is used as the Supabase row ID. This enables multiple devices to submit without overwriting each other.
 
 Repeated sync of the same local record is still idempotent: the same `remoteId` is reused.
 
@@ -659,7 +671,7 @@ The survey is stored locally in **Room** as a `FieldSurvey` row.
 
 1. Checks internet availability.
 2. Uploads media to **Supabase Storage** (if local paths exist and URLs are empty).
-3. Uploads the survey document to Firestore collection `field_surveys` using the survey’s **`remoteId`** as the document id.
+3. Uploads the survey document to Supabase table `field_surveys` using the survey’s **`remoteId`** as the document id.
 4. Marks the local record as `isSynced = true` and persists uploaded media URLs locally.
 
 This supports **multiple devices submitting surveys** without overwriting each other.
@@ -668,7 +680,7 @@ This supports **multiple devices submitting surveys** without overwriting each o
 
 | Feature | Sync Type | Why |
 |---|---|---|
-| Firestore data (products, posts) | Real-time (Firestore listener) | Data changes on the server need to show immediately |
+| Supabase data (products, posts) | Real-time (Supabase listener) | Data changes on the server need to show immediately |
 | Field surveys | On-demand (user taps "Sync") | Surveys are created offline; no need for real-time |
 | Weather | On-demand (every time the screen opens) | Weather changes over time but doesn't need real-time streaming |
 | Cart | Never synced | Cart is a local concern — only uploaded when an order is placed |
@@ -682,19 +694,19 @@ This supports **multiple devices submitting surveys** without overwriting each o
 - **Why over Java:** Null safety (`?` / `!!` operators), extension functions, coroutines (for async code), data classes (concise model definitions), `when` expressions.
 - **In this app:** Every file is Kotlin. Coroutines are used for all database operations in the Field Survey module.
 
-### Firebase Firestore
+### Supabase Database
 - A **NoSQL cloud database** that stores data as documents inside collections.
-- **Why:** Real-time sync, no backend server needed, scales automatically, integrates directly with Firebase Auth.
+- **Why:** Real-time sync, no backend server needed, scales automatically, integrates directly with Supabase Auth.
 - **In this app:** Used for products, posts, user profiles, orders, articles, and field survey sync.
 - **Document structure example:** `users/{email}` → `{ name, city, bio, profileImage, posts: [] }`
 
-### Firebase Authentication
+### Supabase Authentication
 - **Why:** Handles all security (password hashing, token management, OAuth) without building a backend.
 - **In this app:** Supports email/password and Google Sign-In. `AuthHelper` wraps it for clean access throughout the app.
 
-### Firebase Storage
+### Supabase Storage
 - Object storage for binary files (images, videos).
-- **Why:** Images uploaded by users (profile photos, post images) cannot go into Firestore (size limit). Storage provides a URL that Firestore can reference.
+- **Why:** Images uploaded by users (profile photos, post images) cannot go into Supabase (size limit). Storage provides a URL that Supabase can reference.
 
 ### Retrofit 2
 - HTTP client library for Android.
@@ -704,7 +716,7 @@ This supports **multiple devices submitting surveys** without overwriting each o
 ### Room (SQLite ORM)
 - Official Android persistence library that wraps SQLite.
 - **Why:** Type-safe database access with compile-time query validation, LiveData integration, coroutine support.
-- **In this app:** Field Survey module — stores all survey data locally before syncing to Firestore.
+- **In this app:** Field Survey module — stores all survey data locally before syncing to Supabase.
 
 ### LiveData
 - Lifecycle-aware observable data holder from Android Jetpack.
@@ -737,14 +749,14 @@ This supports **multiple devices submitting surveys** without overwriting each o
 
 ### Opening Statement (memorise this)
 
-> "This project is a **Comprehensive Data Collection & Environmental Auditing Suite** for field researchers and research assistants conducting fieldwork. The core design principle is **offline‑first reliability**: the system must remain operational in low‑connectivity environments, capture high‑fidelity evidence (structured forms + GPS + photo + audio), and synchronise to a central dataset when connectivity returns. Technically, it uses **MVVM** with Kotlin, **Room** for local persistence, and **Firebase (Auth + Firestore + Storage)** as the cloud backend, with Retrofit for environmental context feeds (weather). I’ll explain the key technical decisions and why each module contributes to research methodology and data integrity."
+> "This project is a **Comprehensive Data Collection & Environmental Auditing Suite** for field researchers and research assistants conducting fieldwork. The core design principle is **offline‑first reliability**: the system must remain operational in low‑connectivity environments, capture high‑fidelity evidence (structured forms + GPS + photo + audio), and synchronise to a central dataset when connectivity returns. Technically, it uses **MVVM** with Kotlin, **Room** for local persistence, and **Supabase (Auth + Supabase + Storage)** as the cloud backend, with Retrofit for environmental context feeds (weather). I’ll explain the key technical decisions and why each module contributes to research methodology and data integrity."
 
 ---
 
 ### Likely Examiner Questions and How to Answer Them
 
 **Q: Why did you use MVVM?**
-> "MVVM enforces a clear separation of concerns: the View (Activity/Fragment) renders UI, the ViewModel owns state and orchestrates workflows, and the Model/Repository layer abstracts data sources (Room, Firestore, Retrofit). This is important in field research because the UI must remain responsive while background work (I/O, uploads, sync) continues safely. ViewModels also survive configuration changes, so rotating the device or navigating between screens does not restart data collection flows or duplicate network calls."
+> "MVVM enforces a clear separation of concerns: the View (Activity/Fragment) renders UI, the ViewModel owns state and orchestrates workflows, and the Model/Repository layer abstracts data sources (Room, Supabase, Retrofit). This is important in field research because the UI must remain responsive while background work (I/O, uploads, sync) continues safely. ViewModels also survive configuration changes, so rotating the device or navigating between screens does not restart data collection flows or duplicate network calls."
 
 **Q: What is LiveData and why did you use it?**
 > "LiveData is a lifecycle‑aware observable data holder. The ViewModel exposes immutable LiveData streams, and Fragments observe them to update UI reactively. Lifecycle awareness matters in field contexts: if the app is backgrounded during a capture or sync, LiveData prevents updates from targeting a destroyed view, reducing crashes and preventing partial UI states. When the screen becomes active again, it immediately receives the most recent state."
@@ -754,7 +766,7 @@ This supports **multiple devices submitting surveys** without overwriting each o
 >
 > 1) **SharedPreferences** for lightweight state (authentication mode, UI settings, cached selections).
 > 2) **Room (SQLite)** for structured research records in the Field Survey module — each submission is committed locally first, including pointers to evidence files, then synchronised later.
-> 3) **Graceful degradation** for context feeds: if Firestore or the weather endpoint is unreachable, the UI continues with cached or fallback datasets so fieldwork is never blocked by connectivity."
+> 3) **Graceful degradation** for context feeds: if Supabase or the weather endpoint is unreachable, the UI continues with cached or fallback datasets so fieldwork is never blocked by connectivity."
 
 **Q: What is Room and how is it different from SharedPreferences?**
 > "SharedPreferences stores simple key‑value pairs (Booleans, Strings, Ints) and is not suitable for relational queries or structured datasets. Room is an ORM over SQLite that provides:
@@ -771,20 +783,20 @@ This supports **multiple devices submitting surveys** without overwriting each o
 >
 > - Each field submission is written to Room immediately with `isSynced = false` so the researcher never waits on the network.
 > - Evidence files (photo/audio) are captured locally and referenced by path.
-> - When connectivity is available, sync uploads media (Supabase Storage where configured) and writes a metadata document to Firestore, then marks the local record as synced.
-> - Multi‑device safety is handled by a stable, globally unique `remoteId` (UUID) used as the Firestore document id to prevent cross‑device overwrites.
+> - When connectivity is available, sync uploads media (Supabase Storage where configured) and writes a metadata document to Supabase, then marks the local record as synced.
+> - Multi‑device safety is handled by a stable, globally unique `remoteId` (UUID) used as the Supabase row id to prevent cross‑device overwrites.
 >
 > This guarantees that a research assistant can complete audits in remote locations and synchronise later without data loss."
 
-**Q: What is Firebase Firestore?**
-> "Firestore is a cloud NoSQL document database. It stores data in collections and documents (JSON‑like structures) and supports real‑time listeners. In this project it functions as the **central research dataset**:
+**Q: What is Supabase Database?**
+> "Supabase is a cloud NoSQL document database. It stores data in collections and documents (JSON‑like structures) and supports real‑time listeners. In this project it functions as the **central research dataset**:
 >
 > - Field survey submissions are synchronised as documents (linked to evidence URLs).
 > - Auxiliary datasets (catalog items, observation logs) are stored as documents for consistent querying and sharing across devices.
 > - User identity metadata supports provenance and accountability in a research workflow."
 
-**Q: Why did you choose Firebase over a custom backend?**
-> "Building a custom REST API backend requires a server, deployment, security setup, and maintenance. Firebase provides all of this out of the box — authentication, database, file storage, and real-time sync. For a prototype or academic project, this lets me focus on the Android app rather than backend infrastructure. In production, I could migrate to a custom backend gradually."
+**Q: Why did you choose a BaaS (Supabase) over a fully custom backend?**
+> "Building a custom REST API backend requires a server, deployment, security setup, and maintenance. Supabase provides Auth, Postgres, Storage, and REST APIs out of the box — authentication, database, file storage, and real-time sync. For a prototype or academic project, this lets me focus on the Android app rather than backend infrastructure. In production, I could migrate to a custom backend gradually."
 
 **Q: What is Retrofit?**
 > "Retrofit is an HTTP client library. I define typed API interfaces (e.g., `@GET("forecast")`) and Retrofit generates the client implementation. Responses are parsed into Kotlin data classes using Gson. In this suite, Retrofit provides environmental context (weather) that can be attached to field submissions to improve the analytical value of the dataset."
@@ -803,8 +815,8 @@ This supports **multiple devices submitting surveys** without overwriting each o
 **Q: How does authentication work?**
 > "There are three access modes:
 >
-> - **Email/password** via Firebase Auth
-> - **Google Sign‑In** via Firebase credentials
+> - **Email/password** via Supabase Auth
+> - **Google Sign‑In** via Supabase credentials
 > - **Guest mode** for offline demonstration or constrained deployments (controlled by `AuthHelper` and persisted in SharedPreferences)
 >
 > Identity is used for **data provenance**: every submission is attributable to a specific research assistant account (or a guest identity in demo mode), supporting accountability and audit trails."
@@ -813,7 +825,7 @@ This supports **multiple devices submitting surveys** without overwriting each o
 > "The Field Classification Assistant is an offline, rule‑based triage component. It standardises terminology and provides consistent classification guidance (e.g., symptom patterns, disease categories, recommended capture fields) before the research assistant logs a formal record. Implementation‑wise, it uses a keyword/rule matching pipeline (`when` logic) and stores lightweight conversational context in SharedPreferences to support follow‑ups. It is intentionally offline to remain available in remote field locations and to ensure consistent language across data collectors."
 
 **Q: Why does the suite include an “Agricultural Input Supply Catalog & Cost Estimator” (shopping/products module)?**
-> "Fieldwork often requires capturing **economic baselines** alongside biophysical observations. The input catalog module is repurposed as a **supply‑chain auditing instrument**: research assistants can document prevailing prices for fertilisers, pesticides, and machinery rentals in each district. This contextual metadata supports later analysis (e.g., whether input affordability correlates with observed plant health outcomes or yield estimates). Technically, the catalog is a structured dataset (Firestore when available; offline fallback data when not) rendered via RecyclerView adapters, allowing consistent data capture even under weak connectivity."
+> "Fieldwork often requires capturing **economic baselines** alongside biophysical observations. The input catalog module is repurposed as a **supply‑chain auditing instrument**: research assistants can document prevailing prices for fertilisers, pesticides, and machinery rentals in each district. This contextual metadata supports later analysis (e.g., whether input affordability correlates with observed plant health outcomes or yield estimates). Technically, the catalog is a structured dataset (Supabase when available; offline fallback data when not) rendered via RecyclerView adapters, allowing consistent data capture even under weak connectivity."
 
 **Q: Why include “Economic Context Auditing” (market prices / APMC module)?**
 > "Market dynamics can strongly influence local practices and the interpretation of yield and cost data. The APMC module provides an **economic reference layer** so investigators can cross‑reference field observations against prevailing commodity price signals. In research terms, this improves dataset interpretability by separating agronomic effects from economic incentives. The app treats this as a context feed rather than a consumer feature."
@@ -831,7 +843,7 @@ This supports **multiple devices submitting surveys** without overwriting each o
 > "In fieldwork, classification consistency matters. The articles provide a **standard reference baseline** for terminology, disease indicators, and process guidance so that multiple data collectors use the same language. This reduces inter‑rater variance and improves label quality before records are finalised in the Field Survey module. The article detail screen also includes a market‑trend visual to support context-aware interpretation."
 
 **Q: Why include user profiles in an academic data collection workflow?**
-> "User identity supports **data provenance and auditor accountability**. In a research context, each submission should be attributable to a verified research assistant to maintain chain‑of‑custody for evidence (photos/audio) and to support later audit/review. The suite uses Firebase Auth when available, and a controlled guest mode for demonstrations."
+> "User identity supports **data provenance and auditor accountability**. In a research context, each submission should be attributable to a verified research assistant to maintain chain‑of‑custody for evidence (photos/audio) and to support later audit/review. The suite uses Supabase Auth when available, and a controlled guest mode for demonstrations."
 
 **Q: The brief requires a field data collection app. How do you justify additional modules under Rule 7?**
 > "Each module is positioned as a **research‑value component**: it either improves data quality (classification assistant, reference content), improves interpretability (weather + market context), or improves operational reliability (offline fallbacks, observation log, geospatial verification). Features that did not clearly add research value were deliberately removed from the codebase to keep scope aligned with the assignment brief."
@@ -846,10 +858,10 @@ This supports **multiple devices submitting surveys** without overwriting each o
 1. **Offline-first is the core design decision** — not an afterthought.
 2. **MVVM keeps the code maintainable** — changing the UI never touches the data layer.
 3. **LiveData + ViewModel = no memory leaks, no null pointer crashes from stale views.**
-4. **Room + Firestore together** = best of both worlds: local speed + cloud sync.
+4. **Room + Supabase together** = best of both worlds: local speed + cloud sync.
 5. **Every feature has a fallback** — the app never shows a blank screen.
 6. **Sri Lanka context** — LKR currency, Colombo default location, crops like tea/rice/coconut show domain understanding.
-7. **Security** — FileProvider for camera, Firebase Auth tokens, no hardcoded credentials.
+7. **Security** — FileProvider for camera, Supabase Auth tokens, no hardcoded credentials.
 
 ---
 
@@ -857,15 +869,15 @@ This supports **multiple devices submitting surveys** without overwriting each o
 
 | Feature | Key Technology |
 |---|---|
-| Login / Signup | Firebase Authentication, AuthHelper singleton |
+| Login / Signup | Supabase Authentication, AuthHelper singleton |
 | Weather | Retrofit + OpenWeatherMap API, GPS via LocationManager |
-| E-Commerce | Firestore, OfflineEcommerceData fallback, SharedPreferences cart |
-| Community Feed | Firestore + Firebase Storage, LocalPostDraftStore |
-| Field Survey | Room (SQLite), MediaRecorder, FileProvider, Firestore sync |
+| E-Commerce | Supabase, OfflineEcommerceData fallback, SharedPreferences cart |
+| Community Feed | Supabase + Supabase Storage, LocalPostDraftStore |
+| Field Survey | Room (SQLite), MediaRecorder, FileProvider, Supabase sync |
 | Chatbot | Rule-based `when` expression, SharedPreferences for context |
-| Market Prices | Firestore |
-| Articles | Firestore |
-| User Profile | Firestore + Firebase Storage, Glide image loading |
+| Market Prices | Supabase |
+| Articles | Supabase |
+| User Profile | Supabase + Supabase Storage, Glide image loading |
 | Dark/Light Mode | SharedPreferences, AppCompatDelegate, FarmingApp Application class |
 | Navigation | Single Activity + Fragment back stack, custom slide animations |
 | Image loading | Glide (URL images), FileProvider (local camera images) |

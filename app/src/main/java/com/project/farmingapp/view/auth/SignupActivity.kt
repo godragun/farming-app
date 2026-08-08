@@ -1,23 +1,20 @@
 package com.project.farmingapp.view.auth
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.bumptech.glide.Glide
 import com.project.farmingapp.R
-import com.project.farmingapp.utilities.AgriAssetPaths
 import com.project.farmingapp.databinding.ActivitySignupBinding
+import com.project.farmingapp.supabase.SupabaseSession
+import com.project.farmingapp.utilities.AgriAssetPaths
 import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.hide
 import com.project.farmingapp.utilities.show
@@ -29,9 +26,9 @@ import com.project.farmingapp.viewmodel.AuthViewModel
 class SignupActivity : AppCompatActivity(), AuthListener {
 
     lateinit var googleSignInClient: GoogleSignInClient
-    val firebaseAuth = FirebaseAuth.getInstance()
     lateinit var viewModel: AuthViewModel
     private lateinit var binding: ActivitySignupBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AuthHelper.syncFromPrefs(this)
@@ -41,6 +38,13 @@ class SignupActivity : AppCompatActivity(), AuthListener {
         binding.authViewModel = viewModel
         viewModel.authListener = this
 
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+        viewModel.googleSignInClient = googleSignInClient
+
         Glide.with(this)
             .load(AgriAssetPaths.fileUri(AgriAssetPaths.LOGIN_SIGN_HERO))
             .placeholder(R.drawable.hero_banner_bg)
@@ -49,9 +53,7 @@ class SignupActivity : AppCompatActivity(), AuthListener {
             .into(binding.signupHeroBg)
 
         binding.loginRedirectTextSignup.setOnClickListener {
-            Intent(this, LoginActivity::class.java).also {
-                startActivity(it)
-            }
+            startActivity(Intent(this, LoginActivity::class.java))
         }
 
         binding.signGoogleBtnSignup.setOnClickListener {
@@ -65,17 +67,11 @@ class SignupActivity : AppCompatActivity(), AuthListener {
     }
 
     fun signIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
     companion object {
-        private const val TAG = "GoogleActivity"
         private const val RC_SIGN_IN = 9001
     }
 
@@ -88,18 +84,16 @@ class SignupActivity : AppCompatActivity(), AuthListener {
             binding.progressSignup.hide()
             if (it.toString() == "Success") {
                 toast("Account Created")
-                if (firebaseAuth.currentUser != null) {
+                if (SupabaseSession.isLoggedIn()) {
                     AuthHelper.exitGuestMode(this)
                 }
-                Intent(this, DashboardActivity::class.java).also {
-                    startActivity(it)
-                }
+                startActivity(Intent(this, DashboardActivity::class.java))
             }
         })
     }
 
     override fun onFailure(message: String) {
         binding.progressSignup.hide()
-        toast("Failure")
+        toast(message)
     }
 }

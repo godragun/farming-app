@@ -1,20 +1,19 @@
 package com.project.farmingapp.view.ecommerce
 
-import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import com.project.farmingapp.utilities.AuthHelper
-import com.google.firebase.database.FirebaseDatabase
-import com.project.farmingapp.R
 import com.project.farmingapp.databinding.ActivityRazorPayBinding
-import com.project.farmingapp.model.data.orders
+import com.project.farmingapp.supabase.SupabaseDb
+import com.project.farmingapp.utilities.AuthHelper
+import com.project.farmingapp.utilities.LocalOrderStore
 import com.project.farmingapp.utilities.formatLkr
 import com.project.farmingapp.utilities.parseAmount
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
+import java.util.concurrent.Executors
 
 class RazorPayActivity : AppCompatActivity() {
     val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
@@ -28,12 +27,12 @@ class RazorPayActivity : AppCompatActivity() {
     var pincode: String = ""
     var mobile: String = ""
     var currentDate = sdf.format(Date())
-    lateinit var realtimeDatabase: FirebaseDatabase
     var productId: String? = null
     var totalPrice = 0
     var itemCost: Int? = null
     var quantity: Int? = null
     var deliveryCost: Int? = null
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +40,6 @@ class RazorPayActivity : AppCompatActivity() {
         setContentView(binding.root)
         postId = UUID.randomUUID()
 
-        //val totalCost=intent.getStringExtra("tp")
         productId = intent.getStringExtra("productId") ?: ""
         itemCost = parseAmount(intent.getStringExtra("itemCost").orEmpty())
         quantity = intent.getStringExtra("quantity")?.toIntOrNull() ?: 1
@@ -55,8 +53,7 @@ class RazorPayActivity : AppCompatActivity() {
         Log.d("tp", itemCost.toString())
         Log.d("tp", quantity.toString())
         Log.d("tp", deliveryCost.toString())
-        // Toast.makeText(this,abc,Toast.LENGTH_LONG).show()
-//Log.d("tp",abc.toString())
+
         binding.orderNowBtn.setOnClickListener {
             name = binding.fullNamePrePay.text.toString()
             locality = binding.localityPrePay.text.toString()
@@ -72,12 +69,7 @@ class RazorPayActivity : AppCompatActivity() {
                 mobile.isNullOrEmpty()
             ) {
                 Toast.makeText(this, "Please Add all Fields", Toast.LENGTH_LONG).show()
-            }
-
-            //add inputfield validation
-
-            else {
-                // Razorpay SDK removed in this build; place the order directly.
+            } else {
                 placeOrder()
             }
         }
@@ -87,12 +79,6 @@ class RazorPayActivity : AppCompatActivity() {
     }
 
     private fun placeOrder() {
-        realtimeDatabase = FirebaseDatabase.getInstance()
-
-        val orderRef =
-            realtimeDatabase.getReference(AuthHelper.requireUid()).child("orders")
-                .child("${postId}")
-
         var date1 = Date()
         val calendar = Calendar.getInstance()
         calendar.time = date1
@@ -101,29 +87,60 @@ class RazorPayActivity : AppCompatActivity() {
         val displayDateFormat = SimpleDateFormat("dd/MM/yyyy")
         calendar.add(Calendar.DATE, randomDay)
         date1 = calendar.time
+        val deliveryStatus = "Arriving By: " + displayDateFormat.format(date1)
 
-        orderRef.setValue(
-            orders(
-                name,
-                locality,
-                city,
-                state,
-                pincode,
-                mobile,
-                currentDate,
-                productId!!,
-                itemCost!!,
-                quantity!!,
-                deliveryCost!!,
-                "Arriving By: " + displayDateFormat.format(date1)
-            )
-        ).addOnCompleteListener {
-            Toast.makeText(this, "Order placed", Toast.LENGTH_LONG).show()
+        val orderFields = linkedMapOf<String, Any?>(
+            "name" to name,
+            "locality" to locality,
+            "city" to city,
+            "state" to state,
+            "pincode" to pincode,
+            "mobile" to mobile,
+            "time" to currentDate,
+            "productId" to productId,
+            "itemCost" to itemCost,
+            "quantity" to quantity,
+            "deliveryCost" to deliveryCost,
+            "deliveryStatus" to deliveryStatus
+        )
+
+        if (AuthHelper.guestMode) {
+            LocalOrderStore.add(this, postId.toString(), orderFields)
+            Toast.makeText(this, "Order placed (offline)", Toast.LENGTH_LONG).show()
             finish()
-        }.addOnFailureListener {
-            Toast.makeText(this, "Order failed. Please try again.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val uid = AuthHelper.requireUid()
+        val totalCost = (itemCost ?: 0) * (quantity ?: 1) + (deliveryCost ?: 0)
+        val address = "$locality, $city, $state - $pincode"
+        val raw = JSONObject()
+        orderFields.forEach { (k, v) -> raw.put(k, v ?: JSONObject.NULL) }
+
+        executor.execute {
+            try {
+                val row = JSONObject()
+                    .put("uid", uid)
+                    .put("product_id", productId)
+                    .put("quantity", quantity)
+                    .put("cost", totalCost.toString())
+                    .put("status", deliveryStatus)
+                    .put("address", address)
+                    .put("phone", mobile)
+                    .put("time_ms", System.currentTimeMillis())
+                    .put("raw", raw)
+                SupabaseDb.insert("orders", row)
+                runOnUiThread {
+                    Toast.makeText(this, "Order placed", Toast.LENGTH_LONG).show()
+                    finish()
+                }
+            } catch (_: Exception) {
+                LocalOrderStore.add(this, postId.toString(), orderFields)
+                runOnUiThread {
+                    Toast.makeText(this, "Order saved offline.", Toast.LENGTH_LONG).show()
+                    finish()
+                }
+            }
         }
     }
-
-
 }

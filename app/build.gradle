@@ -104,14 +104,6 @@ dependencies {
     implementation "androidx.room:room-ktx:2.6.1"
     kapt "androidx.room:room-compiler:2.6.1"
 
-    // Firebase (via BoM)
-    // Keep on a BoM that doesn't require Kotlin 2.1 metadata (for AGP 8.2.x compatibility).
-    implementation platform("com.google.firebase:firebase-bom:32.7.4")
-    implementation "com.google.firebase:firebase-auth-ktx"
-    implementation "com.google.firebase:firebase-firestore-ktx"
-    implementation "com.google.firebase:firebase-storage-ktx"
-    implementation "com.google.firebase:firebase-database-ktx"
-
     // Images
     implementation "com.squareup.picasso:picasso:2.8"
     implementation "com.github.bumptech.glide:glide:4.16.0"

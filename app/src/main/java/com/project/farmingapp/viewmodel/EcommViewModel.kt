@@ -1,95 +1,71 @@
 package com.project.farmingapp.viewmodel
 
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.project.farmingapp.adapter.EcommerceAdapter
+import com.project.farmingapp.supabase.RemoteDocument
+import com.project.farmingapp.supabase.SupabaseDb
+import java.util.concurrent.Executors
 
 class EcommViewModel : ViewModel() {
-    private var firebaseAuth: FirebaseAuth? = null
-    private var firebaseFireStore: FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    var ecommLiveData = MutableLiveData<List<DocumentSnapshot>>()
-    var specificCategoryItems = MutableLiveData<List<DocumentSnapshot>>()
-    var specificItem = MutableLiveData<DocumentSnapshot>()
-    fun loadAllEcommItems(): MutableLiveData<List<DocumentSnapshot>> {
+    private val executor = Executors.newSingleThreadExecutor()
 
-        firebaseAuth = FirebaseAuth.getInstance()
-        firebaseFireStore = FirebaseFirestore.getInstance()
+    var ecommLiveData = MutableLiveData<List<RemoteDocument>>()
+    var specificCategoryItems = MutableLiveData<List<RemoteDocument>>()
+    var specificItem = MutableLiveData<RemoteDocument>()
 
-        firebaseFireStore!!.collection("products").get()
-            .addOnSuccessListener {
-                ecommLiveData.value = it.documents
-                if (it.documents.isNotEmpty()) {
-                    Log.d("ecommviewmodel", it.documents[0].getString("title").toString())
-                }
-                Log.d("ecommviewmodel", it.documents.toString())
-
+    fun loadAllEcommItems(): MutableLiveData<List<RemoteDocument>> {
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select("products")
+                ecommLiveData.postValue(docs)
+            } catch (e: Exception) {
+                Log.d("ecommviewmodel", e.message ?: "Unknown error")
+                ecommLiveData.postValue(emptyList())
             }
-            .addOnFailureListener {
-                Log.d("ecommviewmodel", it.message ?: "Unknown error")
-                ecommLiveData.value = emptyList()
-            }
+        }
         return ecommLiveData
     }
 
     fun loadSpecificTypeEcomItem(itemType: String) {
-        firebaseFireStore = FirebaseFirestore.getInstance()
-
-        firebaseFireStore!!.collection("products")
-            .whereEqualTo("type", itemType)
-            .get()
-            .addOnSuccessListener {
-                ecommLiveData.value = it.documents
-                if (it.documents.isNotEmpty()) {
-                    Log.d("ecommviewmodel", it.documents[0].getString("title").toString())
-                }
-                Log.d("ecommviewmodel", it.documents.toString())
-
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select("products", SupabaseDb.eq("type", itemType))
+                ecommLiveData.postValue(docs)
+            } catch (e: Exception) {
+                Log.d("ecommviewmodel", e.message ?: "Unknown error")
+                ecommLiveData.postValue(emptyList())
             }
-            .addOnFailureListener {
-                Log.d("ecommviewmodel", it.message ?: "Unknown error")
-                ecommLiveData.value = emptyList()
-            }
-
+        }
     }
 
-    fun getSpecificCategoryItems(itemType: String): MutableLiveData<List<DocumentSnapshot>> {
-        firebaseFireStore.collection("products")
-            .whereEqualTo("type", itemType)
-            .get()
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    specificCategoryItems.value = it.result!!.documents
-                    Log.d("EcommViewModel", it.result!!.documents.toString())
-                }
+    fun getSpecificCategoryItems(itemType: String): MutableLiveData<List<RemoteDocument>> {
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select("products", SupabaseDb.eq("type", itemType))
+                specificCategoryItems.postValue(docs)
+            } catch (e: Exception) {
+                Log.e("EcommViewModel", "Error Loading Specific Category Items", e)
+                specificCategoryItems.postValue(emptyList())
             }
-            .addOnFailureListener {
-                Log.e("EcommViewModel", "Error Loading Specific Category Items")
-                specificCategoryItems.value = emptyList()
-            }
+        }
         return specificCategoryItems
     }
 
-    fun getSpecificItem(itemID: String): MutableLiveData<DocumentSnapshot> {
-        firebaseFireStore.collection("products")
-            .document(itemID)
-            .get()
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    Log.d("EcommViewModel", it.result!!.data.toString())
-                    specificItem.value = it.result
+    fun getSpecificItem(itemID: String): MutableLiveData<RemoteDocument> {
+        executor.execute {
+            try {
+                val doc = SupabaseDb.selectOne("products", SupabaseDb.eq("id", itemID))
+                if (doc != null) {
+                    specificItem.postValue(doc)
                 } else {
                     Log.e("EcommViewModel", "Failed Getting Data")
                 }
-            }.addOnFailureListener {
-                Log.e("EcommViewModel", "Failed Getting Data")
+            } catch (e: Exception) {
+                Log.e("EcommViewModel", "Failed Getting Data", e)
             }
+        }
         return specificItem
     }
 }

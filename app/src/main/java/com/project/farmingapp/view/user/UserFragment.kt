@@ -26,24 +26,23 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.Continuation
-import com.google.android.gms.tasks.Task
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import com.project.farmingapp.model.SupabaseUploader
 import java.util.UUID
 import com.project.farmingapp.R
 import com.project.farmingapp.adapter.PostListUserProfileAdapter
 import com.project.farmingapp.databinding.FragmentUserBinding
+import com.project.farmingapp.supabase.FieldAlias
+import com.project.farmingapp.supabase.SupabaseDb
 import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.CellClickListener
-import com.project.farmingapp.viewmodel.ArticleViewModel
 import com.project.farmingapp.viewmodel.UserDataViewModel
 import com.project.farmingapp.viewmodel.UserProfilePostsViewModel
 import kotlin.collections.ArrayList
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.Executors
+import org.json.JSONObject
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -67,9 +66,9 @@ class UserFragment : Fragment(), CellClickListener {
     private var bitmap: Bitmap? = null
     private var uploadProfOrBack: Int? = null
 
-    val firebaseFirestore = FirebaseFirestore.getInstance()
     private var _binding: FragmentUserBinding? = null
     private val binding get() = _binding!!
+    private val executor = Executors.newSingleThreadExecutor()
   
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -370,25 +369,35 @@ class UserFragment : Fragment(), CellClickListener {
 
     private fun uploadUserPhotos(uri: String, postID: UUID) {
         val field = if (uploadProfOrBack == 0) "profileImage" else "backImage"
-        firebaseFirestore.collection("users").document(AuthHelper.requireEmail())
-            .update(field, uri)
-            .addOnSuccessListener {
-                Toast.makeText(activity?.applicationContext, "Profile updated", Toast.LENGTH_SHORT).show()
-                binding.uploadProgressBarProfile.visibility = View.GONE
-                binding.uploadBackProgressProfile.visibility = View.GONE
-                binding.imageEdit.visibility = View.VISIBLE
-                binding.imageChecked.visibility = View.GONE
-                if (uploadProfOrBack == 0) binding.userImageUserFrag.setImageBitmap(bitmap)
-                else binding.userBackgroundImage.setImageBitmap(bitmap)
-                userDataViewModel.getUserData(AuthHelper.requireEmail())
+        val email = AuthHelper.requireEmail()
+        executor.execute {
+            try {
+                val snake = FieldAlias.toSnakeRow(mapOf(field to uri))
+                val patch = JSONObject()
+                snake.forEach { (k, v) -> patch.put(k, v ?: JSONObject.NULL) }
+                SupabaseDb.update("users", SupabaseDb.eq("email", email), patch)
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    Toast.makeText(activity?.applicationContext, "Profile updated", Toast.LENGTH_SHORT).show()
+                    binding.uploadProgressBarProfile.visibility = View.GONE
+                    binding.uploadBackProgressProfile.visibility = View.GONE
+                    binding.imageEdit.visibility = View.VISIBLE
+                    binding.imageChecked.visibility = View.GONE
+                    if (uploadProfOrBack == 0) binding.userImageUserFrag.setImageBitmap(bitmap)
+                    else binding.userBackgroundImage.setImageBitmap(bitmap)
+                    userDataViewModel.getUserData(email)
+                }
+            } catch (_: Exception) {
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    binding.uploadProgressBarProfile.visibility = View.GONE
+                    binding.uploadBackProgressProfile.visibility = View.GONE
+                    binding.uploadProfilePictureImage.visibility = View.VISIBLE
+                    binding.uploadUserBackgroundImage.visibility = View.VISIBLE
+                    Toast.makeText(activity?.applicationContext, "Failed to save profile", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener {
-                binding.uploadProgressBarProfile.visibility = View.GONE
-                binding.uploadBackProgressProfile.visibility = View.GONE
-                binding.uploadProfilePictureImage.visibility = View.VISIBLE
-                binding.uploadUserBackgroundImage.visibility = View.VISIBLE
-                Toast.makeText(activity?.applicationContext, "Failed to save profile", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
 

@@ -4,16 +4,16 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import androidx.lifecycle.LiveData
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.project.farmingapp.model.data.FieldSurvey
 import com.project.farmingapp.model.db.FieldSurveyDatabase
+import com.project.farmingapp.supabase.FieldAlias
+import com.project.farmingapp.supabase.SupabaseDb
 import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.ImageCompressor
 import com.project.farmingapp.utilities.LogUtil
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.util.UUID
 
@@ -21,7 +21,6 @@ class FieldSurveyRepository(context: Context) {
 
     private val appContext = context.applicationContext
     private val dao = FieldSurveyDatabase.getInstance(context).fieldSurveyDao()
-    private val firestore = FirebaseFirestore.getInstance()
 
     val allSurveys: LiveData<List<FieldSurvey>> = dao.getAllSurveys()
     val unsyncedCount: LiveData<Int> = dao.getUnsyncedCount()
@@ -35,13 +34,8 @@ class FieldSurveyRepository(context: Context) {
     suspend fun getSurveyById(id: Int): FieldSurvey? = dao.getSurveyById(id)
 
     /**
-     * Sync all pending surveys to Firebase Firestore and Storage.
-     * CRITICAL IMPROVEMENTS:
-     * 1. Each survey saved as SEPARATE Firestore document (not overwrite)
-     * 2. Images uploaded with UNIQUE names (timestamp + UUID)
-     * 3. Comprehensive error handling and logging
-     * 4. Network connectivity check before attempting sync
-     * 5. Proper callback to update UI on success/failure
+     * Sync all pending surveys to Supabase (Storage + Database).
+     * Media goes to Storage bucket `media`; rows go to table `surveys`.
      */
     suspend fun syncAll(context: Context): SyncResult = withContext(Dispatchers.IO) {
         try {
@@ -91,8 +85,6 @@ class FieldSurveyRepository(context: Context) {
                         audioUrl = uploadAudioToSupabase(uid, survey)
                     }
                     
-                    // 3. Save to Firestore as a NEW document (not overwrite)
-                    // Key: Use remoteId as document ID to prevent cross-device overwrites
                     val doc = mapOf(
                         "uid" to uid,
                         "remoteId" to survey.remoteId,
@@ -111,18 +103,11 @@ class FieldSurveyRepository(context: Context) {
                         "savedAt" to survey.savedAt,
                         "syncedAt" to System.currentTimeMillis()
                     )
-                    
-                    // Scalable structure: users/{uid}/surveys/{remoteId}
-                    // Each survey is a unique document, never overwrites
-                    // Save ONLY URLs to Firebase (Firestore). If Supabase upload failed, we never reach here.
-                    firestore.collection("users")
-                        .document(uid)
-                        .collection("surveys")
-                        .document(survey.remoteId)
-                        .set(doc, SetOptions.merge())
-                        .await()
-                    
-                    LogUtil.syncDebug("Successfully uploaded survey to Firestore: ${survey.farmerName}")
+                    val snake = FieldAlias.toSnakeRow(doc)
+                    val row = JSONObject()
+                    snake.forEach { (k, v) -> row.put(k, v ?: JSONObject.NULL) }
+                    SupabaseDb.upsert("surveys", row, onConflict = "remote_id")
+                    LogUtil.syncDebug("Successfully uploaded survey to Supabase: ${survey.farmerName}")
                     
                     // 4. Update local record: mark synced, store media URLs
                     dao.update(

@@ -1,10 +1,11 @@
 package com.project.farmingapp.utilities
 
 import android.content.Context
-import com.google.firebase.auth.FirebaseAuth
+import com.project.farmingapp.supabase.SupabaseSession
 
 /**
- * Offline / demo mode: email login skips Firebase; [guestMode] supplies stable id/email for UI.
+ * Offline / demo mode: guest mode supplies a stable id/email for UI when no Supabase session.
+ * Real sessions come from [SupabaseSession].
  */
 object AuthHelper {
 
@@ -20,7 +21,9 @@ object AuthHelper {
         private set
 
     fun syncFromPrefs(context: Context) {
-        guestMode = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_GUEST, false)
+        guestMode = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getBoolean(KEY_GUEST, false)
+        SupabaseSession.syncFromPrefs(context)
     }
 
     fun enterGuestMode(context: Context) {
@@ -40,19 +43,17 @@ object AuthHelper {
     }
 
     fun isSignedIn(): Boolean =
-        guestMode || FirebaseAuth.getInstance().currentUser != null
+        guestMode || SupabaseSession.isLoggedIn()
 
     fun requireEmail(): String =
         if (guestMode) GUEST_EMAIL
-        else FirebaseAuth.getInstance().currentUser?.email
-            ?: error("Not signed in")
+        else SupabaseSession.email ?: error("Not signed in")
 
     fun requireUid(): String =
         if (guestMode) GUEST_UID
-        else FirebaseAuth.getInstance().currentUser?.uid
-            ?: error("Not signed in")
+        else SupabaseSession.userId ?: error("Not signed in")
 
     fun currentDisplayName(): String? =
         if (guestMode) GUEST_NAME
-        else FirebaseAuth.getInstance().currentUser?.displayName
+        else SupabaseSession.displayName
 }

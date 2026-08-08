@@ -1,5 +1,7 @@
 package com.project.farmingapp.model
 
+import com.project.farmingapp.supabase.SupabaseConfig
+import com.project.farmingapp.supabase.SupabaseSession
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
@@ -18,15 +20,9 @@ import kotlin.coroutines.resumeWithException
 
 /**
  * Uploads files to Supabase Storage and returns a public URL.
- * Bucket `media` must exist and allow uploads with the anon key (or be public).
+ * Bucket must exist and allow uploads with the anon key (or be public).
  */
 object SupabaseUploader {
-
-    private const val SUPABASE_URL =
-        "YOUR_SUPABASE_URL"
-    private const val SUPABASE_ANON_KEY =
-        "YOUR_SUPABASE_ANON_KEY"
-    private const val BUCKET = "media"
 
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -63,8 +59,9 @@ object SupabaseUploader {
             UUID.randomUUID().toString().replace("-", ""),
             if (safeOriginal.contains('.')) safeOriginal else "$safeOriginal.$ext"
         )
-        val uploadUrl = "$SUPABASE_URL/storage/v1/object/$BUCKET/$objectPath"
-        val publicUrl = "$SUPABASE_URL/storage/v1/object/public/$BUCKET/$objectPath"
+        val uploadUrl = "${SupabaseConfig.URL}/storage/v1/object/${SupabaseConfig.MEDIA_BUCKET}/$objectPath"
+        val publicUrl = "${SupabaseConfig.URL}/storage/v1/object/public/${SupabaseConfig.MEDIA_BUCKET}/$objectPath"
+        val bearer = SupabaseSession.bearerToken()
 
         val mediaType = mimeType.toMediaTypeOrNull()
         val body = file.asRequestBody(mediaType)
@@ -72,8 +69,8 @@ object SupabaseUploader {
         val request = Request.Builder()
             .url(uploadUrl)
             .post(body)
-            .addHeader("apikey", SUPABASE_ANON_KEY)
-            .addHeader("Authorization", "Bearer $SUPABASE_ANON_KEY")
+            .addHeader("apikey", SupabaseConfig.ANON_KEY)
+            .addHeader("Authorization", "Bearer $bearer")
             .addHeader("x-upsert", "true")
             .addHeader("Content-Type", mimeType)
             .build()

@@ -13,38 +13,31 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.lifecycle.lifecycleScope
 import com.project.farmingapp.R
-import com.project.farmingapp.model.SupabaseUploader
-import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.databinding.FragmentSMCreatePostBinding
+import com.project.farmingapp.model.SupabaseUploader
+import com.project.farmingapp.supabase.FieldAlias
+import com.project.farmingapp.supabase.SupabaseDb
+import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.pulseTapFeedback
 import com.project.farmingapp.viewmodel.UserDataViewModel
-import com.project.farmingapp.viewmodel.UserProfilePostsViewModel
-import java.io.IOException
-import java.io.File
-import java.io.FileOutputStream
-import java.util.*
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.UUID
+import java.util.concurrent.Executors
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [SMCreatePostFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class SMCreatePostFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
     private val PICK_IMAGE_REQUEST = 71
@@ -52,11 +45,11 @@ class SMCreatePostFragment : Fragment() {
     private var postID: UUID? = null
     private var bitmap: Bitmap? = null
     lateinit var socialMediaPostsFragment: SocialMediaPostsFragment
-    lateinit var userDataViewModel : UserDataViewModel
-    val db = FirebaseFirestore.getInstance()
+    lateinit var userDataViewModel: UserDataViewModel
     val data2 = HashMap<String, Any>()
     private var _binding: FragmentSMCreatePostBinding? = null
     private val binding get() = _binding!!
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +63,7 @@ class SMCreatePostFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentSMCreatePostBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -81,15 +74,6 @@ class SMCreatePostFragment : Fragment() {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SMCreatePostFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             SMCreatePostFragment().apply {
@@ -123,15 +107,20 @@ class SMCreatePostFragment : Fragment() {
 
         val displayName = AuthHelper.currentDisplayName()
         if (displayName.isNullOrBlank()) {
-            db.collection("users").document(AuthHelper.requireEmail())
-                .get()
-                .addOnCompleteListener {
-                    val data = it.result
-                    data2["name"] = data!!.getString("name").toString()
-                    Log.d("Google User", data!!.getString("name") ?: "")
+            executor.execute {
+                try {
+                    val email = AuthHelper.requireEmail()
+                    val user = SupabaseDb.selectOne("users", SupabaseDb.eq("email", email), idKey = "email")
+                    val name = user?.getString("name").orEmpty()
+                    if (name.isNotBlank()) {
+                        data2["name"] = name
+                    }
+                    Log.d("Google User", name)
+                } catch (_: Exception) {
                 }
+            }
         } else {
-            data2["name"] = displayName.toString()
+            data2["name"] = displayName
             Log.d("Normal User", displayName)
         }
 
@@ -141,19 +130,11 @@ class SMCreatePostFragment : Fragment() {
             val descText = binding.descPostSM.text.toString().trim()
 
             if (titleText.isEmpty()) {
-                Toast.makeText(
-                    requireContext(),
-                    "Please enter title",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Please enter title", Toast.LENGTH_SHORT).show()
             } else {
                 if (AuthHelper.guestMode) {
                     LocalPostDraftStore.addDraft(titleText, descText)
-                    Toast.makeText(
-                        requireContext(),
-                        "Post saved in offline mode.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Post saved in offline mode.", Toast.LENGTH_SHORT).show()
                     openPostsList()
                     return@setOnClickListener
                 }
@@ -173,22 +154,17 @@ class SMCreatePostFragment : Fragment() {
             filePath = data.data
             binding.uploadImagePreview.setImageURI(filePath)
             try {
-                val lastIndex = filePath.toString().length - 1
-                val type =
-                    filePath.toString().slice((filePath.toString().lastIndexOf(".") + 1)..lastIndex)
-
-                Log.d("File Type", filePath.toString())
-
-                if (filePath.toString().contains("png") || filePath.toString().contains("jpg") || filePath.toString().contains("jpeg") || filePath.toString().contains("image") || filePath.toString().contains("images")){
+                val pathStr = filePath.toString()
+                if (pathStr.contains("png") || pathStr.contains("jpg") || pathStr.contains("jpeg")
+                    || pathStr.contains("image") || pathStr.contains("images")
+                ) {
                     data2["uploadType"] = "image"
-                } else if(filePath.toString().contains("videos") || filePath.toString().contains("video") || filePath.toString().contains("mp4")){
+                } else if (pathStr.contains("videos") || pathStr.contains("video") || pathStr.contains("mp4")) {
                     data2["uploadType"] = "video"
                 }
 
                 Log.d("File Type 3", data2["uploadType"].toString())
-                bitmap = MediaStore.Images.Media.getBitmap(activity!!.contentResolver, filePath)
-
-//                uploadImage().setImageBitmap(bitmap)
+                bitmap = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, filePath)
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -249,74 +225,65 @@ class SMCreatePostFragment : Fragment() {
         return out
     }
 
-    private fun addUploadRecordWithTextToDb() {
-        addUploadRecordWithImageToDb(null, null)
-    }
-
     private fun addUploadRecordWithImageToDb(uri: String?, postID: UUID?) {
-
         if (!uri.isNullOrEmpty()) {
-            data2["imageUrl"] = uri.toString()
+            data2["imageUrl"] = uri
             data2["imageID"] = postID.toString()
-
         }
 
-        val data3 = HashMap<String, Any>()
         val postTimeStamp = System.currentTimeMillis()
-
         data2["userID"] = AuthHelper.requireEmail()
         data2["timeStamp"] = postTimeStamp
         data2["title"] = binding.postTitleSM.text.toString()
         data2["description"] = binding.descPostSM.text.toString()
 
+        executor.execute {
+            try {
+                val snake = FieldAlias.toSnakeRow(data2.mapValues { it.value as Any? })
+                val row = JSONObject()
+                snake.forEach { (k, v) ->
+                    when (v) {
+                        null -> row.put(k, JSONObject.NULL)
+                        is List<*> -> row.put(k, JSONArray(v))
+                        else -> row.put(k, v)
+                    }
+                }
+                val inserted = SupabaseDb.insert("posts", row)
+                val postRecordID = inserted?.id.orEmpty()
+                if (postRecordID.isBlank()) throw IllegalStateException("Missing post id")
 
-        db.collection("posts")
-            .add(data2)
-            .addOnSuccessListener { documentReference ->
-
-                val data = HashMap<String, Any>()
-                val posts = arrayListOf<String>()
-                val postRecordID = documentReference.id.toString()
-
+                val email = AuthHelper.requireEmail()
+                val user = SupabaseDb.selectOne("users", SupabaseDb.eq("email", email), idKey = "email")
+                val posts = (user?.getList<String>("posts") ?: emptyList()).toMutableList()
                 posts.add(postRecordID)
-                data["posts"] = posts
-
-                db.collection("users")
-                    .document(AuthHelper.requireEmail())
-                    .update("posts", FieldValue.arrayUnion(postRecordID))
-                    .addOnSuccessListener { documentReference ->
-                        Toast.makeText(
-                            requireContext(),
-                            "Post Created",
-                            Toast.LENGTH_LONG
-                        ).show()
-
-                        binding.progressCreatePost.visibility = View.GONE
-                        binding.progressTitle.visibility = View.GONE
-                        userDataViewModel.getUserData(AuthHelper.requireEmail())
-                        openPostsList()
-                    }
-                    .addOnFailureListener { e ->
-                        LocalPostDraftStore.addDraft(
-                            binding.postTitleSM.text.toString().trim(),
-                            binding.descPostSM.text.toString().trim()
-                        )
-                        Toast.makeText(requireContext(), "Post saved offline.", Toast.LENGTH_LONG).show()
-                        binding.progressCreatePost.visibility = View.GONE
-                        binding.progressTitle.visibility = View.GONE
-                        openPostsList()
-                    }
-            }
-            .addOnFailureListener { e ->
-                LocalPostDraftStore.addDraft(
-                    binding.postTitleSM.text.toString().trim(),
-                    binding.descPostSM.text.toString().trim()
+                SupabaseDb.update(
+                    "users",
+                    SupabaseDb.eq("email", email),
+                    JSONObject().put("posts", JSONArray(posts))
                 )
-                Toast.makeText(requireContext(), "Post saved offline.", Toast.LENGTH_LONG).show()
-                binding.progressCreatePost.visibility = View.GONE
-                binding.progressTitle.visibility = View.GONE
-                openPostsList()
+
+                activity?.runOnUiThread {
+                    if (!isAdded) return@runOnUiThread
+                    Toast.makeText(requireContext(), "Post Created", Toast.LENGTH_LONG).show()
+                    binding.progressCreatePost.visibility = View.GONE
+                    binding.progressTitle.visibility = View.GONE
+                    userDataViewModel.getUserData(email)
+                    openPostsList()
+                }
+            } catch (e: Exception) {
+                activity?.runOnUiThread {
+                    if (!isAdded) return@runOnUiThread
+                    LocalPostDraftStore.addDraft(
+                        binding.postTitleSM.text.toString().trim(),
+                        binding.descPostSM.text.toString().trim()
+                    )
+                    Toast.makeText(requireContext(), "Post saved offline.", Toast.LENGTH_LONG).show()
+                    binding.progressCreatePost.visibility = View.GONE
+                    binding.progressTitle.visibility = View.GONE
+                    openPostsList()
+                }
             }
+        }
     }
 
     private fun openPostsList() {

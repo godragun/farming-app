@@ -5,84 +5,63 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.project.farmingapp.R
-import com.project.farmingapp.view.user.UserFragment
+import com.project.farmingapp.supabase.RemoteDocument
+import com.project.farmingapp.supabase.SupabaseDb
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.concurrent.Executors
 
 class UserDataViewModel : ViewModel() {
 
-    var userliveData = MutableLiveData<DocumentSnapshot>()
+    private val executor = Executors.newSingleThreadExecutor()
+    var userliveData = MutableLiveData<RemoteDocument>()
 
     fun getUserData(userId: String) {
-        val firebaseFireStore = FirebaseFirestore.getInstance()
-
-        firebaseFireStore.collection("users").document(userId)
-            .get()
-            .addOnCompleteListener {
-                userliveData.value = it.result
+        executor.execute {
+            try {
+                // Profiles are keyed by email in the Android app.
+                val doc = SupabaseDb.selectOne("users", SupabaseDb.eq("email", userId), idKey = "email")
+                    ?: SupabaseDb.selectOne("users", SupabaseDb.eq("id", userId))
+                if (doc != null) {
+                    userliveData.postValue(doc)
+                }
+            } catch (e: Exception) {
+                Log.e("UserDataViewModel", "Failed to load user", e)
             }
+        }
     }
 
     fun updateUserField(context: Context, userID: String, about: String?, city: String?) {
-
-        if (about !=null) {
-            val firebaseFireStore = FirebaseFirestore.getInstance()
-            firebaseFireStore.collection("users").document("${userID}")
-                .update(
-                    mapOf(
-                        "about" to about
-                    )
-                )
-                .addOnSuccessListener {
-                    Log.d("UserDataViewModel", "User About Data Updated")
+        executor.execute {
+            try {
+                val patch = JSONObject()
+                if (about != null) patch.put("about", about)
+                if (city != null) patch.put("city", city)
+                if (patch.length() > 0) {
+                    SupabaseDb.update("users", SupabaseDb.eq("email", userID), patch)
                     getUserData(userID)
                 }
-                .addOnFailureListener {
-                    Log.d("UserDataViewModel", "Failed to Update About User Data")
-                    Toast.makeText(context, "Failed to Update About. Try Again!", Toast.LENGTH_SHORT).show()
-                }
-        }
-
-        if (city !=null) {
-            val firebaseFireStore = FirebaseFirestore.getInstance()
-            firebaseFireStore.collection("users").document("${userID}")
-                .update(
-                    mapOf(
-                        "city" to city
-                    )
-                )
-                .addOnSuccessListener {
-                    Log.d("UserDataViewModel", "User City Data Updated")
-                    getUserData(userID)
-                }
-                .addOnFailureListener {
-                    Log.d("UserDataViewModel", "Failed to Update City User Data")
-                    Toast.makeText(context, "Failed to Update City Try Again!", Toast.LENGTH_SHORT).show()
-                }
+            } catch (e: Exception) {
+                Log.d("UserDataViewModel", "Failed to Update User Data")
+            }
         }
         Toast.makeText(context, "Profile Updated", Toast.LENGTH_SHORT).show()
     }
 
-    fun deleteUserPost(userId: String, postId: String){
-        val firebaseFirestore = FirebaseFirestore.getInstance()
-
-        firebaseFirestore.collection("posts").document(postId)
-            .delete()
-            .addOnSuccessListener {
-                Log.d("User Data View Model", "Post Deleted")
-                firebaseFirestore.collection("users").document(userId).update("posts", FieldValue.arrayRemove("${postId}"))
-                    .addOnSuccessListener {
-                        Log.d("UserDataViewModel", "Successfully Deleted User Doc Post")
-                        getUserData(userId)
-                    }
-                    .addOnFailureListener{
-                        Log.e("UserDataViewModel", "Failed to delete post from User Doc")
-                    }
-            }
-            .addOnFailureListener {
+    fun deleteUserPost(userId: String, postId: String) {
+        executor.execute {
+            try {
+                SupabaseDb.delete("posts", SupabaseDb.eq("id", postId))
+                val user = SupabaseDb.selectOne("users", SupabaseDb.eq("email", userId), idKey = "email")
+                val posts = (user?.getList<String>("posts") ?: emptyList()).toMutableList()
+                posts.remove(postId)
+                val patch = JSONObject().put("posts", JSONArray(posts))
+                SupabaseDb.update("users", SupabaseDb.eq("email", userId), patch)
+                getUserData(userId)
+                Log.d("UserDataViewModel", "Post Deleted")
+            } catch (e: Exception) {
                 Log.d("User Data View Model", "Failed to delete post")
             }
+        }
     }
 }

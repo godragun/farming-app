@@ -9,39 +9,28 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.project.farmingapp.utilities.AuthHelper
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.firestore.FirebaseFirestore
 import com.project.farmingapp.R
 import com.project.farmingapp.adapter.MyOrdersAdapter
 import com.project.farmingapp.databinding.FragmentMyOrdersBinding
+import com.project.farmingapp.supabase.SupabaseDb
+import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.CartItemBuy
 import com.project.farmingapp.utilities.CellClickListener
+import com.project.farmingapp.utilities.LocalOrderStore
+import java.util.concurrent.Executors
 import kotlin.collections.HashMap
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [MyOrdersFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-    lateinit var firebaseDatabase: FirebaseDatabase
-    lateinit var firebaseFirestore: FirebaseFirestore
 
-    var orders = HashMap<String, Object>()
+    var orders = HashMap<String, Any>()
     private var _binding: FragmentMyOrdersBinding? = null
     private val binding get() = _binding!!
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,15 +38,12 @@ class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
-        firebaseDatabase = FirebaseDatabase.getInstance()
-        firebaseFirestore = FirebaseFirestore.getInstance()
-
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentMyOrdersBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -68,15 +54,6 @@ class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MyOrdersFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             MyOrdersFragment().apply {
@@ -89,33 +66,83 @@ class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val orderRef = firebaseDatabase.getReference(AuthHelper.requireUid()).child("orders")
-
         (activity as AppCompatActivity).supportActionBar?.title = "My Orders"
 
-        val orderListener = object : ValueEventListener{
-            override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
-            }
+        if (AuthHelper.guestMode) {
+            @Suppress("UNCHECKED_CAST")
+            orders = LocalOrderStore.getAll(requireContext()) as HashMap<String, Any>
+            bindOrders()
+            return
+        }
 
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if(snapshot.exists()){
-                    orders = snapshot.value as HashMap<String, Object>
-                    var myOrdersAdapter = MyOrdersAdapter(this@MyOrdersFragment, orders, this@MyOrdersFragment, this@MyOrdersFragment)
-                    binding.myOrderRecycler.adapter = myOrdersAdapter
-                    binding.myOrderRecycler.layoutManager = LinearLayoutManager(activity!!.applicationContext)
+        val uid = AuthHelper.requireUid()
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select(
+                    "orders",
+                    "${SupabaseDb.eq("uid", uid)}&${SupabaseDb.order("time_ms", ascending = false)}"
+                )
+                val map = HashMap<String, Any>()
+                for (doc in docs) {
+                    @Suppress("UNCHECKED_CAST")
+                    val raw = doc.get("raw") as? Map<String, Any>
+                    if (raw != null) {
+                        map[doc.id] = HashMap(raw)
+                    } else {
+                        map[doc.id] = hashMapOf<String, Any>(
+                            "productId" to (doc.getString("productId") ?: doc.getString("product_id").orEmpty()),
+                            "quantity" to (doc.getLong("quantity") ?: 1),
+                            "itemCost" to (doc.get("cost")?.toString()?.toIntOrNull() ?: 0),
+                            "deliveryCost" to 0,
+                            "deliveryStatus" to (doc.getString("status").orEmpty()),
+                            "pincode" to "",
+                            "time" to (doc.get("time")?.toString() ?: doc.get("time_ms")?.toString().orEmpty()),
+                            "name" to "",
+                            "locality" to "",
+                            "city" to "",
+                            "state" to "",
+                            "mobile" to (doc.getString("phone").orEmpty())
+                        )
+                    }
+                }
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    if (map.isEmpty()) {
+                        @Suppress("UNCHECKED_CAST")
+                        orders = LocalOrderStore.getAll(requireContext()) as HashMap<String, Any>
+                    } else {
+                        orders = map
+                    }
+                    bindOrders()
+                }
+            } catch (_: Exception) {
+                activity?.runOnUiThread {
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    @Suppress("UNCHECKED_CAST")
+                    orders = LocalOrderStore.getAll(requireContext()) as HashMap<String, Any>
+                    bindOrders()
                 }
             }
         }
+    }
 
-        orderRef.addValueEventListener(orderListener)
-
+    private fun bindOrders() {
+        if (orders.isEmpty()) return
+        @Suppress("UNCHECKED_CAST")
+        val adapterOrders = orders as HashMap<String, Object>
+        val myOrdersAdapter = MyOrdersAdapter(
+            this@MyOrdersFragment,
+            adapterOrders,
+            this@MyOrdersFragment,
+            this@MyOrdersFragment
+        )
+        binding.myOrderRecycler.adapter = myOrdersAdapter
+        binding.myOrderRecycler.layoutManager = LinearLayoutManager(activity!!.applicationContext)
     }
 
     override fun onCellClickListener(name: String) {
         val ecommerceItemFragment = EcommerceItemFragment()
-        val transaction = activity!!.supportFragmentManager
+        activity!!.supportFragmentManager
             .beginTransaction()
             .replace(R.id.frame_layout, ecommerceItemFragment, name)
             .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)

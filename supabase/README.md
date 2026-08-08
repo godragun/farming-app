@@ -1,56 +1,83 @@
-# Supabase setup for the `media` bucket
+# Supabase setup for Agri Lanka
 
-This folder configures the Storage policies required by the Android upload feature
-(`MainActivity` + `SupabaseUploadHelper`).
+This folder configures **Supabase Database + Storage** used by the Android app.
 
-## What it does
+## Project
 
-- Enables RLS on `storage.objects` (already default).
-- Adds an **INSERT** policy so the `anon` key can upload into the `media` bucket.
-- Adds a **SELECT** policy so reads/listing in the `media` bucket work.
+- Project URL: `https://nkjzjbjkcpcbefkypvdl.supabase.co`
+- Client config (anon key only): `app/.../supabase/SupabaseConfig.kt`
+- Do **not** put the service-role key in the Android app.
 
-## Option A: SQL Editor (no terminal, fastest)
+## 1) Apply database schema
 
-1. Open: Supabase Dashboard → **SQL** → **New query**.
-2. Paste the contents of `policies.sql`.
-3. Click **Run**.
-4. Verify in Storage → Policies → `media` bucket: two policies should now appear.
+1. Open Supabase Dashboard → **SQL** → **New query**
+2. Paste `schema.sql`
+3. Click **Run**
+
+Creates tables:
+
+| Table | Purpose |
+|---|---|
+| `users` | Profiles (linked to Supabase Auth) |
+| `posts` | Community / field observation posts |
+| `products` | E-commerce catalog |
+| `article_fruits` | Agriculture articles |
+| `surveys` | Field survey sync targets |
+| `cart_items` | Shopping cart |
+| `orders` | Order history |
+| `uploaded_images` | Demo upload records |
+| `ai_disease_results` | Future AI Crop Doctor results |
+
+Prototype RLS policies are permissive (`using (true)`). Tighten before production.
+
+## 2) Storage bucket `media`
+
+1. Create a public (or authenticated) Storage bucket named **`media`** if it does not exist.
+2. Apply `policies.sql` (anon insert/select for prototype uploads).
+
+## Option A: SQL Editor (fastest)
+
+1. SQL → New query → paste `policies.sql` → Run.
+2. Verify Storage → Policies → `media` bucket.
 
 ## Option B: Terminal via `psql`
 
-1. Install `psql` once:
-   ```powershell
-   winget install -e --id PostgreSQL.PostgreSQL.17
-   ```
-   (or use Chocolatey: `choco install postgresql`)
+```powershell
+$env:SUPABASE_DB_URL = "postgresql://postgres.[ref]:[PASSWORD]@aws-0-....pooler.supabase.com:6543/postgres"
+./apply-policies.ps1
+```
 
-2. In Supabase Dashboard → **Project Settings → Database → Connection string (URI)**.
-   Copy the URI (it contains your DB password). Do NOT paste it into chat or commit it.
+## Option C: Supabase CLI
 
-3. In PowerShell (same shell where you'll run the script):
-   ```powershell
-   $env:SUPABASE_DB_URL = "postgresql://postgres.[ref]:[PASSWORD]@aws-0-....pooler.supabase.com:6543/postgres"
-   ```
-
-4. Run:
-   ```powershell
-   ./apply-policies.ps1
-   ```
-
-5. On success, the script prints the two created policies.
-
-## Option C: Supabase CLI (repeatable migrations)
-
-If you already use `supabase` CLI:
 ```powershell
 supabase login
 supabase link --project-ref nkjzjbjkcpcbefkypvdl
+supabase db execute --file supabase/schema.sql
 supabase db execute --file supabase/policies.sql
 ```
 
+## Android client modules
+
+| File | Role |
+|---|---|
+| `SupabaseConfig.kt` | URL + anon key |
+| `SupabaseSession.kt` | Persisted auth tokens |
+| `SupabaseAuth.kt` | Signup / login / Google / reset |
+| `SupabaseDb.kt` | PostgREST CRUD |
+| `SupabaseHttp.kt` | OkHttp helpers |
+| `RemoteDocument.kt` | UI-friendly row wrapper |
+| `SupabaseUploader.kt` | Storage uploads |
+
+## Auth notes
+
+- Email/password uses Supabase Auth (`/auth/v1`).
+- Google Sign-In: enable **Google** provider in Supabase Auth and exchange the Google ID token.
+- Offline demo: login password `guest` enters guest mode without a cloud session.
+
 ## After applying
 
-- The Android app should be able to upload to `https://nkjzjbjkcpcbefkypvdl.supabase.co/storage/v1/object/media/...`
-  using only the anon key.
-- If you later want to restrict uploads to logged-in users, change `to anon` to
-  `to authenticated` in `policies.sql` and re-run it.
+The app can:
+
+- Sign users in via Supabase Auth
+- Read/write catalog, posts, surveys, cart, orders
+- Upload media to `https://nkjzjbjkcpcbefkypvdl.supabase.co/storage/v1/object/media/...`

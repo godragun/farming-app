@@ -8,6 +8,9 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 
+import com.project.farmingapp.supabase.SupabaseConfig;
+import com.project.farmingapp.supabase.SupabaseSession;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,10 +33,6 @@ public class SupabaseUploadHelper {
         void onSuccess(@NonNull String publicUrl);
         void onError(@NonNull String error);
     }
-
-    private static final String SUPABASE_URL = "https://nkjzjbjkcpcbefkypvdl.supabase.co";
-    private static final String SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ranpqYmprY3BjYmVma3lwdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODMzMDQsImV4cCI6MjA5MjM1OTMwNH0.yI46mLkjTM9Qs3etBoJSCqCDjPRMuibUlvDSabFiG5w";
-    private static final String BUCKET_NAME = "media";
 
     private final OkHttpClient okHttpClient;
     private final ExecutorService executorService;
@@ -61,15 +60,16 @@ public class SupabaseUploadHelper {
                     UUID.randomUUID().toString().replace("-", ""),
                     extension
             );
-            String uploadUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + fileName;
+            String uploadUrl = SupabaseConfig.URL + "/storage/v1/object/" + SupabaseConfig.MEDIA_BUCKET + "/" + fileName;
             MediaType mediaType = MediaType.parse(resolveMimeType(context.getContentResolver(), imageUri));
             RequestBody requestBody = RequestBody.create(fileBytes, mediaType);
+            String bearer = SupabaseSession.INSTANCE.bearerToken();
 
             Request request = new Request.Builder()
                     .url(uploadUrl)
                     .post(requestBody)
-                    .addHeader("apikey", SUPABASE_ANON_KEY)
-                    .addHeader("Authorization", "Bearer " + SUPABASE_ANON_KEY)
+                    .addHeader("apikey", SupabaseConfig.ANON_KEY)
+                    .addHeader("Authorization", "Bearer " + bearer)
                     .addHeader("x-upsert", "false")
                     .build();
 
@@ -87,7 +87,8 @@ public class SupabaseUploadHelper {
                             callback.onError("Upload failed (" + response.code() + "): " + body);
                             return;
                         }
-                        String publicUrl = SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + fileName;
+                        String publicUrl = SupabaseConfig.URL + "/storage/v1/object/public/"
+                                + SupabaseConfig.MEDIA_BUCKET + "/" + fileName;
                         callback.onSuccess(publicUrl);
                     }
                 }

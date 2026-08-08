@@ -37,8 +37,8 @@ class EcommerceFragment : Fragment(), CellClickListener {
     private var chipGroup: ChipGroup? = null
     private var recycler: androidx.recyclerview.widget.RecyclerView? = null
     private var searchInput: EditText? = null
-    private var allOnlineItems = listOf<com.google.firebase.firestore.DocumentSnapshot>()
-    private var categoryOnlineItems = listOf<com.google.firebase.firestore.DocumentSnapshot>()
+    private var allOnlineItems = listOf<com.project.farmingapp.supabase.RemoteDocument>()
+    private var categoryOnlineItems = listOf<com.project.farmingapp.supabase.RemoteDocument>()
     private var offlineCategoryItems = listOf<OfflineEcommerceItem>()
     private var currentMode: String = "online_all"
     private var currentQuery: String = ""

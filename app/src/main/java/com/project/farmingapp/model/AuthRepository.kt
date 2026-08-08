@@ -1,113 +1,70 @@
 package com.project.farmingapp.model
 
-import android.util.Log
-import android.widget.Toast
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
+import com.project.farmingapp.supabase.SupabaseAuth
 import java.io.Serializable
+import java.util.concurrent.Executors
 
+/**
+ * Authentication via Supabase Auth (replaces Firebase Auth + Firestore user docs).
+ */
 class AuthRepository {
 
-    lateinit var googleSignInClient: GoogleSignInClient
-    val firebaseAuth = FirebaseAuth.getInstance()
-    lateinit var firebaseDb: FirebaseFirestore
-    val data = MutableLiveData<String>()
+    private val executor = Executors.newSingleThreadExecutor()
+
     fun signInWithEmail(
+        context: Context,
         email: String,
         password: String,
         otherData: HashMap<String, Serializable?>
     ): LiveData<String> {
-
-        firebaseDb = FirebaseFirestore.getInstance()
-
-        val data2 = MutableLiveData<String>()
-        firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
-            if (it.isSuccessful) {
-                firebaseDb!!.collection("users").document("${email}")
-                    .set(otherData, SetOptions.merge())
-                    .addOnSuccessListener {
-                        data.value = "Success"
-                    }
-                    .addOnFailureListener { Exception ->
-                        {
-                            data.value = "Failure"
-                        }
-                    }
-
-            } else if (it.isCanceled) {
-                data.value = "Failure"
-            }
-        }.addOnFailureListener {
-            Log.d("AuthRepo", it.message ?: "Unknown error")
-            data.value = it.message ?: "Unknown error"
+        val data = MutableLiveData<String>()
+        executor.execute {
+            val result = SupabaseAuth.signUpWithEmail(
+                context = context.applicationContext,
+                email = email,
+                password = password,
+                profile = otherData.mapValues { it.value }
+            )
+            data.postValue(if (result.success) "Success" else result.message)
         }
         return data
     }
 
     fun signInToGoogle(
+        context: Context,
         idToken: String,
         email: String,
         otherData: HashMap<String, Serializable?>
     ): LiveData<String> {
-        firebaseDb = FirebaseFirestore.getInstance()
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        firebaseAuth!!.signInWithCredential(credential)
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    val userDocRef = firebaseDb!!.collection("users").document("${email}")
-
-                    userDocRef.get().addOnSuccessListener {
-                        data.value = "Success"
-                        if(it.exists()){
-                            Log.d("User", "User Exists")
-                        } else{
-                            Log.d("User", "User Does not Exists")
-                            firebaseDb!!.collection("users").document("${email}")
-                                .set(otherData, SetOptions.merge())
-                                .addOnSuccessListener {
-                                    data.value = "Success"
-                                }
-                                .addOnFailureListener { Exception ->
-                                    {
-                                        data.value = "Failure"
-                                    }
-                                }
-                        }
-                    }
-
-                    val user = firebaseAuth!!.currentUser
-                } else {
-                    data.value = "Failure"
-                }
-            }
-
+        val data = MutableLiveData<String>()
+        executor.execute {
+            val result = SupabaseAuth.signInWithGoogleIdToken(
+                context = context.applicationContext,
+                idToken = idToken,
+                email = email,
+                profile = otherData.mapValues { it.value }
+            )
+            data.postValue(if (result.success) "Success" else result.message)
+        }
         return data
     }
 
-
-    //login
     fun logInWithEmail(
+        context: Context,
         email: String,
         password: String
     ): LiveData<String> {
-
-        firebaseDb = FirebaseFirestore.getInstance()
-
         val data = MutableLiveData<String>()
-        firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
-            when {
-                it.isSuccessful -> data.value = "Success"
-                it.isCanceled -> data.value = "Cancelled"
-                else -> data.value = it.exception?.message ?: "Login failed"
-            }
-        }.addOnFailureListener {
-            Log.d("AuthRepo", it.message ?: "Unknown error")
-            data.value = it.message ?: "Unknown error"
+        executor.execute {
+            val result = SupabaseAuth.loginWithEmail(
+                context = context.applicationContext,
+                email = email,
+                password = password
+            )
+            data.postValue(if (result.success) "Success" else result.message)
         }
         return data
     }

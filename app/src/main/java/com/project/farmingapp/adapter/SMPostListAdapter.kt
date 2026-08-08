@@ -1,6 +1,5 @@
 package com.project.farmingapp.adapter
 
-import android.content.Context
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,20 +11,22 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import com.project.farmingapp.R
+import com.project.farmingapp.supabase.RemoteDocument
+import com.project.farmingapp.supabase.SupabaseDb
+import java.util.concurrent.Executors
 
+class SMPostListAdapter(
+    val context: android.content.Context,
+    val postListData: List<RemoteDocument>
+) : RecyclerView.Adapter<SMPostListAdapter.SMPostListViewModel>() {
 
-class SMPostListAdapter(val context: Context, val postListData : List<DocumentSnapshot>): RecyclerView.Adapter<SMPostListAdapter.SMPostListViewModel>() {
-
-    lateinit var firebaseAuth: FirebaseAuth
-    lateinit var firebaseFirestore: FirebaseFirestore
     private val profileImageCache = mutableMapOf<String, String>()
+    private val executor = Executors.newSingleThreadExecutor()
     private var lastAnimatedPosition = -1
     private val itemAnimation by lazy { AnimationUtils.loadAnimation(context, R.anim.fade_transition) }
-    class SMPostListViewModel(itemView: View): RecyclerView.ViewHolder(itemView){
+
+    class SMPostListViewModel(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val userName: TextView = itemView.findViewById(R.id.userNamePostSM)
         val title: TextView = itemView.findViewById(R.id.userPostTitleValue)
         val description: TextView = itemView.findViewById(R.id.userPostDescValue)
@@ -46,9 +47,7 @@ class SMPostListAdapter(val context: Context, val postListData : List<DocumentSn
         return holder
     }
 
-    override fun getItemCount(): Int {
-        return postListData.size
-    }
+    override fun getItemCount(): Int = postListData.size
 
     override fun onBindViewHolder(holder: SMPostListViewModel, position: Int) {
         val currentPost = postListData[position]
@@ -56,59 +55,61 @@ class SMPostListAdapter(val context: Context, val postListData : List<DocumentSn
         holder.userName.text = currentPost.get("name").toString()
         holder.title.text = currentPost.get("title").toString()
         holder.description.text = currentPost.get("description").toString()
-        holder.uploadTime.text = DateUtils.getRelativeTimeSpanString(currentPost.get("timeStamp") as Long)
+        val stamp = currentPost.getLong("timeStamp") ?: currentPost.getLong("time_stamp") ?: 0L
+        holder.uploadTime.text = DateUtils.getRelativeTimeSpanString(stamp)
 
         val imageUrl = currentPost.get("imageUrl")
         Log.d("Post without Image1", imageUrl.toString())
 
-
-        val uploadType = currentPost.get("uploadType").toString()
-        if (uploadType == "video"){
+        val uploadType = currentPost.get("uploadType")?.toString().orEmpty()
+        if (uploadType == "video") {
             holder.postImage.visibility = View.GONE
             holder.postVideo.visibility = View.VISIBLE
             holder.postVideo.loadUrl(currentPost.get("imageUrl").toString())
-
-
-        } else if (uploadType == "image"){
+        } else if (uploadType == "image") {
             Glide.with(context).load(currentPost.get("imageUrl")).into(holder.postImage)
             holder.postVideo.visibility = View.GONE
             holder.postImage.visibility = View.VISIBLE
             Log.d("Upload Type 2 ", uploadType)
-        }else if (uploadType.isEmpty() ){
+        } else if (uploadType.isEmpty()) {
             Log.d("Post without Image2", imageUrl.toString())
             holder.postImage.visibility = View.GONE
             holder.postVideo.visibility = View.GONE
             Log.d("Upload Type 3 ", uploadType)
         }
 
-        firebaseAuth = FirebaseAuth.getInstance()
-
         if (position > lastAnimatedPosition) {
             holder.profileImageCard.startAnimation(itemAnimation)
             holder.container.startAnimation(itemAnimation)
             lastAnimatedPosition = position
         }
-//        Glide.with(context).load(firebaseAuth.currentUser!!.photoUrl.toString()).into(holder.itemView.userProfileImagePost)
         holder.description.setOnClickListener {
             holder.description.maxLines = Int.MAX_VALUE
         }
 
-
-
-        firebaseFirestore = FirebaseFirestore.getInstance()
-        val userId = currentPost.get("userID").toString()
+        val userId = currentPost.get("userID")?.toString()
+            ?: currentPost.get("user_id")?.toString()
+            ?: return
         val cachedImage = profileImageCache[userId]
         if (!cachedImage.isNullOrBlank()) {
             Glide.with(context).load(cachedImage).into(holder.profileImage)
         } else {
-            firebaseFirestore.collection("users").document(userId).get()
-                .addOnSuccessListener {
-                    val profileImage = it.get("profileImage").toString()
-                    if (!profileImage.isNullOrEmpty()) {
+            executor.execute {
+                try {
+                    val user = SupabaseDb.selectOne("users", SupabaseDb.eq("email", userId), idKey = "email")
+                        ?: SupabaseDb.selectOne("users", SupabaseDb.eq("id", userId))
+                    val profileImage = user?.getString("profileImage").orEmpty()
+                    if (profileImage.isNotBlank()) {
                         profileImageCache[userId] = profileImage
-                        Glide.with(context).load(profileImage).into(holder.profileImage)
+                        (context as? android.app.Activity)?.runOnUiThread {
+                            Glide.with(context).load(profileImage).into(holder.profileImage)
+                        } ?: android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            Glide.with(context).load(profileImage).into(holder.profileImage)
+                        }
                     }
+                } catch (_: Exception) {
                 }
+            }
         }
     }
 }

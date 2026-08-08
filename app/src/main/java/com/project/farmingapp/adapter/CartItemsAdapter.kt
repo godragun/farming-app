@@ -9,27 +9,30 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.project.farmingapp.utilities.AuthHelper
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.FirebaseFirestore
 import com.project.farmingapp.R
+import com.project.farmingapp.supabase.SupabaseDb
+import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.CartItemBuy
 import com.project.farmingapp.utilities.LocalCartStore
 import com.project.farmingapp.utilities.formatLkr
 import com.project.farmingapp.utilities.parseAmount
 import com.project.farmingapp.view.ecommerce.CartFragment
 import com.project.farmingapp.view.ecommerce.OfflineEcommerceData
+import org.json.JSONObject
+import java.util.concurrent.Executors
 
 class CartItemsAdapter(
     val context: CartFragment,
     val allData: HashMap<String, Any>,
     val cartitembuy: CartItemBuy,
     private val useLocalStore: Boolean = false
-) :
-    RecyclerView.Adapter<CartItemsAdapter.CartItemsViewHolder>() {
+) : RecyclerView.Adapter<CartItemsAdapter.CartItemsViewHolder>() {
+
     var itemCost = 0
     var deliveryCharge = 0
     var quantity = 0
+    private val executor = Executors.newSingleThreadExecutor()
+
     class CartItemsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val buyBtn: com.google.android.material.button.MaterialButton = itemView.findViewById(R.id.cartItemBuyBtn)
         val removeBtn: ImageView = itemView.findViewById(R.id.removeCartBtn)
@@ -50,23 +53,16 @@ class CartItemsAdapter(
         return CartItemsAdapter.CartItemsViewHolder(view)
     }
 
-    override fun getItemCount(): Int {
-        return allData.size
-    }
+    override fun getItemCount(): Int = allData.size
 
     override fun onBindViewHolder(holder: CartItemsViewHolder, position: Int) {
         val currentData = allData.entries.toTypedArray()[position]
         val itemId = currentData.key.toString()
-        val firebaseDatabase = FirebaseDatabase.getInstance()
-        val itemQtyRef = if (!useLocalStore) {
-            firebaseDatabase.getReference(AuthHelper.requireUid()).child("cart")
-                .child(itemId).child("quantity")
-        } else null
-
-        val itemRef = if (!useLocalStore) {
-            firebaseDatabase.getReference(AuthHelper.requireUid()).child("cart")
-                .child(itemId)
-        } else null
+        val uid = try {
+            AuthHelper.requireUid()
+        } catch (_: Exception) {
+            AuthHelper.GUEST_UID
+        }
 
         holder.buyBtn.setOnClickListener {
             val qty = holder.quantityText.text.toString().toInt()
@@ -84,20 +80,32 @@ class CartItemsAdapter(
                 allData.remove(itemId)
                 notifyDataSetChanged()
             } else {
-                itemRef?.removeValue()
+                executor.execute {
+                    try {
+                        SupabaseDb.delete(
+                            "cart_items",
+                            "${SupabaseDb.eq("uid", uid)}&${SupabaseDb.eq("product_id", itemId)}"
+                        )
+                        context.requireActivity().runOnUiThread {
+                            allData.remove(itemId)
+                            notifyDataSetChanged()
+                        }
+                    } catch (_: Exception) {
+                        context.requireActivity().runOnUiThread {
+                            LocalCartStore.remove(context.requireContext(), itemId)
+                            allData.remove(itemId)
+                            notifyDataSetChanged()
+                        }
+                    }
+                }
             }
         }
 
         holder.increaseQtyBtn.setOnClickListener {
-
             holder.quantityText.text =
                 (holder.quantityText.text.toString().toInt() + 1).toString()
             val updatedQty = holder.quantityText.text.toString().toInt()
-            if (useLocalStore) {
-                LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
-            } else {
-                itemQtyRef?.setValue(updatedQty)
-            }
+            updateQuantity(itemId, uid, updatedQty)
         }
 
         holder.decreaseQtyBtn.setOnClickListener {
@@ -105,14 +113,11 @@ class CartItemsAdapter(
                 holder.quantityText.text =
                     (holder.quantityText.text.toString().toInt() - 1).toString()
                 val updatedQty = holder.quantityText.text.toString().toInt()
-                if (useLocalStore) {
-                    LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
-                } else {
-                    itemQtyRef?.setValue(updatedQty)
-                }
+                updateQuantity(itemId, uid, updatedQty)
             }
         }
 
+        @Suppress("UNCHECKED_CAST")
         val curr = currentData.value as Map<String, Any>
 
         val offlineItem = if (itemId.startsWith("offline_")) {
@@ -139,43 +144,69 @@ class CartItemsAdapter(
             return
         }
 
-        FirebaseFirestore.getInstance().collection("products").document(itemId).get()
-            .addOnSuccessListener { it ->
-                if (it == null || !it.exists()) {
-                    holder.itemName.text = "Unavailable Item"
-                    holder.itemPrice.text = formatLkr(0)
-                    holder.quantityText.text = (curr["quantity"].toString().toIntOrNull() ?: 1).toString()
-                    holder.deliveryCharge.text = "0"
-                    holder.firm.text = "Unknown"
-                    holder.availability.text = "Unavailable"
-                    holder.buyBtn.text = "Buy Now: " + formatLkr(0)
-                    holder.image.setImageResource(R.drawable.ic_launcher_foreground)
-                    return@addOnSuccessListener
-                }
+        executor.execute {
+            try {
+                val product = SupabaseDb.selectOne("products", SupabaseDb.eq("id", itemId))
+                context.requireActivity().runOnUiThread {
+                    if (product == null || !product.exists()) {
+                        bindUnavailable(holder, curr)
+                        return@runOnUiThread
+                    }
+                    itemCost = product.get("price")?.toString()?.toIntOrNull() ?: 0
+                    deliveryCharge = product.get("delCharge")?.toString()?.toIntOrNull()
+                        ?: product.get("del_charge")?.toString()?.toIntOrNull()
+                        ?: 0
+                    quantity = curr["quantity"].toString().toIntOrNull() ?: 1
+                    holder.itemName.text = product.getString("title").orEmpty().ifBlank { "Product" }
+                    holder.itemPrice.text = formatLkr(itemCost)
+                    holder.quantityText.text = quantity.toString()
+                    holder.deliveryCharge.text = deliveryCharge.toString()
+                    holder.firm.text = product.get("retailer").toString()
+                    holder.availability.text = product.get("availability").toString()
 
-                itemCost = it.get("price").toString().toIntOrNull() ?: 0
-                deliveryCharge = it.get("delCharge").toString().toIntOrNull() ?: 0
-                quantity = curr["quantity"].toString().toIntOrNull() ?: 1
-                holder.itemName.text = it.getString("title").orEmpty().ifBlank { "Product" }
-                holder.itemPrice.text = formatLkr(itemCost)
-                holder.quantityText.text = quantity.toString()
-                holder.deliveryCharge.text = deliveryCharge.toString()
-                holder.firm.text = it.get("retailer").toString()
-                holder.availability.text = it.get("availability").toString()
-
-                val allImages = it.get("imageUrl") as? ArrayList<String> ?: arrayListOf()
-                if (allImages.isNotEmpty()) {
-                    Glide.with(context).load(allImages[0]).into(holder.image)
-                } else {
-                    holder.image.setImageResource(R.drawable.ic_launcher_foreground)
+                    @Suppress("UNCHECKED_CAST")
+                    val allImages = product.get("imageUrl") as? List<*> ?: emptyList<Any>()
+                    if (allImages.isNotEmpty()) {
+                        Glide.with(context).load(allImages[0].toString()).into(holder.image)
+                    } else {
+                        holder.image.setImageResource(R.drawable.ic_launcher_foreground)
+                    }
+                    holder.buyBtn.text = "Buy Now: " + formatLkr(itemCost * quantity + deliveryCharge)
                 }
-                holder.buyBtn.text = "Buy Now: " + formatLkr(itemCost * quantity + deliveryCharge)
+            } catch (_: Exception) {
+                context.requireActivity().runOnUiThread {
+                    bindUnavailable(holder, curr)
+                }
             }
-            .addOnFailureListener {
-                holder.itemName.text = "Unavailable Item"
-                holder.itemPrice.text = formatLkr(0)
-                holder.buyBtn.text = "Buy Now: " + formatLkr(0)
-                holder.image.setImageResource(R.drawable.ic_launcher_foreground)
+        }
+    }
+
+    private fun bindUnavailable(holder: CartItemsViewHolder, curr: Map<String, Any>) {
+        holder.itemName.text = "Unavailable Item"
+        holder.itemPrice.text = formatLkr(0)
+        holder.quantityText.text = (curr["quantity"].toString().toIntOrNull() ?: 1).toString()
+        holder.deliveryCharge.text = "0"
+        holder.firm.text = "Unknown"
+        holder.availability.text = "Unavailable"
+        holder.buyBtn.text = "Buy Now: " + formatLkr(0)
+        holder.image.setImageResource(R.drawable.ic_launcher_foreground)
+    }
+
+    private fun updateQuantity(itemId: String, uid: String, updatedQty: Int) {
+        if (useLocalStore) {
+            LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
+        } else {
+            executor.execute {
+                try {
+                    SupabaseDb.update(
+                        "cart_items",
+                        "${SupabaseDb.eq("uid", uid)}&${SupabaseDb.eq("product_id", itemId)}",
+                        JSONObject().put("quantity", updatedQty)
+                    )
+                } catch (_: Exception) {
+                    LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
+                }
             }
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.project.farmingapp.viewmodel
 import android.content.Intent
 import android.util.Log
 import android.view.View
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,7 +21,6 @@ class AuthViewModel : ViewModel() {
     var userType: String? = "normal"
     var authListener: AuthListener? = null
 
-    //login
     var loginmail: String? = ""
     var loginpwd: String? = ""
 
@@ -35,24 +33,30 @@ class AuthViewModel : ViewModel() {
     }
 
     val userPosts = arrayListOf<String>()
+
     fun signupButtonClicked(view: View) {
         authListener!!.onStarted()
-        if (name.isNullOrEmpty() || mobNo.toString().length != 10 || mobNo == null || password.isNullOrEmpty() || confPassword.isNullOrEmpty() || city.isNullOrEmpty()) {
-            // Failure
+        if (name.isNullOrEmpty() || mobNo.toString().length != 10 || mobNo == null ||
+            password.isNullOrEmpty() || confPassword.isNullOrEmpty() || city.isNullOrEmpty()
+        ) {
             authListener!!.onFailure("Error Occurred")
             return
         }
-        // Success
-        var data = hashMapOf(
+        val data = hashMapOf(
             "name" to name,
             "mobNo" to mobNo,
             "email" to email,
             "city" to city,
             "userType" to userType,
-            "posts" to  userPosts,
+            "posts" to userPosts,
             "profileImage" to ""
         )
-        val authRepo = AuthRepository().signInWithEmail(email!!, password!!, data)
+        val authRepo = AuthRepository().signInWithEmail(
+            view.context.applicationContext,
+            email!!,
+            password!!,
+            data
+        )
         authListener?.onSuccess(authRepo)
     }
 
@@ -61,18 +65,21 @@ class AuthViewModel : ViewModel() {
 
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            val exception = task.exception
             if (task.isSuccessful) {
                 try {
                     val account = task.getResult(ApiException::class.java)!!
-                    var data2 = hashMapOf(
+                    val data2 = hashMapOf(
                         "userType" to userType,
                         "posts" to userPosts,
                         "name" to account.displayName.toString(),
                         "profileImage" to account.photoUrl.toString()
                     )
                     authRepository = AuthRepository()
-                    var returned = authRepository.signInToGoogle(
+                    val returned = authRepository.signInToGoogle(
+                        // Context is required; Google callback runs from Activity — use application via listener host.
+                        // AuthListener callers pass Activity; we need context from GoogleSignIn client context.
+                        // Fallback: store is handled in Activity by exiting guest after Success.
+                        googleSignInClient.applicationContext,
                         account.idToken!!,
                         account.email.toString(),
                         data2
@@ -81,13 +88,13 @@ class AuthViewModel : ViewModel() {
                     authListener?.onSuccess(returned)
                 } catch (e: ApiException) {
                     authListener!!.onFailure(e.message.toString())
+                } catch (e: UninitializedPropertyAccessException) {
+                    authListener!!.onFailure("Google sign-in client not ready")
                 }
-            } else {
             }
         }
     }
 
-    // Login works with user input; in demo mode it accepts non-empty credentials.
     fun loginButtonClicked(view: View) {
         authListener!!.onStarted()
         val emailInput = loginmail?.trim().orEmpty()
@@ -96,9 +103,19 @@ class AuthViewModel : ViewModel() {
             authListener?.onFailure("Enter email and password to login")
             return
         }
-        AuthHelper.enterGuestMode(view.context.applicationContext)
-        val authRepo = MutableLiveData<String>()
-        authRepo.value = "Success"
+        // Demo offline shortcut: password "guest" enters offline guest mode.
+        if (passwordInput.equals("guest", ignoreCase = true)) {
+            AuthHelper.enterGuestMode(view.context.applicationContext)
+            val authRepo = androidx.lifecycle.MutableLiveData<String>()
+            authRepo.value = "Success"
+            authListener?.onSuccess(authRepo)
+            return
+        }
+        val authRepo = AuthRepository().logInWithEmail(
+            view.context.applicationContext,
+            emailInput,
+            passwordInput
+        )
         authListener?.onSuccess(authRepo)
     }
 }

@@ -1,7 +1,6 @@
 package com.project.farmingapp.adapter
 
 import android.content.Context
-import android.text.Layout
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -10,12 +9,17 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.google.firebase.firestore.DocumentSnapshot
 import com.project.farmingapp.R
+import com.project.farmingapp.supabase.RemoteDocument
 import com.project.farmingapp.utilities.CellClickListener
 
-class PostListUserProfileAdapter(val context: Context, var listData: ArrayList<DocumentSnapshot>, private val cellClickListener: CellClickListener) : RecyclerView.Adapter<PostListUserProfileAdapter.PostListUserProfileViewHolder>() {
-    class PostListUserProfileViewHolder(itemView: View): RecyclerView.ViewHolder(itemView){
+class PostListUserProfileAdapter(
+    val context: Context,
+    var listData: ArrayList<RemoteDocument>,
+    private val cellClickListener: CellClickListener
+) : RecyclerView.Adapter<PostListUserProfileAdapter.PostListUserProfileViewHolder>() {
+
+    class PostListUserProfileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.userPostTitleUserProfileFrag)
         val time: TextView = itemView.findViewById(R.id.userPostUploadTimeUserProfileFrag)
         val card: View = itemView.findViewById(R.id.userPostProfileCard)
@@ -30,20 +34,20 @@ class PostListUserProfileAdapter(val context: Context, var listData: ArrayList<D
         return PostListUserProfileAdapter.PostListUserProfileViewHolder(view)
     }
 
-    override fun getItemCount(): Int {
-        return listData.size
-    }
+    override fun getItemCount(): Int = listData.size
 
     override fun onBindViewHolder(holder: PostListUserProfileViewHolder, position: Int) {
         val currentData = listData[position]
 
         holder.title.text = currentData.get("title").toString()
-        holder.time.text = DateUtils.getRelativeTimeSpanString(currentData.get("timeStamp") as Long)
+        val stamp = currentData.getLong("timeStamp") ?: currentData.getLong("time_stamp") ?: 0L
+        holder.time.text = DateUtils.getRelativeTimeSpanString(stamp)
         holder.card.setOnClickListener {
             cellClickListener.onCellClickListener(currentData.id)
         }
-        if (!currentData.get("imageUrl").toString().isNullOrEmpty()){
-            Glide.with(context).load(currentData.getString("imageUrl")).into(holder.image)
+        val imageUrl = currentData.getString("imageUrl")
+        if (!imageUrl.isNullOrBlank()) {
+            Glide.with(context).load(imageUrl).into(holder.image)
         }
     }
 }

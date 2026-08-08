@@ -2,28 +2,26 @@ package com.project.farmingapp.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-class SocialMediaViewModel: ViewModel() {
+import com.project.farmingapp.supabase.RemoteDocument
+import com.project.farmingapp.supabase.SupabaseDb
+import java.util.concurrent.Executors
 
-    private var firebaseAuth: FirebaseAuth? = null
-    private var firebaseFireStore: FirebaseFirestore? = null
+class SocialMediaViewModel : ViewModel() {
 
-    var postLiveData = MutableLiveData<List<DocumentSnapshot>>()
-    fun loadPosts(){
+    private val executor = Executors.newSingleThreadExecutor()
+    var postLiveData = MutableLiveData<List<RemoteDocument>>()
 
-        firebaseAuth = FirebaseAuth.getInstance()
-        firebaseFireStore = FirebaseFirestore.getInstance()
-
-        firebaseFireStore!!.collection("posts").get()
-            .addOnSuccessListener {
-//                postLiveData.value = it.documents[0].data.get("")
+    fun loadPosts() {
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select(
+                    "posts",
+                    SupabaseDb.order("time_stamp", ascending = false)
+                )
+                postLiveData.postValue(docs)
+            } catch (_: Exception) {
+                postLiveData.postValue(emptyList())
             }
-            .addOnFailureListener {
-
-            }
-
+        }
     }
-
 }

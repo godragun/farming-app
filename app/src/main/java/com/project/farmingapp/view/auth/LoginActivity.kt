@@ -7,14 +7,15 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
-import com.bumptech.glide.Glide
 import com.project.farmingapp.R
-import com.project.farmingapp.utilities.AgriAssetPaths
 import com.project.farmingapp.databinding.ActivityLoginBinding
+import com.project.farmingapp.supabase.SupabaseAuth
+import com.project.farmingapp.supabase.SupabaseSession
+import com.project.farmingapp.utilities.AgriAssetPaths
 import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.hide
 import com.project.farmingapp.utilities.show
@@ -24,12 +25,13 @@ import com.project.farmingapp.view.dashboard.DashboardActivity
 import com.project.farmingapp.view.introscreen.IntroActivity
 import com.project.farmingapp.viewmodel.AuthListener
 import com.project.farmingapp.viewmodel.AuthViewModel
+import java.util.concurrent.Executors
 
 class LoginActivity : AppCompatActivity(), AuthListener {
     lateinit var googleSignInClient: GoogleSignInClient
-    val firebaseAuth = FirebaseAuth.getInstance()
     lateinit var viewModel: AuthViewModel
     private lateinit var binding: ActivityLoginBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AuthHelper.syncFromPrefs(this)
@@ -45,6 +47,13 @@ class LoginActivity : AppCompatActivity(), AuthListener {
         binding.authViewModel = viewModel
         viewModel.authListener = this
 
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+        viewModel.googleSignInClient = googleSignInClient
+
         Glide.with(this)
             .load(AgriAssetPaths.fileUri(AgriAssetPaths.LOGIN_SIGN_HERO))
             .placeholder(R.drawable.hero_banner_bg)
@@ -52,19 +61,15 @@ class LoginActivity : AppCompatActivity(), AuthListener {
             .centerCrop()
             .into(binding.loginHeroBg)
 
-        if (firebaseAuth.currentUser != null) {
+        if (SupabaseSession.isLoggedIn()) {
             AuthHelper.exitGuestMode(this)
-            Intent(this, DashboardActivity::class.java).also {
-                startActivity(it)
-            }
+            startActivity(Intent(this, DashboardActivity::class.java))
             finish()
             return
         }
 
         binding.createaccountText.setOnClickListener {
-            Intent(this, SignupActivity::class.java).also {
-                startActivity(it)
-            }
+            startActivity(Intent(this, SignupActivity::class.java))
         }
         binding.signGoogleBtnLogin.setOnClickListener {
             signIn()
@@ -75,34 +80,22 @@ class LoginActivity : AppCompatActivity(), AuthListener {
             if (userEmail.isNullOrEmpty()) {
                 showAgriMessage("Please enter your Email")
             } else {
-//                Toast.makeText(this, "Please enter your Email", Toast.LENGTH_SHORT).show()
-                firebaseAuth.sendPasswordResetEmail(userEmail)
-                    .addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            showAgriMessage("Email Sent")
-                        }
+                Executors.newSingleThreadExecutor().execute {
+                    val result = SupabaseAuth.sendPasswordReset(userEmail)
+                    runOnUiThread {
+                        showAgriMessage(result.message)
                     }
-                    .addOnFailureListener {
-                        showAgriMessage(it.message.orEmpty().ifBlank { "Could not send reset email." })
-                    }
+                }
             }
         }
-
     }
 
-
-    //googlesignIn
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         viewModel.returnActivityResult(requestCode, resultCode, data)
     }
 
     fun signIn() {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
@@ -114,8 +107,8 @@ class LoginActivity : AppCompatActivity(), AuthListener {
         a.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(a)
     }
+
     companion object {
-        private const val TAG = "GoogleActivity"
         private const val RC_SIGN_IN = 9001
     }
 
@@ -129,12 +122,10 @@ class LoginActivity : AppCompatActivity(), AuthListener {
             val result = it?.toString()?.trim().orEmpty()
             if (result.equals("Success", ignoreCase = true)) {
                 toast("Logged In")
-                if (firebaseAuth.currentUser != null) {
+                if (SupabaseSession.isLoggedIn()) {
                     AuthHelper.exitGuestMode(this)
                 }
-                Intent(this, DashboardActivity::class.java).also { intent ->
-                    startActivity(intent)
-                }
+                startActivity(Intent(this, DashboardActivity::class.java))
             } else {
                 showAgriMessage(if (result.isNotEmpty()) result else "Login failed")
             }

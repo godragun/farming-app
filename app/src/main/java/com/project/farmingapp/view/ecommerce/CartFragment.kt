@@ -9,30 +9,20 @@ import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.project.farmingapp.utilities.AuthHelper
-import com.project.farmingapp.utilities.LocalCartStore
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.project.farmingapp.PrePaymentFragment
 import com.project.farmingapp.R
 import com.project.farmingapp.adapter.CartItemsAdapter
+import com.project.farmingapp.supabase.SupabaseDb
+import com.project.farmingapp.utilities.AuthHelper
 import com.project.farmingapp.utilities.CartItemBuy
+import com.project.farmingapp.utilities.LocalCartStore
 import com.project.farmingapp.utilities.formatLkr
 import com.project.farmingapp.viewmodel.EcommViewModel
+import java.util.concurrent.Executors
 import kotlin.collections.HashMap
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [CartFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class CartFragment : Fragment(), CartItemBuy {
 
     private var param1: String? = null
@@ -49,6 +39,7 @@ class CartFragment : Fragment(), CartItemBuy {
     private var progressCart: android.view.View? = null
     private var loadingTitleText: android.widget.TextView? = null
     private var buyAllBtn: com.google.android.material.button.MaterialButton? = null
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,21 +54,11 @@ class CartFragment : Fragment(), CartItemBuy {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         setHasOptionsMenu(true)
         return inflater.inflate(R.layout.fragment_cart, container, false)
     }
 
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment CartFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             CartFragment().apply {
@@ -86,14 +67,10 @@ class CartFragment : Fragment(), CartItemBuy {
                     putString(ARG_PARAM2, param2)
                 }
             }
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val firebaseDatabase = FirebaseDatabase.getInstance()
-        val cartRef =
-            firebaseDatabase.getReference(AuthHelper.requireUid()).child("cart")
 
         (activity as AppCompatActivity).supportActionBar?.title = "Cart"
         isOpened = true
@@ -108,57 +85,9 @@ class CartFragment : Fragment(), CartItemBuy {
         if (AuthHelper.guestMode) {
             usingLocalStore = true
             renderItems(LocalCartStore.getAll(requireContext()))
-            return
+        } else {
+            loadRemoteCart()
         }
-
-        val postListener = object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-                val localItems = LocalCartStore.getAll(requireContext())
-                if (localItems.isNotEmpty()) {
-                    usingLocalStore = true
-                    renderItems(localItems)
-                } else {
-                    Toast.makeText(
-                        activity!!.applicationContext,
-                        "Unable to load cart right now.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    progressCart?.visibility = View.GONE
-                    loadingTitleText?.visibility = View.GONE
-                }
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                if (dataSnapshot.exists()) {
-
-                    @Suppress("UNCHECKED_CAST")
-                    val data = dataSnapshot.value as? HashMap<String, Any> ?: hashMapOf()
-                    usingLocalStore = false
-                    renderItems(data)
-                } else {
-                    val localItems = LocalCartStore.getAll(requireContext())
-                    if (localItems.isNotEmpty()) {
-                        usingLocalStore = true
-                        renderItems(localItems)
-                    } else {
-                        Toast.makeText(
-                            activity!!.applicationContext,
-                            "Item Not Exist",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        totalCount = 0
-                        totalPrice = 0
-                        updateSummary()
-                        progressCart?.visibility = View.GONE
-                        loadingTitleText?.visibility = View.GONE
-                    }
-                }
-            }
-        }
-
-
-        cartRef.addValueEventListener(postListener)
-
 
         buyAllBtn?.setOnClickListener {
             if (items.isEmpty()) {
@@ -178,16 +107,79 @@ class CartFragment : Fragment(), CartItemBuy {
                     R.anim.slide_in_left,
                     R.anim.slide_out_right
                 )
-                    .replace(R.id.frame_layout, paymentFragment, "paymentFrag")
+                .replace(R.id.frame_layout, paymentFragment, "paymentFrag")
                 .setReorderingAllowed(true)
                 .addToBackStack("paymentFrag")
                 .commit()
         }
     }
 
+    private fun loadRemoteCart() {
+        val uid = AuthHelper.requireUid()
+        executor.execute {
+            try {
+                val docs = SupabaseDb.select("cart_items", SupabaseDb.eq("uid", uid))
+                val cart = HashMap<String, Any>()
+                for (doc in docs) {
+                    val productId = doc.getString("productId")
+                        ?: doc.getString("product_id")
+                        ?: continue
+                    val qty = doc.getLong("quantity")?.toInt() ?: 1
+                    val time = doc.get("time")?.toString()
+                        ?: doc.get("time_ms")?.toString()
+                        ?: ""
+                    cart[productId] = hashMapOf<String, Any>(
+                        "quantity" to qty,
+                        "time" to time
+                    )
+                }
+                activity?.runOnUiThread {
+                    if (!isAdded) return@runOnUiThread
+                    if (cart.isNotEmpty()) {
+                        usingLocalStore = false
+                        renderItems(cart)
+                    } else {
+                        val localItems = LocalCartStore.getAll(requireContext())
+                        if (localItems.isNotEmpty()) {
+                            usingLocalStore = true
+                            renderItems(localItems)
+                        } else {
+                            Toast.makeText(
+                                activity!!.applicationContext,
+                                "Item Not Exist",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            totalCount = 0
+                            totalPrice = 0
+                            updateSummary()
+                            progressCart?.visibility = View.GONE
+                            loadingTitleText?.visibility = View.GONE
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                activity?.runOnUiThread {
+                    if (!isAdded) return@runOnUiThread
+                    val localItems = LocalCartStore.getAll(requireContext())
+                    if (localItems.isNotEmpty()) {
+                        usingLocalStore = true
+                        renderItems(localItems)
+                    } else {
+                        Toast.makeText(
+                            activity!!.applicationContext,
+                            "Unable to load cart right now.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        progressCart?.visibility = View.GONE
+                        loadingTitleText?.visibility = View.GONE
+                    }
+                }
+            }
+        }
+    }
+
     override fun addToOrders(productId: String, quantity: Int, itemCost: Int, deliveryCost: Int) {
         Intent(activity!!.applicationContext, RazorPayActivity::class.java).also {
-            //  it.putExtra("tp", "123")
             it.putExtra("productId", productId)
             it.putExtra("itemCost", itemCost.toString())
             it.putExtra("quantity", quantity.toString())
@@ -241,5 +233,4 @@ class CartFragment : Fragment(), CartItemBuy {
         progressCart?.visibility = View.GONE
         loadingTitleText?.visibility = View.GONE
     }
-
 }
