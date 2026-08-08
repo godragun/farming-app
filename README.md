@@ -72,7 +72,13 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 | **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; Voice handoff) |
 | AI Crop Suitability + map zones | Not yet |
 
-### Python AI backend (`ai-backend/`)
+### Python AI backend (separate private repo)
+
+**Canonical source (host / Render):**  
+Local folder: `C:\Users\VICTUS\Desktop\farming app backend`  
+GitHub (private): https://github.com/godragun/farming-app-backend  
+
+A copy may still exist under `ai-backend/` in this Android repo for convenience — prefer the standalone backend repo for deployment.
 
 | Module | Status |
 |--------|--------|
@@ -116,8 +122,8 @@ Phone (Agri Lanka APK)
    camera / mic / typed Sinhala / GPS
            │  HTTP JSON
            ▼
-Python FastAPI  (ai-backend)
-   voice  │  disease (soon)  │  suitability (soon)
+Python FastAPI  (farming-app-backend — private repo)
+   voice  │  disease (Roboflow)  │  suitability (soon)
            │
            ▼
       JSON result → Android UI
@@ -151,7 +157,7 @@ Config file: `app/src/main/java/com/project/farmingapp/model/ai/AgriAiApi.kt` �
 | Networking | Retrofit + OkHttp |
 | Weather | OpenWeatherMap |
 | Map | Leaflet in WebView (`leaflet_map.html` + `LeafletMapWebViewHelper`) |
-| AI server | Python FastAPI (`ai-backend/`) |
+| AI server | Python FastAPI ([farming-app-backend](https://github.com/godragun/farming-app-backend) private repo) |
 | Min / Target SDK | 23 / 34 |
 
 ---
@@ -167,7 +173,7 @@ Config file: `app/src/main/java/com/project/farmingapp/model/ai/AgriAiApi.kt` �
 **Backend**
 
 ```powershell
-cd ai-backend
+cd "C:\Users\VICTUS\Desktop\farming app backend"
 .\.venv\Scripts\Activate.ps1
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
@@ -182,7 +188,7 @@ curl -X POST "http://127.0.0.1:8000/voice-assistant/text" -H "Content-Type: appl
 
 Expected: `intent=disease_help`, `crop=chilli`, `needs_photo=true`.
 
-More detail: [`ai-backend/README.md`](ai-backend/README.md).
+More detail: private repo [farming-app-backend](https://github.com/godragun/farming-app-backend).
 
 ---
 
@@ -201,7 +207,7 @@ Do **not** put the service-role key in the Android app (anon key only).
 1. Open the project in Android Studio.  
 2. Sync Gradle.  
 3. Use an **API 33/34** emulator or a physical device.  
-4. For Sinhala Voice AI: start `ai-backend` first (see above).  
+4. For Sinhala Voice AI / Crop Doctor: start the **standalone** backend first (`farming app backend` folder / private GitHub repo).  
 5. Emulator uses `http://10.0.2.2:8000/` by default.  
 6. Guest login: any email + password `guest`.
 
@@ -211,11 +217,17 @@ Cleartext HTTP is enabled for local AI testing (`usesCleartextTraffic` in the ma
 
 ## Running the AI backend
 
+**Use the separate private repo** (recommended for Render):
+
+Folder: `C:\Users\VICTUS\Desktop\farming app backend`  
+GitHub: https://github.com/godragun/farming-app-backend  
+
 ```powershell
-cd "ai-backend"
+cd "C:\Users\VICTUS\Desktop\farming app backend"
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+copy .env.example .env
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -230,16 +242,20 @@ pip install openai-whisper torch
 ## Project structure (high level)
 
 ```
-Farming-App/
+Farming-App/                    # Android Studio APK (this repo)
 ├── app/src/main/java/com/project/farmingapp/
 │   ├── view/           # Fragments & Activities (dashboard, survey, ai, …)
 │   ├── viewmodel/
 │   ├── model/          # Repositories, WeatherApi, ai/AgriAiApi
 │   ├── supabase/       # Supabase Auth/DB/HTTP helpers
 │   └── utilities/      # AuthHelper, LeafletMapWebViewHelper, …
-├── ai-backend/         # Python FastAPI (voice now; disease/suitability later)
+├── ai-backend/         # Optional local copy — prefer standalone backend repo
 ├── supabase/           # schema.sql, policies.sql
 └── README.md
+
+# Separate private repo (hosting):
+# C:\Users\VICTUS\Desktop\farming app backend
+# → https://github.com/godragun/farming-app-backend
 ```
 
 ---
