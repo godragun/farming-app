@@ -37,6 +37,14 @@
             android:id="@+id/miItem9"
             android:icon="@drawable/ic_baseline_edit_24"
             android:title="@string/nav_agri_chatbot" />
+        <item
+            android:id="@+id/miItemSinhalaVoice"
+            android:icon="@drawable/ic_baseline_edit_24"
+            android:title="@string/nav_sinhala_voice" />
+        <item
+            android:id="@+id/miItemCropDoctor"
+            android:icon="@drawable/ic_baseline_photo_camera_24"
+            android:title="@string/nav_crop_doctor" />
     </group>
 
     <group android:id="@+id/navGroupSocial">

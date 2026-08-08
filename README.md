@@ -1,4 +1,4 @@
-# Agri Lanka — Farming Companion App
+# Agri Lanka — AI-Powered Farming Companion
 
 <p align="center">
   <img src="output%20images%20of%20app/front%20page%20farming%20app.png" width="200" />
@@ -27,857 +27,246 @@
   <img src="output%20images%20of%20app/front%20page%207.png" width="200" />
 </p>
 
-An Android fieldwork application built for Sri Lankan **research assistants and data collectors**. It includes **satellite map overlays**, **GPS-based weather**, **offline-first field surveys** (photo + voice notes), agriculture articles, an input catalog/cost baseline module, and a field observation log.
+**Agri Lanka** is an Android app for Sri Lankan farmers and field workers. It combines everyday farming tools (weather, surveys, map, market info) with a growing **AI decision-support** layer.
 
-This repository is built to be **demo-friendly**: core UI keeps working even when Supabase or third‑party APIs are unavailable (offline products, offline articles, demo weather, guest mode).
+Built for **AI Challenge Sri Lanka 2026 – AI Buildathon** direction:
+
+1. What is wrong with my crop? *(disease AI — planned next)*  
+2. Can I talk to the system in Sinhala? *(voice AI — started)*  
+3. Where is the best place to grow this crop? *(suitability AI — planned)*
+
+The app stays usable offline for core fieldwork. AI features call a **Python FastAPI** server (laptop during development, cloud later). The APK does **not** run ML models inside the phone.
 
 ---
 
 ## Table of Contents
 
-- [What the App Does](#what-the-app-does)
-- [Architecture & Tech Stack](#architecture--tech-stack)
-- [Features In Detail](#features-in-detail)
-- [How the Map Works](#how-the-map-works)
-- [How Weather Works](#how-weather-works)
-- [How Field Surveys Work (Offline + Sync)](#how-field-surveys-work-offline--sync)
-- [Authentication & User Accounts](#authentication--user-accounts)
-- [Offline / Guest Mode](#offline--guest-mode)
-- [Dark & Light Mode](#dark--light-mode)
-- [Running the App](#running-the-app)
-- [Project Structure](#project-structure)
-- [External APIs & Services](#external-apis--services)
-- [Acknowledgements & References](#acknowledgements--references)
-- [Known Quirks & Notes](#known-quirks--notes)
-- [Viva Preparation Guide](#viva-preparation-guide--agri-lanka)
+- [What is built now](#what-is-built-now)
+- [What the app can do](#what-the-app-can-do)
+- [How AI connects to the APK](#how-ai-connects-to-the-apk)
+- [Architecture & tech stack](#architecture--tech-stack)
+- [Sinhala Voice AI (current)](#sinhala-voice-ai-current)
+- [Supabase backend](#supabase-backend)
+- [Running the Android app](#running-the-android-app)
+- [Running the AI backend](#running-the-ai-backend)
+- [Project structure](#project-structure)
+- [Roadmap](#roadmap)
+- [Known notes](#known-notes)
 
 ---
 
-## What the App Does
+## What is built now
 
-Agri Lanka is a one-stop mobile app for **field researchers** working in Sri Lanka. From the moment you open the app, you can:
+### Android app (Kotlin, MVVM)
 
-- Check live weather for your exact GPS location (or Colombo as a default)
-- Review an agricultural input catalog and estimate baseline costs (fertilizers, pesticides, machinery) for supply-chain auditing
-- Read daily market/APMC price updates to make better selling decisions
-- Post field observations and anomalies and coordinate with other research assistants
-- Learn from crop-specific agriculture articles
-- Get advice from a built-in rule-based chatbot covering rice, tea, chilli, coconut, pests, and fertilizer
-- Manage your own farmer profile with photo and bio
+| Area | Status |
+|------|--------|
+| Login / Signup / Guest mode | Done (Supabase Auth; guest password `guest`) |
+| English + Sinhala UI strings | Done (`values` / `values-si`, Settings toggle) |
+| Dashboard + weather (GPS / OpenWeatherMap) | Done |
+| Satellite map (Leaflet WebView) | Done |
+| Field surveys (photo + voice notes, offline Room → sync) | Done |
+| Community posts, articles, e-commerce / cart / orders | Done |
+| Rule-based Agri Chatbot | Done (not ML) |
+| **Sinhala Voice AI screen** | Done (talks to FastAPI) |
+| **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; Voice handoff) |
+| AI Crop Suitability + map zones | Not yet |
 
-The app is designed to work in Sri Lanka specifically — currency is LKR, the default location is Colombo, and crop guidance is tuned for local agriculture.
+### Python AI backend (`ai-backend/`)
+
+| Module | Status |
+|--------|--------|
+| FastAPI server (`/health`, `/voice-assistant`, `/speech-to-text`) | Done |
+| Agricultural Sinhala/English intent (crops, symptoms, fertilizer, weather…) | Done |
+| Text path for testing without Whisper | Done |
+| Optional Whisper STT + gTTS Sinhala speech | Scaffolded (Whisper optional install) |
+| Disease detection API (`POST /predict-disease` via Roboflow) | Done (set keys in `.env`; demo mode available) |
+| Crop suitability API | Not yet |
+
+### Cloud data
+
+| Service | Status |
+|---------|--------|
+| Supabase Auth + Database + Storage (`media`) | Done |
+| SQL schema (`supabase/schema.sql`) including `surveys`, `ai_disease_results` | Done |
+| Firebase Auth/Firestore | Removed from app code |
 
 ---
 
-## Architecture & Tech Stack
+## What the app can do
+
+After install / run, a user can:
+
+1. **Sign in** with email/password (Supabase), Google (if configured), or **guest** (password `guest`).
+2. Switch **English / Sinhala** UI and **dark / light** mode in Settings.
+3. See **live weather** for their GPS location (Colombo fallback).
+4. Open a **satellite map** (pan/zoom Leaflet).
+5. Create **field surveys** with farmer details, crop, soil, irrigation, GPS, **camera photo**, and **voice note** — saved offline in Room and synced to Supabase when online.
+6. Browse **crop articles**, **market/APMC** context, and an **input catalog** (e-commerce) with cart/orders (offline demo products if cloud empty).
+7. Use the **community feed** to post field observations (images via Supabase Storage).
+8. Use the floating / drawer **Agri Chatbot** for simple rule-based farming tips.
+9. Open drawer → **Sinhala Voice AI**: type (or record) a farming question in Sinhala/English → get intent, crop/symptom slots, and a Sinhala reply from the Python server. Disease-style questions set `needs_photo` (ready to connect Crop Doctor later).
+
+---
+
+## How AI connects to the APK
+
+```
+Phone (Agri Lanka APK)
+   camera / mic / typed Sinhala / GPS
+           │  HTTP JSON
+           ▼
+Python FastAPI  (ai-backend)
+   voice  │  disease (soon)  │  suitability (soon)
+           │
+           ▼
+      JSON result → Android UI
+
+Optional: Supabase for login, surveys, media storage, saving AI results
+```
+
+- Building an APK does **not** put Whisper/YOLO inside the phone.
+- During development: run FastAPI on your laptop; phone/emulator calls that URL.
+- Later: deploy FastAPI to a cloud host (Render / Railway / Fly.io — better than Vercel for heavy ML) and set `AgriAiConfig.BASE_URL` to the HTTPS URL.
+
+| Client | Typical AI base URL |
+|--------|---------------------|
+| Android emulator | `http://10.0.2.2:8000/` |
+| Real phone (same Wi‑Fi as PC) | `http://YOUR_PC_LAN_IP:8000/` |
+| Production | `https://your-deployed-api.../` |
+
+Config file: `app/src/main/java/com/project/farmingapp/model/ai/AgriAiApi.kt` → `AgriAiConfig.BASE_URL`.
+
+---
+
+## Architecture & tech stack
 
 | Layer | Technology |
-|---|---|
+|-------|------------|
 | Language | Kotlin |
-| UI | XML layouts + ViewBinding / DataBinding |
-| Architecture | MVVM (ViewModel + LiveData) |
-| Cloud backend | Supabase (PostgreSQL + PostgREST) |
-| Local database | Room (SQLite) |
-| Auth | Supabase Auth (email + Google Sign-In via ID token) |
-| File Storage | Supabase Storage bucket `media` (profiles, posts, surveys) |
-| AI backend (planned) | Python FastAPI (disease / voice / suitability) |
-| Weather | OpenWeatherMap API via Retrofit |
-| Image loading | Glide, Picasso |
-| Build system | Gradle (Kotlin DSL) |
-| Min SDK | API 23 (Android 6.0) |
-| Target SDK | API 34 |
-
-The app follows a single-Activity / multi-Fragment pattern. `DashboardActivity` is the main host and all screens (weather, e-commerce, community, etc.) are `Fragment`s swapped in and out of a single `frame_layout` container. Navigation state is preserved correctly across configuration changes (theme switches, rotations).
-
-### Backend: Supabase (not Firebase)
-
-Auth, database, and file storage now use **Supabase**:
-
-1. Run `supabase/schema.sql` in the Supabase SQL editor (creates `users`, `posts`, `products`, `article_fruits`, `surveys`, `cart_items`, `orders`, …).
-2. Ensure Storage bucket `media` exists and apply `supabase/policies.sql`.
-3. Android client code lives under `app/src/main/java/com/project/farmingapp/supabase/`.
-4. Guest demo login: any email + password `guest`.
-
-Google Sign-In still needs a Google OAuth web client id (`default_web_client_id`); the ID token is exchanged with Supabase Auth (not Firebase).
+| UI | XML + ViewBinding / DataBinding |
+| Architecture | MVVM (ViewModel + LiveData), single `DashboardActivity` + Fragments |
+| Auth / DB / Storage | Supabase |
+| Local DB | Room (field surveys) |
+| Networking | Retrofit + OkHttp |
+| Weather | OpenWeatherMap |
+| Map | Leaflet in WebView (`leaflet_map.html` + `LeafletMapWebViewHelper`) |
+| AI server | Python FastAPI (`ai-backend/`) |
+| Min / Target SDK | 23 / 34 |
 
 ---
 
-## Features In Detail
+## Sinhala Voice AI (current)
 
-### 1. Dashboard (Home Screen)
-The home screen is the main hub. It shows:
-- A **live weather card** — current temperature, humidity, wind speed, and a weather icon pulled from OpenWeatherMap based on device GPS. Falls back to Colombo coordinates if location is unavailable.
-- A **satellite map preview** (Leaflet inside a `WebView`) that is reliable across devices. Tapping it opens the full-screen satellite experience in the APMC screen.
-- A **product grid** — 4 randomly selected products from the e-commerce catalog (or offline demo products if Supabase is unavailable).
-- **Category shortcuts** to Agriculture Articles.
-- A **cart button** in the top corner for quick access to the cart.
-- A **floating chatbot button** (bottom-right) that opens the Agri Chatbot from any screen except the social feed and chatbot itself.
+**Android**
 
-### 2. Weather Screen
-Full weather detail screen:
-- **Hero card** — temperature (°C), condition description, feels-like, humidity, wind speed, min/max for the day.
-- **Hourly forecast** — horizontal scrollable list of today's hourly entries.
-- **5-day forecast** — daily noon-based entries in a vertical list.
-- Data comes from the OpenWeatherMap 5-day / 3-hour forecast API, keyed to GPS coordinates. City name is displayed at the top.
-- An offline fallback demo dataset is used if the API call fails.
+- Drawer item: **Sinhala Voice AI**
+- `SinhalaVoiceFragment` + `VoiceAiViewModel`
+- Type question or record audio → FastAPI → show Sinhala + English reply, intent/crop/symptom
 
-### 3. E-Commerce (Shop)
-A full shopping flow:
-- **Product catalog** — grid layout with category filter chips (All, Fertilizer, Pesticide, Machine) and a live search bar that filters by product name and short description.
-- **Product detail screen** — full description, images, attribute selection (e.g. size/weight variants), add-to-cart.
-- **Cart** — list of selected items with quantities, totals in LKR, and a checkout button.
-- **Checkout / Payment** — pre-payment summary screen feeding into a Razorpay payment activity.
-- **My Orders** — history of placed orders.
-- When Supabase is unavailable, a built-in set of offline demo products is shown so the UI is always usable.
-
-### 4. Market Prices (APMC)
-Displays agricultural commodity market prices. Useful for research assistants when capturing **economic context** alongside field yields.
-
-In the article detail screen, each crop/article also shows a **Market price trend** line chart (MPAndroidChart). If the Supabase `article_fruits` row contains a `market_prices` / `marketPrices` field, it will be used; otherwise a stable offline fallback series is shown.
-
-### 5. Field Observation & Anomaly Log (Social Feed)
-A research-focused observation log:
-- **Post list** — scrollable list of community posts, each optionally with an image.
-- **Create post** — text and image posts. Images are uploaded to Supabase Storage before the post is saved to the Supabase `posts` table.
-- Posts are saved locally as drafts via `LocalPostDraftStore` so nothing is lost if the app is closed mid-composition.
-- User's own posts are visible on their profile and can be deleted from there.
-
-### 6. Agriculture Articles
-Educational content section:
-- **Article list** — overview of agriculture topics.
-- **Fruits / Crops sub-section** — crop-specific articles (e.g. rice, tea, coconut, vegetables).
-- Content sourced from the Supabase `article_fruits` table (with offline article fallbacks).
-- The article detail screen (`FruitsFragment`) includes a **Market price trend** chart and fixed layouts to avoid text overlap on smaller devices.
-
-### 7. Field Classification Assistant
-A lightweight, rule-based classification helper:
-- Responds to questions on **weather**, **fertilizer**, **pests/disease**, **rice**, **tea**, **chilli**, **coconut**, **how to grow** (any crop), and more.
-- Remembers the last topic discussed within the session (stored in SharedPreferences) so follow-up messages like "tell me more" are context-aware.
-- Chat bubbles scroll automatically as the conversation grows.
-- Available from any screen via the floating action button, and from the side navigation drawer.
-
-### 8. User Profile
-Every registered user has a profile page:
-- Profile photo and background cover image (uploaded to Supabase Storage).
-- Display name, city, and a short bio — all editable inline.
-- Post count and a scrollable list of the user's own community posts.
-- Tap any of your own posts to view or delete them.
-
-### 9. Intro / Onboarding
-Users see a multi-screen intro slider (ViewPager2) **before** the login screen. Slide images live under `app/src/main/assets/images/` (`front_page_1.jpeg` … `front_page_6.jpeg`, `front_page_8.jpeg`, plus `onboarding.png` for the seventh story). The pager loads them with Glide from `file:///android_asset/…` (see `IntroAdapter`, `AgriAssetPaths`). Whether onboarding runs is controlled by `SharedPreferences` (`MyPrefs`): **`intro_schema_version`** must be at least `IntroActivity.INTRO_SCHEMA_VERSION` (bump that constant when you change slides so everyone sees the new tour once). `firstTime` is still written when onboarding completes for older code paths.
-
----
-
-## Authentication & User Accounts
-
-Three ways to get in:
-
-| Method | How it works |
-|---|---|
-| Email + Password | Supabase Auth. Signup creates a row in the `users` table. |
-| Google Sign-In | Google Sign-In SDK ID token exchanged with Supabase Auth. |
-| Guest / Offline mode | Password `guest` (or offline path). Uses a fixed demo identity (`harendrathennakoon@gmail.com`). All UI screens open normally. |
-
-Password reset is available from the login screen (Supabase Auth recover email).
-
-The `AuthHelper` singleton manages the signed-in state across the app. It persists guest mode to SharedPreferences so the app survives restarts without asking you to log in again.
-
----
-
-## Offline / Guest Mode
-
-The app is built to run even without a live Supabase connection:
-
-- **Guest mode** — use password `guest` on login. All screens open. Cloud-backed data (your real posts, orders, profile) may not sync, but the layout and navigation are fully testable.
-- **Offline e-commerce** — if Supabase returns empty results, a hardcoded set of demo agricultural products is shown automatically. Product detail, cart, and checkout flows all work with these demo products.
-- **Offline weather** — if the OpenWeatherMap API call fails, a demo weather dataset is displayed so the weather card and screen always show something.
-- **Draft posts** — community post drafts are saved locally so they survive app restarts.
-- **Cart persistence** — cart items are stored in `LocalCartStore` (SharedPreferences) and/or Supabase `cart_items` when signed in.
-
----
-
-## Dark & Light Mode
-
-A dark/light mode toggle is in the **side navigation drawer** ("Switch to Dark Mode" / "Switch to Light Mode"). The preference is saved to SharedPreferences and applied at app startup via the `FarmingApp` Application class, so the chosen theme is restored every time the app opens.
-
-Toggling the theme causes Android to recreate `DashboardActivity` to apply the new theme resources. The app correctly saves and restores your current screen and navigation state during this recreation — you stay on whatever screen you were on, now re-rendered in the new theme.
-
----
-
-## Running the App
-
-### Requirements
-- Android Studio Hedgehog (2023.1) or newer
-- A physical device or emulator running **API 33 or 34** (API 36 emulators have known instability issues with this project)
-- A `google-services.json` / `default_web_client_id` — only needed for Google Sign-In (Google Cloud OAuth client)
-- Supabase project with schema from `supabase/schema.sql` and Storage policies from `supabase/policies.sql`
-
-### Steps
-1. Clone or download this repository.
-2. Open the `Farming-App` folder in Android Studio.
-3. Place your `google-services.json` in the `app/` directory.
-4. Let Gradle sync fully.
-5. Open **Device Manager**, create/start an emulator (API 33 or 34 recommended).
-6. Run the `app` configuration.
-
-> **No Supabase setup?** You can still run the app. On the login screen, tap "Continue as Guest" to enter offline/guest mode. All UI screens, offline products, demo weather data, and the chatbot will work without configuring Supabase tables.
-
-### Fixing a Stuck Emulator
-If you see `Timed out after 300 seconds waiting for emulator to come online`, run these from PowerShell inside the `scripts/` folder:
+**Backend**
 
 ```powershell
-.\fix-emulator.ps1
-.\start-emulator-cursor.ps1 -Avd "YOUR_AVD_NAME"
+cd ai-backend
+.\.venv\Scripts\Activate.ps1
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-Wait until the Android home screen is fully loaded before running the app again.
+Docs: http://127.0.0.1:8000/docs  
+
+Quick test (no mic needed):
+
+```powershell
+curl -X POST "http://127.0.0.1:8000/voice-assistant/text" -H "Content-Type: application/json" -d "{\"text\": \"මගේ මිරිස් ගස් වල කොළ කහ වෙලා. මොකක්ද කරන්න ඕන?\"}"
+```
+
+Expected: `intent=disease_help`, `crop=chilli`, `needs_photo=true`.
+
+More detail: [`ai-backend/README.md`](ai-backend/README.md).
 
 ---
 
-## Project Structure
+## Supabase backend
 
+1. Run `supabase/schema.sql` in the Supabase SQL editor.  
+2. Ensure Storage bucket `media` exists; apply `supabase/policies.sql`.  
+3. Android client: `app/.../supabase/` (`SupabaseConfig`, Auth, Db, Session, Uploader).
+
+Do **not** put the service-role key in the Android app (anon key only).
+
+---
+
+## Running the Android app
+
+1. Open the project in Android Studio.  
+2. Sync Gradle.  
+3. Use an **API 33/34** emulator or a physical device.  
+4. For Sinhala Voice AI: start `ai-backend` first (see above).  
+5. Emulator uses `http://10.0.2.2:8000/` by default.  
+6. Guest login: any email + password `guest`.
+
+Cleartext HTTP is enabled for local AI testing (`usesCleartextTraffic` in the manifest). Use HTTPS in production.
+
+---
+
+## Running the AI backend
+
+```powershell
+cd "ai-backend"
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-app/src/main/
-├── java/com/project/farmingapp/
-│   ├── FarmingApp.kt                    # Application class — applies dark/light theme on startup
-│   ├── adapter/                         # RecyclerView adapters for all lists
-│   │   ├── EcommerceAdapter.kt
-│   │   ├── OfflineEcommerceAdapter.kt
-│   │   ├── WeatherAdapter.kt
-│   │   ├── CurrentWeatherAdapter.kt
-│   │   ├── CartItemsAdapter.kt
-│   │   ├── SMPostListAdapter.kt
-│   │   ├── DashboardEcomItemAdapter.kt
-│   │   └── ...
-│   ├── model/                           # Data models and API definitions
-│   │   ├── WeatherApi.kt                # Retrofit interface for OpenWeatherMap
-│   │   ├── AuthRepository.kt
-│   │   └── data/                        # Data classes (Weather, Orders, etc.)
-│   ├── utilities/                       # Helpers and extensions
-│   │   ├── AuthHelper.kt                # Singleton for auth state (guest + Supabase)
-│   │   ├── LocalCartStore.kt            # SharedPreferences-backed cart persistence
-│   │   ├── MicroInteractions.kt         # Tap feedback animations
-│   │   └── ViewUtils.kt
-│   ├── view/                            # All screens (Activities + Fragments)
-│   │   ├── auth/                        # LoginActivity, SignupActivity
-│   │   ├── dashboard/                   # DashboardActivity (main host), DashboardFragment
-│   │   ├── weather/                     # WeatherFragment
-│   │   ├── ecommerce/                   # EcommerceFragment, EcommerceItemFragment,
-│   │   │                                #   CartFragment, PaymentFragment, MyOrdersFragment,
-│   │   │                                #   RazorPayActivity, OfflineEcommerceData
-│   │   ├── apmc/                        # ApmcFragment (market prices)
-│   │   ├── socialmedia/                 # SocialMediaPostsFragment, SMCreatePostFragment
-│   │   ├── articles/                    # ArticleListFragment, FruitsFragment
-│   │   ├── chatbot/                     # ChatbotFragment
-│   │   ├── user/                        # UserFragment (profile)
-│   │   └── introscreen/                 # IntroActivity (onboarding)
-│   └── viewmodel/                       # ViewModels (MVVM)
-│       ├── AuthViewModel.kt
-│       ├── WeatherViewModel.kt
-│       ├── EcommViewModel.kt
-│       ├── SocialMediaViewModel.kt
-│       ├── UserDataViewModel.kt
-│       └── ...
-└── res/
-    ├── layout/                          # XML layouts for all screens and list items
-    ├── anim/                            # Slide-in / slide-out fragment transition animations
-    ├── drawable/                        # Icons, backgrounds, shapes
-    ├── menu/                            # Navigation drawer menu, bottom nav menu, toolbar menus
-    └── values/                          # Colors, strings, themes (light + dark)
+
+Optional real speech (Whisper):
+
+```powershell
+pip install openai-whisper torch
 ```
 
 ---
 
-## External APIs & Services
-
-| Service | Purpose | Notes |
-|---|---|---|
-| Supabase Auth | User login (email + Google ID token) | Required for real accounts; guest mode bypasses this |
-| Supabase Database | Products, posts, users, surveys, cart, orders, articles | App falls back to offline data if unavailable |
-| Supabase Storage | Profile photos, posts, survey media (`media` bucket) | Used for uploads when signed in / syncing |
-| OpenWeatherMap | 5-day / 3-hour weather forecast | API key configured in the weather ViewModel; demo fallback if unavailable |
-| Google Maps (WebView) | Satellite map tile on home screen | Uses `google_maps_key` from strings |
-| Razorpay | Payment processing for orders | Runs in `RazorPayActivity` |
-| Google Sign-In | OAuth login | Requires `default_web_client_id` from `google-services.json` |
-
----
-
-## Acknowledgements & References
-
-This project was built by **[godragun](https://github.com/godragun)** as an academic project. During development, the following open-source GitHub repositories were studied for guidance on architecture patterns, Supabase integration, and UI structure. No code was directly copied — these projects served as learning references.
-
-| Repository | Author | What I learned from it |
-|---|---|---|
-| [farming-app (hetsuthar028)](https://github.com/hetsuthar028) | hetsuthar028 | MVVM structure, Supabase Database integration patterns, e-commerce flow |
-| [farming-app (sirvi3014)](https://github.com/sirvi3014) | sirvi3014 | UI layout approaches, navigation drawer setup, weather API integration |
-
-All new features in this repository — the **Field Survey offline module** (Room database, MediaRecorder, FileProvider, Supabase sync), the **light mode crash fix**, the **chatbot FAB visibility logic**, and this documentation — were designed and implemented independently.
-
----
-
-## Known Quirks & Notes
-
-- **Currency & region** — all prices are in LKR (Sri Lankan Rupees). Location defaults to Colombo (6.9271°N, 79.8612°E) when GPS is unavailable.
-- **Location permission** — the app requests `ACCESS_FINE_LOCATION` at runtime. If denied, weather data defaults to Colombo. The app never blocks functionality because of a denied location permission.
-- **First-run intro** — shown until `intro_schema_version` in `MyPrefs` matches `IntroActivity.INTRO_SCHEMA_VERSION`. To force the tour again, clear app data or remove/adjust that int (and optionally `firstTime`).
-- **Dashboard satellite preview** — **Leaflet** runs inside a `WebView` and loads Leaflet JS/CSS from local app assets (no CDN). Tile images are fetched via a `/tiles/…` proxy handled by `LeafletMapWebViewHelper` (OkHttp + caching) for consistent behavior across devices.
-- **OpenWeather JSON** — forecast `main.humidity`, `temp_min`, and `temp_max` are numeric in JSON; the Kotlin model must use numeric types so Gson can parse responses (see `WeatherMain.kt`).
-- **Google Sign-In** — requires a valid `google-services.json` and a correctly configured OAuth client ID in Supabase Console. Without it, Google Sign-In will fail at runtime (email login and guest mode will still work).
-- **API 36 emulators** — known to be unstable with this project. Use API 33 or 34.
-- **Razorpay** — a valid Razorpay key must be configured for payment to complete. The pre-payment and cart flows work without it.
-
----
-
----
-
-# Viva Preparation Guide — Agri Lanka
-
-> This section is written for a student presenting this project in a viva or technical interview. Read it like you are explaining your own work to an examiner. Everything below is tied directly to code and features that exist in this app.
-
----
-
-## 1. What Problem Does This App Solve?
-
-### The Problem (say this first in your viva)
-
-Farmers in Sri Lanka — and in most developing countries — face four daily challenges:
-
-1. **No easy access to weather information** relevant to their field location.
-2. **No single platform** to audit local input pricing (fertilizer, pesticides, machinery) in a consistent, repeatable way.
-3. **Isolation** — research assistants working across districts cannot easily share observations or get rapid peer feedback in the field.
-4. **Unreliable internet** — rural areas have poor or no connectivity, so apps that require constant internet are useless.
-
-### How This App Solves It
-
-Agri Lanka is a **single Android application** that addresses all four problems:
-
-| Problem | Solution in the App |
-|---|---|
-| No weather access | Live GPS-based weather from OpenWeatherMap, with offline fallback data |
-| No marketplace | E-commerce module for fertilizers, pesticides, machinery with offline demo products |
-| Isolation | Community social feed, Agri Chatbot, agriculture articles |
-| Poor internet | Offline-first design — Room database, SharedPreferences cache, demo data fallbacks |
-
-**Examiner tip:** Say "The core design decision was offline-first. Every feature has a fallback so a farmer with no internet can still use the app."
-
----
-
-## 2. How the Architecture Works (MVVM + Data Flow)
-
-### What is MVVM?
-
-MVVM stands for **Model — View — ViewModel**. It is an architectural pattern that separates the app into three layers so each layer has one job and they don't directly depend on each other.
+## Project structure (high level)
 
 ```
-USER INTERACTION
-      ↓
-   VIEW (Fragment / Activity)
-      ↓  observes LiveData      ↑ calls functions
-   VIEWMODEL
-      ↓  requests data          ↑ returns data
-   MODEL (Repository → Supabase / Room / Retrofit)
+Farming-App/
+├── app/src/main/java/com/project/farmingapp/
+│   ├── view/           # Fragments & Activities (dashboard, survey, ai, …)
+│   ├── viewmodel/
+│   ├── model/          # Repositories, WeatherApi, ai/AgriAiApi
+│   ├── supabase/       # Supabase Auth/DB/HTTP helpers
+│   └── utilities/      # AuthHelper, LeafletMapWebViewHelper, …
+├── ai-backend/         # Python FastAPI (voice now; disease/suitability later)
+├── supabase/           # schema.sql, policies.sql
+└── README.md
 ```
-
-### How It Works in This App — Concrete Example
-
-Take the **Weather feature** as an example:
-
-1. **Model layer** — `WeatherApi.kt` (Retrofit interface) defines the HTTP call to OpenWeatherMap. `WeatherViewModel` holds the `WeatherRepository` which fetches data.
-
-2. **ViewModel layer** — `WeatherViewModel.kt` holds a `MutableLiveData<WeatherRootList>` called `newDataTrial`. It exposes this as an immutable `LiveData` to the View. It also holds coordinates via `getCoordinates()` / `updateCoordinates()`.
-
-3. **View layer** — `WeatherFragment.kt` calls `viewModel.newDataTrial.observe(viewLifecycleOwner) { weatherData -> ... }`. Whenever the ViewModel posts new weather data, the Fragment automatically updates the UI — temperature, humidity, wind, icon.
-
-**Why this is good:** The Fragment does NOT make the network call. If the screen rotates, the ViewModel survives (it is scoped to the Activity), so the data is not lost and no extra network request is made.
-
-### Key Android Architecture Concepts
-
-| Concept | What it means | Where in this app |
-|---|---|---|
-| `ViewModel` | Survives screen rotation. Holds UI data. | `WeatherViewModel`, `EcommViewModel`, `FieldSurveyViewModel`, etc. |
-| `LiveData` | Observable data holder. Automatically updates the UI. | `newDataTrial`, `ecommLiveData`, `allSurveys`, `userliveData` |
-| `Repository` | Single source of truth for data. Hides whether data comes from network or local DB. | `FieldSurveyRepository`, `AuthRepository` |
-| `Fragment` | A reusable UI screen that lives inside an Activity. | Every screen is a Fragment inside `DashboardActivity` |
-| `ViewBinding` | Type-safe access to XML layout views without `findViewById`. | Used in every Fragment |
-
-### Single Activity Pattern
-
-This app uses **one Activity (`DashboardActivity`) as a host** and every screen is a `Fragment` swapped into a `frame_layout` container. This is a recommended modern Android pattern because:
-
-- Fragments share the same ViewModel scope (the Activity), so data flows between screens without complicated callbacks.
-- The back stack is managed by the `FragmentManager` — pressing back naturally restores the previous screen.
-- Navigation animations are applied at the transaction level.
 
 ---
 
-## 3. How Each Major Feature Works Internally
+## Roadmap
 
-### Authentication
-
-**Flow:**
-```
-LoginActivity → SupabaseAuth.signInWithEmailAndPassword()
-                        OR
-             → GoogleSignIn → SupabaseAuth.signInWithCredential()
-                        OR
-             → "Guest" button → AuthHelper.enterGuestMode()
-                        ↓
-             DashboardActivity (main app)
-```
-
-- `AuthViewModel` holds the business logic (login, signup, Google sign-in).
-- `AuthHelper` is a Kotlin `object` (singleton) that holds the guest mode flag in memory AND in `SharedPreferences` so it survives app restarts.
-- On every screen that needs a user identity (social feed, profile, orders), the code calls `AuthHelper.requireEmail()` — it returns either the real Supabase email or `guest@offline.local`.
-
-**Key point for examiner:** "I used a singleton `AuthHelper` class to centralise all authentication state so no Fragment needs to directly import Supabase Auth — it just asks `AuthHelper`."
+| Step | Goal |
+|------|------|
+| ✅ | App features + Supabase + Sinhala UI |
+| ✅ | Sinhala Voice AI backend + Android screen |
+| 🔜 | Crop disease model + `/predict-disease` + Crop Doctor screen |
+| 🔜 | Connect voice `needs_photo` → camera → disease result |
+| 🔜 | Crop suitability ML + map colour zones |
+| 🔜 | Deploy FastAPI to cloud; point APK at HTTPS URL |
 
 ---
 
-### Weather Feature
+## Known notes
 
-**Flow:**
-```
-DashboardActivity (GPS location)
-        ↓ updateCoordinates([lat, lon, city])
-WeatherViewModel (LiveData<List<String>> coordinates)
-        ↓ updateNewData() → Retrofit API call
-OpenWeatherMap API → WeatherRootList (data class)
-        ↓ postValue(weatherData)
-WeatherFragment / DashboardFragment → UI updates
-```
-
-- The GPS location is fetched in `DashboardActivity` using `LocationManager` + `FusedLocationApi`.
-- Location is published via `WeatherViewModel.updateCoordinates()` — any Fragment observing this ViewModel automatically gets the coordinates.
-- The actual HTTP request uses **Retrofit 2** with a **Gson converter** to parse JSON directly into Kotlin data classes (`WeatherRootList`, `WeatherList`, `Main`, `Wind`, etc.).
-- If GPS is unavailable or permission is denied, the app defaults to **Colombo, Sri Lanka (6.9271°N, 79.8612°E)** — a hardcoded fallback.
-- If the API call fails entirely, the ViewModel's LiveData is never updated, so the UI shows the last known value or the initial placeholder.
+- Prices use **LKR**; default map/weather location is **Colombo** if GPS is unavailable.  
+- Surveys stay on-device until sync; AI needs the FastAPI server reachable.  
+- Prefer API 33/34 emulators over API 36 for this project.  
+- Google Sign-In needs a valid OAuth web client id + Supabase Google provider.  
+- Heavy ML is better hosted on Render/Railway/Fly.io than Vercel serverless.
 
 ---
 
-### E-Commerce Feature
+## Licence / credit
 
-**Flow:**
-```
-Supabase table "products"
-        ↓ EcommViewModel.loadAllEcommItems()
-        ↓ or getSpecificCategoryItems("fertilizer")
-EcommerceFragment → RecyclerView (EcommerceAdapter)
-        ↓ user taps product
-EcommerceItemFragment (product details + add to cart)
-        ↓ add to cart
-LocalCartStore (SharedPreferences) ← stored offline
-        ↓ checkout
-PrePaymentFragment → RazorPayActivity
-```
-
-- Products are stored in **Supabase Database** and fetched as `RemoteDocument` objects.
-- If Supabase returns empty (no internet or no data), `OfflineEcommerceData` provides a hardcoded list of demo products so the shopping flow never breaks.
-- The cart is stored in **SharedPreferences** (`LocalCartStore`) — this means the cart persists even if the app is killed, with no Supabase needed.
-- Category filtering is done by querying Supabase with a `.whereEqualTo("type", category)` clause.
-- Search filtering is done **client-side** — the full list is loaded and filtered in memory using Kotlin's `.filter { }` function.
-
-**Key point for examiner:** "I separated online and offline adapters — `EcommerceAdapter` for Supabase data and `OfflineEcommerceAdapter` for demo data — so both render identically to the user."
-
----
-
-### Field Survey Module (Offline-First)
-
-This is the most technically complete offline feature in the app.
-
-**Flow:**
-```
-SurveyFormFragment
-  → GPS location (LocationManager)
-  → Camera photo (FileProvider + TakePicture contract)
-  → Voice recording (MediaRecorder → .mp4 file)
-  → User fills form fields
-        ↓
-FieldSurveyViewModel.saveSurvey(survey)
-        ↓ coroutine (suspend function)
-FieldSurveyDao.insert(survey) → Room SQLite database
-        ↓
-LiveData<List<FieldSurvey>> auto-updates
-SavedSurveysFragment → shows updated list
-        ↓ user taps "Sync"
-FieldSurveyRepository.syncAll()
-  → checks internet (ConnectivityManager)
-  → if online: Supabase.collection("field_surveys").set(doc)
-  → marks isSynced = true in Room
-```
-
-- **Room** is Android's official SQLite ORM (Object Relational Mapper). It maps a Kotlin data class (`FieldSurvey`) to a database table via the `@Entity` annotation.
-- **DAO (Data Access Object)** — `FieldSurveyDao` provides `@Insert`, `@Update`, `@Delete`, and `@Query` functions. Room generates all the SQL at compile time.
-- `getAllSurveys()` returns a `LiveData<List<FieldSurvey>>` — Room automatically re-queries the database whenever data changes and posts the new list to LiveData, so the UI updates without any manual refresh.
-- The `isSynced` boolean flag in the `FieldSurvey` entity tracks whether this record has been uploaded to Supabase.
-- `syncAll()` only uploads records where `isSynced = false`, then marks them synced. If there is no internet, a `SyncResult.NoInternet` is returned and the data stays safe in Room.
-
----
-
-### Community Social Feed
-
-```
-SMCreatePostFragment
-  → image picked from gallery (Intent.ACTION_PICK)
-  → SupabaseStorage.upload(image) → returns download URL
-  → Supabase.collection("posts").add({ text, imageUrl, email, timestamp })
-        ↓
-SocialMediaPostsFragment
-  → Supabase.collection("posts").get() → list of posts
-  → SMPostListAdapter → RecyclerView
-```
-
-- Post drafts (text only) are saved to `LocalPostDraftStore` (SharedPreferences) so if the user closes the app while writing, the draft is restored.
-- Image uploads happen asynchronously — a progress bar is shown during upload.
-- Each post is a Supabase row with fields: author email, text, image URL, timestamp.
-
----
-
-### Agri Chatbot
-
-The chatbot is **fully offline** — it requires no API, no internet, no server.
-
-```
-User types message
-        ↓
-ChatbotFragment.generateResponse(prompt)
-  → prompt.lowercase()
-  → when { text.contains("rice") → ... }
-        ↓
-Returns hardcoded string response
-  → displayed as chat bubble (TextView added to LinearLayout)
-```
-
-- It is a **rule-based system** — `when` (switch) on keywords.
-- It maintains context using `SharedPreferences` — the last topic (`"last_topic"` key) is stored and used to answer follow-up questions like "tell me more".
-- The chat UI is built dynamically — each message is a `TextView` added programmatically to a `LinearLayout` inside a `ScrollView`.
-
-**Key point for examiner:** "I chose a rule-based approach because field researchers repeatedly need consistent, standardised classifications (symptom labels, capture checklists, category selection). A server-dependent ML approach would be risky in low-connectivity environments."
-
----
-
-## 4. How Offline Storage Is Handled
-
-The app uses **three different offline storage mechanisms** depending on what kind of data needs to be stored:
-
-| Storage Type | Technology | Used For |
-|---|---|---|
-| Structured data (surveys) | **Room** (SQLite ORM) | Field surveys — full CRUD, sync status, queries |
-| Simple key-value data | **SharedPreferences** | Cart items, auth state, dark mode, chatbot last topic, post drafts, first-run flag |
-| Files (images, audio) | **Internal/External files** | Survey photos (`.jpg`), voice notes (`.mp4`) via `getExternalFilesDir()` |
-
-### Room Database — How It Works Step by Step
-
-1. **Define the entity** — `@Entity(tableName = "field_surveys") data class FieldSurvey(...)` — each field becomes a database column.
-2. **Define the DAO** — `interface FieldSurveyDao` with `@Insert`, `@Query`, etc. — Room generates the actual SQL implementation at compile time using `kapt`.
-3. **Build the database** — `Room.databaseBuilder(context, FieldSurveyDatabase::class.java, "field_survey_db").build()` — this creates the SQLite file on the device.
-4. **Observe with LiveData** — `dao.getAllSurveys()` returns `LiveData<List<FieldSurvey>>`. Whenever any row in the table changes, Room re-runs the query and delivers the fresh list to all active observers automatically.
-5. **Write with coroutines** — `insert`, `update`, `delete` are `suspend` functions, called inside `viewModelScope.launch { }` so they run on a background thread without blocking the UI.
-
-### Why Not Just Use SharedPreferences for Everything?
-
-SharedPreferences stores simple key-value pairs (String, Boolean, Int). It cannot:
-- Store complex structured data (like a list of surveys with 14 fields each)
-- Query data (e.g. "give me all unsynced surveys")
-- Observe changes automatically
-
-Room (SQLite) handles all of these, which is why it is used for the Field Survey module.
-
----
-
-## 5. How Data Synchronization Works
-
-### The Sync Strategy — "Offline First, Sync When Online"
-
-This app follows an **offline-first** strategy:
-
-1. **Write locally first** — every survey is saved to Room immediately when the user taps "Save Offline". The user never waits for a network response.
-2. **Mark as unsynced** — the `isSynced = false` flag is set.
-3. **Sync when online** — when the user taps "Submit & Sync" or "Sync All", the app:
-   - Checks internet via `ConnectivityManager.getNetworkCapabilities()`
-   - If offline: returns `SyncResult.NoInternet` — user is informed, data stays safe
-   - If online: uploads each unsynced survey to Supabase, then marks `isSynced = true` in Room
-
-```
-No Internet?          Yes Internet?
-     ↓                      ↓
-Show warning        Upload to Supabase
-Keep in Room        Mark isSynced = true in Room
-                    Update LiveData → UI reflects "Synced"
-```
-
-### Conflict Handling
-Each device generates surveys independently, so **local Room IDs are not safe across devices**. To prevent multi-device overwrites, every survey also has a globally unique `remoteId` (UUID) that is used as the Supabase row ID. This enables multiple devices to submit without overwriting each other.
-
-Repeated sync of the same local record is still idempotent: the same `remoteId` is reused.
-
----
-
-## How the Map Works
-
-The app provides a satellite map in two places: a preview on the Dashboard and a full experience in the APMC screen.
-
-### Dashboard map preview (Leaflet WebView)
-
-- The preview is a `WebView` that loads `app/src/main/assets/leaflet_map.html`.
-- Leaflet JS/CSS are bundled locally under `app/src/main/assets/leaflet/` (no external CDN dependency).
-- Tile requests are routed through `https://appassets.androidplatform.net/tiles/{z}/{y}/{x}`.
-  - `LeafletMapWebViewHelper` intercepts `/tiles/…` and fetches real tiles with OkHttp.
-  - OkHttp has disk + memory caching so scroll/zoom stays smooth.
-
-### APMC (full-screen satellite + overlays)
-
-`ApmcFragment` supports two implementations:
-
-- **Google Maps (preferred)** when a valid `google_maps_key` exists:
-  - Map type: `SATELLITE`
-  - District boundary polygon is drawn with a green stroke + light fill.
-  - Crop suitability zones are drawn as circles (HIGH/MEDIUM/LOW) with **stroke + fill**.
-
-- **Leaflet WebView fallback** when no Google Maps key is present:
-  - Uses the same `leaflet_map.html` and tile proxy.
-  - Boundary and crop zones are rendered by calling JavaScript functions:
-    - `showDistrictBoundary(boundaryJson)`
-    - `showCropZones(zonesJson)`
-  - Crop zones do **not** clear the boundary; only circles are replaced so the border stays visible.
-
-## How Weather Works
-
-- Weather data is fetched from OpenWeatherMap using Retrofit (`WeatherApi`).
-- `WeatherViewModel` holds current coordinates (lat/lon/city) and exposes weather via `newDataTrial`.
-- Requests are **debounced** and any in-flight call is cancelled when a new request is made, to prevent request storms and UI jank.
-- If network fails, a demo fallback dataset is shown so the UI never goes blank.
-
-## How Field Surveys Work (Offline + Sync)
-
-Field surveys are designed as an **offline-first workflow**.
-
-### Create a survey (offline)
-
-In `SurveyFormFragment` the farmer can:
-- Capture a **photo** (camera + FileProvider)
-- Record a **voice note** (MediaRecorder → `.mp4`)
-- Save agronomy fields (crop type, soil condition, irrigation type, notes, yield, GPS coords)
-
-The survey is stored locally in **Room** as a `FieldSurvey` row.
-
-### View and sync surveys
-
-- `SavedSurveysFragment` lists local surveys using LiveData from Room.
-- `SurveyDetailFragment` shows full detail; it loads Room data on a background dispatcher and plays audio using `prepareAsync()` to avoid UI freezes.
-
-### Sync pipeline (multi-device safe)
-
-`FieldSurveyRepository.syncAll()`:
-
-1. Checks internet availability.
-2. Uploads media to **Supabase Storage** (if local paths exist and URLs are empty).
-3. Uploads the survey document to Supabase table `field_surveys` using the survey’s **`remoteId`** as the document id.
-4. Marks the local record as `isSynced = true` and persists uploaded media URLs locally.
-
-This supports **multiple devices submitting surveys** without overwriting each other.
-
-### Real-Time vs On-Demand Sync
-
-| Feature | Sync Type | Why |
-|---|---|---|
-| Supabase data (products, posts) | Real-time (Supabase listener) | Data changes on the server need to show immediately |
-| Field surveys | On-demand (user taps "Sync") | Surveys are created offline; no need for real-time |
-| Weather | On-demand (every time the screen opens) | Weather changes over time but doesn't need real-time streaming |
-| Cart | Never synced | Cart is a local concern — only uploaded when an order is placed |
-
----
-
-## 6. What Technologies Are Used and Why
-
-### Kotlin
-- Official language for Android development since 2017.
-- **Why over Java:** Null safety (`?` / `!!` operators), extension functions, coroutines (for async code), data classes (concise model definitions), `when` expressions.
-- **In this app:** Every file is Kotlin. Coroutines are used for all database operations in the Field Survey module.
-
-### Supabase Database
-- A **NoSQL cloud database** that stores data as documents inside collections.
-- **Why:** Real-time sync, no backend server needed, scales automatically, integrates directly with Supabase Auth.
-- **In this app:** Used for products, posts, user profiles, orders, articles, and field survey sync.
-- **Document structure example:** `users/{email}` → `{ name, city, bio, profileImage, posts: [] }`
-
-### Supabase Authentication
-- **Why:** Handles all security (password hashing, token management, OAuth) without building a backend.
-- **In this app:** Supports email/password and Google Sign-In. `AuthHelper` wraps it for clean access throughout the app.
-
-### Supabase Storage
-- Object storage for binary files (images, videos).
-- **Why:** Images uploaded by users (profile photos, post images) cannot go into Supabase (size limit). Storage provides a URL that Supabase can reference.
-
-### Retrofit 2
-- HTTP client library for Android.
-- **Why:** Converts a Kotlin interface with annotations into a full HTTP client. Handles JSON parsing via Gson automatically.
-- **In this app:** `WeatherApi.kt` defines `@GET("forecast")` with query parameters. Retrofit generates the actual implementation.
-
-### Room (SQLite ORM)
-- Official Android persistence library that wraps SQLite.
-- **Why:** Type-safe database access with compile-time query validation, LiveData integration, coroutine support.
-- **In this app:** Field Survey module — stores all survey data locally before syncing to Supabase.
-
-### LiveData
-- Lifecycle-aware observable data holder from Android Jetpack.
-- **Why:** Automatically stops delivering data when the Fragment is not visible (prevents memory leaks and crashes on null views). Resumes delivery when the Fragment becomes active again.
-- **In this app:** Used in every ViewModel to communicate data changes to the UI.
-
-### Glide
-- Image loading and caching library.
-- **Why:** Handles downloading images from URLs asynchronously, caches them to disk, handles placeholder/error images, and automatically cancels requests when the view is recycled.
-- **In this app:** Used to load product images, profile photos, weather icons from URLs.
-
-### ViewBinding / DataBinding
-- **ViewBinding** generates a type-safe binding class for each XML layout.
-- **Why:** Eliminates `findViewById` calls and provides null-safe, type-safe access to every view.
-- **In this app:** Every Fragment and Activity uses ViewBinding (`_binding = FragmentXyzBinding.inflate(...)`).
-
-### MediaRecorder
-- Android's built-in API for recording audio.
-- **Why:** No external library needed. Supports `.mp4` / `.aac` output. Runs in-process.
-- **In this app:** Used in the Field Survey form to record voice notes for crop conditions.
-
-### FileProvider
-- Android security component for sharing file URIs between apps.
-- **Why:** On Android 7.0+, you cannot pass raw `file://` URIs to the camera app — it will crash. FileProvider converts local file paths to `content://` URIs that the camera accepts.
-- **In this app:** Used in the Field Survey's photo capture to pass the output file URI to the camera intent.
-
----
-
-## 7. What to Say to the Examiner
-
-### Opening Statement (memorise this)
-
-> "This project is a **Comprehensive Data Collection & Environmental Auditing Suite** for field researchers and research assistants conducting fieldwork. The core design principle is **offline‑first reliability**: the system must remain operational in low‑connectivity environments, capture high‑fidelity evidence (structured forms + GPS + photo + audio), and synchronise to a central dataset when connectivity returns. Technically, it uses **MVVM** with Kotlin, **Room** for local persistence, and **Supabase (Auth + Supabase + Storage)** as the cloud backend, with Retrofit for environmental context feeds (weather). I’ll explain the key technical decisions and why each module contributes to research methodology and data integrity."
-
----
-
-### Likely Examiner Questions and How to Answer Them
-
-**Q: Why did you use MVVM?**
-> "MVVM enforces a clear separation of concerns: the View (Activity/Fragment) renders UI, the ViewModel owns state and orchestrates workflows, and the Model/Repository layer abstracts data sources (Room, Supabase, Retrofit). This is important in field research because the UI must remain responsive while background work (I/O, uploads, sync) continues safely. ViewModels also survive configuration changes, so rotating the device or navigating between screens does not restart data collection flows or duplicate network calls."
-
-**Q: What is LiveData and why did you use it?**
-> "LiveData is a lifecycle‑aware observable data holder. The ViewModel exposes immutable LiveData streams, and Fragments observe them to update UI reactively. Lifecycle awareness matters in field contexts: if the app is backgrounded during a capture or sync, LiveData prevents updates from targeting a destroyed view, reducing crashes and preventing partial UI states. When the screen becomes active again, it immediately receives the most recent state."
-
-**Q: How does offline work in your app?**
-> "Offline operation is layered:
->
-> 1) **SharedPreferences** for lightweight state (authentication mode, UI settings, cached selections).
-> 2) **Room (SQLite)** for structured research records in the Field Survey module — each submission is committed locally first, including pointers to evidence files, then synchronised later.
-> 3) **Graceful degradation** for context feeds: if Supabase or the weather endpoint is unreachable, the UI continues with cached or fallback datasets so fieldwork is never blocked by connectivity."
-
-**Q: What is Room and how is it different from SharedPreferences?**
-> "SharedPreferences stores simple key‑value pairs (Booleans, Strings, Ints) and is not suitable for relational queries or structured datasets. Room is an ORM over SQLite that provides:
->
-> - Schema‑defined entities (`@Entity`) for structured research records
-> - Queryable DAOs (e.g., retrieve all unsynced submissions)
-> - LiveData integration for reactive UI
-> - Coroutine support so database I/O runs off the main thread
->
-> This makes Room appropriate for offline‑first field collection where records must be consistent, queryable, and durable."
-
-**Q: How does data sync work?**
-> "The suite uses an **offline‑first, append‑only synchronisation strategy**:
->
-> - Each field submission is written to Room immediately with `isSynced = false` so the researcher never waits on the network.
-> - Evidence files (photo/audio) are captured locally and referenced by path.
-> - When connectivity is available, sync uploads media (Supabase Storage where configured) and writes a metadata document to Supabase, then marks the local record as synced.
-> - Multi‑device safety is handled by a stable, globally unique `remoteId` (UUID) used as the Supabase row id to prevent cross‑device overwrites.
->
-> This guarantees that a research assistant can complete audits in remote locations and synchronise later without data loss."
-
-**Q: What is Supabase Database?**
-> "Supabase is a cloud NoSQL document database. It stores data in collections and documents (JSON‑like structures) and supports real‑time listeners. In this project it functions as the **central research dataset**:
->
-> - Field survey submissions are synchronised as documents (linked to evidence URLs).
-> - Auxiliary datasets (catalog items, observation logs) are stored as documents for consistent querying and sharing across devices.
-> - User identity metadata supports provenance and accountability in a research workflow."
-
-**Q: Why did you choose a BaaS (Supabase) over a fully custom backend?**
-> "Building a custom REST API backend requires a server, deployment, security setup, and maintenance. Supabase provides Auth, Postgres, Storage, and REST APIs out of the box — authentication, database, file storage, and real-time sync. For a prototype or academic project, this lets me focus on the Android app rather than backend infrastructure. In production, I could migrate to a custom backend gradually."
-
-**Q: What is Retrofit?**
-> "Retrofit is an HTTP client library. I define typed API interfaces (e.g., `@GET("forecast")`) and Retrofit generates the client implementation. Responses are parsed into Kotlin data classes using Gson. In this suite, Retrofit provides environmental context (weather) that can be attached to field submissions to improve the analytical value of the dataset."
-
-**Q: How did you handle camera and microphone in the survey?**
-> "For evidence capture I used Android’s modern, permission‑safe APIs:
->
-> - **Camera**: `ActivityResultContracts.TakePicture()` writes to an app‑owned file. A `FileProvider` issues a `content://` URI so the camera app can write securely (required on Android 7.0+).
-> - **Audio**: `MediaRecorder` captures voice notes as `.mp4` files for consistent storage and later upload.
->
-> This design supports traceable, high‑fidelity field evidence alongside structured form data."
-
-**Q: What is the single-Activity pattern?**
-> "All screens in this app are Fragments hosted inside one Activity — `DashboardActivity`. The Activity has a `FrameLayout` container and each screen is a Fragment that replaces the previous one. This pattern is recommended by Google because Fragments are lighter than Activities, they can share ViewModels scoped to the Activity, and navigation (back stack) is managed cleanly by the FragmentManager."
-
-**Q: How does authentication work?**
-> "There are three access modes:
->
-> - **Email/password** via Supabase Auth
-> - **Google Sign‑In** via Supabase credentials
-> - **Guest mode** for offline demonstration or constrained deployments (controlled by `AuthHelper` and persisted in SharedPreferences)
->
-> Identity is used for **data provenance**: every submission is attributable to a specific research assistant account (or a guest identity in demo mode), supporting accountability and audit trails."
-
-**Q: How does the “Field Classification Assistant” work?**
-> "The Field Classification Assistant is an offline, rule‑based triage component. It standardises terminology and provides consistent classification guidance (e.g., symptom patterns, disease categories, recommended capture fields) before the research assistant logs a formal record. Implementation‑wise, it uses a keyword/rule matching pipeline (`when` logic) and stores lightweight conversational context in SharedPreferences to support follow‑ups. It is intentionally offline to remain available in remote field locations and to ensure consistent language across data collectors."
-
-**Q: Why does the suite include an “Agricultural Input Supply Catalog & Cost Estimator” (shopping/products module)?**
-> "Fieldwork often requires capturing **economic baselines** alongside biophysical observations. The input catalog module is repurposed as a **supply‑chain auditing instrument**: research assistants can document prevailing prices for fertilisers, pesticides, and machinery rentals in each district. This contextual metadata supports later analysis (e.g., whether input affordability correlates with observed plant health outcomes or yield estimates). Technically, the catalog is a structured dataset (Supabase when available; offline fallback data when not) rendered via RecyclerView adapters, allowing consistent data capture even under weak connectivity."
-
-**Q: Why include “Economic Context Auditing” (market prices / APMC module)?**
-> "Market dynamics can strongly influence local practices and the interpretation of yield and cost data. The APMC module provides an **economic reference layer** so investigators can cross‑reference field observations against prevailing commodity price signals. In research terms, this improves dataset interpretability by separating agronomic effects from economic incentives. The app treats this as a context feed rather than a consumer feature."
-
-**Q: Why include a “Real‑Time Field Observation & Anomaly Log” (social feed)?**
-> "This module functions as a decentralised **anomaly reporting channel** for research teams operating across districts. It supports rapid dissemination of unexpected observations (e.g., emerging pest clusters, disease outbreaks, flood damage) and helps standardise incident reporting. The design is intentionally lightweight (text + optional media), with asynchronous uploads and local draft persistence to reduce data loss in the field."
-
-**Q: Why include satellite maps and geospatial overlays?**
-> "Spatial context is essential for field research. The satellite view supports **site verification**, helps confirm district boundaries, and enables consistent visual context during audits. The APMC screen overlays boundaries and suitability zones to support repeatable site selection and to reduce ambiguity when multiple investigators work in adjacent regions. The implementation includes both Google Maps (when a key is configured) and a WebView‑Leaflet fallback to preserve functionality across devices and deployment environments."
-
-**Q: Why include weather if the core task is data collection?**
-> "Weather is a primary confounder in field observations. Attaching a consistent environmental context feed (temperature, humidity, wind) improves analytical value and reduces retrospective ambiguity during data cleaning. In the implementation, weather requests are debounced and have offline fallback data so that the UI remains responsive and fieldwork is not blocked by transient network failures."
-
-**Q: Why include articles/knowledge content in a research suite?**
-> "In fieldwork, classification consistency matters. The articles provide a **standard reference baseline** for terminology, disease indicators, and process guidance so that multiple data collectors use the same language. This reduces inter‑rater variance and improves label quality before records are finalised in the Field Survey module. The article detail screen also includes a market‑trend visual to support context-aware interpretation."
-
-**Q: Why include user profiles in an academic data collection workflow?**
-> "User identity supports **data provenance and auditor accountability**. In a research context, each submission should be attributable to a verified research assistant to maintain chain‑of‑custody for evidence (photos/audio) and to support later audit/review. The suite uses Supabase Auth when available, and a controlled guest mode for demonstrations."
-
-**Q: The brief requires a field data collection app. How do you justify additional modules under Rule 7?**
-> "Each module is positioned as a **research‑value component**: it either improves data quality (classification assistant, reference content), improves interpretability (weather + market context), or improves operational reliability (offline fallbacks, observation log, geospatial verification). Features that did not clearly add research value were deliberately removed from the codebase to keep scope aligned with the assignment brief."
-
-**Q: How do you handle dark and light mode?**
-> "The user toggles dark/light mode from the navigation drawer. The choice is saved to SharedPreferences. In the `FarmingApp` Application class — which runs before any Activity — I read this preference and call `AppCompatDelegate.setDefaultNightMode()`. This applies the theme before the first Activity starts. When the mode is toggled, Android recreates the Activity to reload themed resources. I fixed a bug where this recreation was navigating the user back to the home screen — I solved it by guarding the initial fragment transaction with `if (savedInstanceState == null)` so recreations restore the saved state instead of resetting navigation."
-
----
-
-### Things to Emphasise in Your Viva
-
-1. **Offline-first is the core design decision** — not an afterthought.
-2. **MVVM keeps the code maintainable** — changing the UI never touches the data layer.
-3. **LiveData + ViewModel = no memory leaks, no null pointer crashes from stale views.**
-4. **Room + Supabase together** = best of both worlds: local speed + cloud sync.
-5. **Every feature has a fallback** — the app never shows a blank screen.
-6. **Sri Lanka context** — LKR currency, Colombo default location, crops like tea/rice/coconut show domain understanding.
-7. **Security** — FileProvider for camera, Supabase Auth tokens, no hardcoded credentials.
-
----
-
-### Quick Feature → Technology Map (for last-minute revision)
-
-| Feature | Key Technology |
-|---|---|
-| Login / Signup | Supabase Authentication, AuthHelper singleton |
-| Weather | Retrofit + OpenWeatherMap API, GPS via LocationManager |
-| E-Commerce | Supabase, OfflineEcommerceData fallback, SharedPreferences cart |
-| Community Feed | Supabase + Supabase Storage, LocalPostDraftStore |
-| Field Survey | Room (SQLite), MediaRecorder, FileProvider, Supabase sync |
-| Chatbot | Rule-based `when` expression, SharedPreferences for context |
-| Market Prices | Supabase |
-| Articles | Supabase |
-| User Profile | Supabase + Supabase Storage, Glide image loading |
-| Dark/Light Mode | SharedPreferences, AppCompatDelegate, FarmingApp Application class |
-| Navigation | Single Activity + Fragment back stack, custom slide animations |
-| Image loading | Glide (URL images), FileProvider (local camera images) |
+Academic / competition project by [godragun](https://github.com/godragun). Earlier open-source farming apps were studied for MVVM/UI patterns; current Supabase + AI backend work is project-specific.

@@ -73,6 +73,8 @@ import com.project.farmingapp.view.introscreen.IntroActivity
 import com.project.farmingapp.view.socialmedia.SMCreatePostFragment
 import com.project.farmingapp.view.socialmedia.SocialMediaPostsFragment
 import com.project.farmingapp.view.chatbot.ChatbotFragment
+import com.project.farmingapp.view.ai.CropDoctorFragment
+import com.project.farmingapp.view.ai.SinhalaVoiceFragment
 import com.project.farmingapp.view.survey.SavedSurveysFragment
 import com.project.farmingapp.view.survey.SurveyDetailFragment
 import com.project.farmingapp.view.survey.SurveyFormFragment
@@ -331,6 +333,14 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
         tx.commit()
     }
 
+    /** Voice AI → Crop Doctor handoff (needs_photo). */
+    fun openCropDoctor(cropHint: String? = null, autoOpenCamera: Boolean = true) {
+        openScreen(
+            CropDoctorFragment.newInstance(cropHint, autoOpenCamera),
+            "cropDoctorFrag"
+        )
+    }
+
 
     override fun onPostCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onPostCreate(savedInstanceState, persistentState)
@@ -387,6 +397,12 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             R.id.miItem9 -> {
                 chatbotFragment = ChatbotFragment()
                 openScreen(chatbotFragment, "chatbotFrag")
+            }
+            R.id.miItemSinhalaVoice -> {
+                openScreen(SinhalaVoiceFragment(), "sinhalaVoiceFrag")
+            }
+            R.id.miItemCropDoctor -> {
+                openCropDoctor(cropHint = null, autoOpenCamera = false)
             }
             R.id.miItemSurvey -> {
                 supportFragmentManager.popBackStack(
