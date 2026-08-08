@@ -56,10 +56,19 @@ class OfflineSMPostAdapter(
             Glide.with(holder.itemView)
                 .load("file:///android_asset/${post.imageAssetName}")
                 .downsample(DownsampleStrategy.CENTER_INSIDE)
-                .override(900, 1200)
+                .override(900, 700)
+                .centerCrop()
+                .error(post.imageRes)
+                .into(holder.postImage)
+        } else if (post.imageRes != 0) {
+            Glide.with(holder.itemView)
+                .load(post.imageRes)
+                .downsample(DownsampleStrategy.CENTER_INSIDE)
+                .override(900, 700)
+                .centerCrop()
                 .into(holder.postImage)
         } else {
-            holder.postImage.setImageResource(post.imageRes)
+            holder.postImage.setImageResource(R.drawable.disease)
         }
         if (position > lastAnimatedPosition) {
             val anim = cachedAnimation ?: AnimationUtils.loadAnimation(holder.itemView.context, R.anim.fade_transition).also { cachedAnimation = it }

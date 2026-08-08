@@ -30,6 +30,10 @@ object AgriAssetPaths {
     const val PINEAPPLE = "$IMAGES/pineapple.jpeg"
     const val TEA_LEAVES = "$IMAGES/tea_leaves.jpeg"
     const val POTATO = "$IMAGES/potato.jpeg"
+    const val LEAF_DISEASE = "$IMAGES/leaf_disease.png"
+    const val ORGANIC_FERTILIZER = "$IMAGES/uria.jpeg"
+    const val TOMATO_CROP = "$IMAGES/tomato.jpg"
+    const val CHILLI_CROP = "$IMAGES/chilli.jpg"
 
     fun fileUri(pathUnderAssets: String) = "file:///android_asset/$pathUnderAssets"
 }

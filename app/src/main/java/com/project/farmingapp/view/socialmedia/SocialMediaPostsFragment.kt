@@ -103,15 +103,15 @@ class SocialMediaPostsFragment : Fragment() {
                 title = "Apple Leaf Spots: Quick Solution",
                 description = "Mix neem-based spray and apply every 5-7 days in the evening. Remove heavily infected leaves and keep spacing for airflow.",
                 uploadedAt = System.currentTimeMillis() - 2 * 60 * 60 * 1000L,
-                imageRes = R.drawable.plant3,
-                imageAssetName = null
+                imageRes = R.drawable.disease,
+                imageAssetName = AgriAssetPaths.LEAF_DISEASE
             ),
             OfflinePostItem(
                 name = "Farmer Support",
                 title = "Paddy Field Water Management",
                 description = "Use alternate wetting and drying to reduce water usage while protecting yield. Check soil moisture before re-irrigation.",
                 uploadedAt = System.currentTimeMillis() - 5 * 60 * 60 * 1000L,
-                imageRes = R.drawable.method2,
+                imageRes = R.drawable.disease,
                 imageAssetName = AgriAssetPaths.PADDY_WATER_MANAGEMENT
             ),
             OfflinePostItem(
@@ -127,7 +127,7 @@ class SocialMediaPostsFragment : Fragment() {
                 title = "How to prepare seed beds",
                 description = "Loosen topsoil 15-20 cm, add organic compost, and keep moisture balanced before sowing.",
                 uploadedAt = System.currentTimeMillis() - 36 * 60 * 60 * 1000L,
-                imageRes = R.drawable.method2,
+                imageRes = R.drawable.disease,
                 imageAssetName = AgriAssetPaths.SEED_SPREADING
             ),
             OfflinePostItem(
@@ -135,7 +135,7 @@ class SocialMediaPostsFragment : Fragment() {
                 title = "Morning irrigation tip",
                 description = "Irrigate early morning for better absorption and lower evaporation loss.",
                 uploadedAt = System.currentTimeMillis() - 48 * 60 * 60 * 1000L,
-                imageRes = R.drawable.plant3,
+                imageRes = R.drawable.disease,
                 imageAssetName = AgriAssetPaths.SPRINKLING_SYSTEM_POST
             ),
             OfflinePostItem(
@@ -144,14 +144,14 @@ class SocialMediaPostsFragment : Fragment() {
                 description = "Check underside of leaves weekly for spots or insects to act before spread.",
                 uploadedAt = System.currentTimeMillis() - 72 * 60 * 60 * 1000L,
                 imageRes = R.drawable.disease,
-                imageAssetName = null
+                imageAssetName = AgriAssetPaths.TOMATO_CROP
             ),
             OfflinePostItem(
                 name = "Agri Lanka",
                 title = "New plantation way",
                 description = "Contour beds, stable moisture, and quality planting material help roots establish fast and cut runoff after rains.",
                 uploadedAt = System.currentTimeMillis() - 80 * 60 * 60 * 1000L,
-                imageRes = R.drawable.method2,
+                imageRes = R.drawable.disease,
                 imageAssetName = AgriAssetPaths.NEW_PLANTATION_WAY_POST
             ),
             OfflinePostItem(
@@ -159,8 +159,8 @@ class SocialMediaPostsFragment : Fragment() {
                 title = "කාබනික පොහොර භාවිතය",
                 description = "ඔබේ භෝග සඳහා කාබනික පොහොර භාවිතා කිරීමෙන් පසෙහි සාරවත් බව වැඩි කර අස්වැන්න වර්ධනය කර ගත හැක.",
                 uploadedAt = System.currentTimeMillis() - 1 * 60 * 60 * 1000L,
-                imageRes = R.drawable.plant3,
-                imageAssetName = null
+                imageRes = R.drawable.disease,
+                imageAssetName = AgriAssetPaths.ORGANIC_FERTILIZER
             )
         )
         val mergedPosts = LocalPostDraftStore.allDrafts() + staticPosts
