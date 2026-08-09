@@ -21,12 +21,6 @@ import java.util.concurrent.TimeUnit
  */
 object AgriAiConfig {
     const val BASE_URL = "https://farming-app-backend-xyw1.onrender.com/"
-
-    /**
-     * When true, Crop Doctor diagnoses on-device with random demo diseases
-     * (does not depend on Render/Roboflow). Set false when your hosted API is reliable.
-     */
-    const val USE_ON_DEVICE_DISEASE_DEMO = true
 }
 
 data class VoiceTextRequest(val text: String)
