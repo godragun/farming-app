@@ -15,13 +15,12 @@ import java.util.concurrent.TimeUnit
 /**
  * FastAPI Agri Lanka AI backend.
  *
- * Emulator → http://10.0.2.2:8000/
+ * Emulator (local) → http://10.0.2.2:8000/
  * Physical phone (same Wi‑Fi) → http://<PC_LAN_IP>:8000/
- * Production → https://YOUR_DEPLOYED_API/
+ * Production (Render) → https://farming-app-backend-xyw1.onrender.com/
  */
 object AgriAiConfig {
-    // Change this when testing on a real phone or after Render deploy.
-    const val BASE_URL = "http://10.0.2.2:8000/"
+    const val BASE_URL = "https://farming-app-backend-xyw1.onrender.com/"
 }
 
 data class VoiceTextRequest(val text: String)
@@ -57,6 +56,52 @@ data class DiseasePredictionResponse(
     val engine: String? = null
 )
 
+data class CropSuitabilityRequest(
+    val crop: String,
+    val soil: String? = null,
+    val irrigation: String? = null,
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val top_k: Int = 5
+)
+
+data class SuitabilityLocation(
+    val label: String? = null,
+    val district: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val score: Double? = null,
+    val zone: String? = null,
+    val sample_count: Int? = null,
+    val avg_yield_kg: Double? = null,
+    val common_soil: String? = null,
+    val common_irrigation: String? = null,
+    val reasons: List<String>? = null
+)
+
+data class SuitabilityZone(
+    val label: String? = null,
+    val district: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val score: Double? = null,
+    val zone: String? = null
+)
+
+data class CropSuitabilityResponse(
+    val crop: String? = null,
+    val crop_english: String? = null,
+    val engine: String? = null,
+    val survey_count: Int? = null,
+    val matched_survey_count: Int? = null,
+    val best_locations: List<SuitabilityLocation>? = null,
+    val map_zones: List<SuitabilityZone>? = null,
+    val advice_sinhala: String? = null,
+    val advice_english: String? = null,
+    val supabase_configured: Boolean? = null,
+    val warning: String? = null
+)
+
 interface AgriAiApi {
     @POST("voice-assistant/text")
     fun voiceAssistantText(@Body body: VoiceTextRequest): Call<VoiceAssistantResponse>
@@ -75,6 +120,9 @@ interface AgriAiApi {
         @Part image: MultipartBody.Part,
         @Part("crop") crop: RequestBody?
     ): Call<DiseasePredictionResponse>
+
+    @POST("crop-suitability")
+    fun cropSuitability(@Body body: CropSuitabilityRequest): Call<CropSuitabilityResponse>
 }
 
 object AgriAiClient {
