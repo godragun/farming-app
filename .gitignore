@@ -17,3 +17,10 @@ app/google-services.json
 # AI Python backend lives in separate private repo:
 # https://github.com/godragun/farming-app-backend
 ai-backend/
+# Local / IDE (do not commit)
+.kotlin/
+.gradle/
+# Duplicate crop photos (use app/src/main/assets/images/)
+crops/
+# Tooling leftovers
+.github/java-upgrade/

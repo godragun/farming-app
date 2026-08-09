@@ -19,7 +19,6 @@ if (-not $dev) {
     Write-Host ""
     Write-Host "Fix: close any hung emulator window, then run:"
     Write-Host "  .\scripts\fix-emulator.ps1"
-    Write-Host "  .\scripts\start-emulator-cursor.ps1 -Avd `"$Avd`""
     Write-Host "Wait until the home screen appears, then run this script again."
     exit 1
 }
