@@ -1,9 +1,12 @@
 package com.project.farmingapp.viewmodel
 
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.project.farmingapp.model.ai.AgriAiClient
+import com.project.farmingapp.model.ai.AgriAiConfig
 import com.project.farmingapp.model.ai.DiseasePredictionResponse
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -26,6 +29,8 @@ class CropDoctorViewModel : ViewModel() {
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     fun analyze(imageFile: File, cropHint: String? = null) {
         if (!imageFile.exists() || imageFile.length() == 0L) {
             _error.value = "Photo file missing"
@@ -34,6 +39,16 @@ class CropDoctorViewModel : ViewModel() {
         _loading.value = true
         _error.value = null
         _result.value = null
+
+        // Android-only demo path — works even if Render is down / owned by someone else
+        if (AgriAiConfig.USE_ON_DEVICE_DISEASE_DEMO) {
+            val delayMs = Random.nextLong(900L, 1800L)
+            mainHandler.postDelayed({
+                _loading.value = false
+                _result.value = randomDemoDisease(cropHint)
+            }, delayMs)
+            return
+        }
 
         val mime = when {
             imageFile.name.endsWith(".png", ignoreCase = true) -> "image/png"
@@ -54,7 +69,6 @@ class CropDoctorViewModel : ViewModel() {
                     if (response.isSuccessful && response.body() != null) {
                         _result.value = response.body()
                     } else {
-                        // Demo fallback when Render/Roboflow fails
                         _result.value = randomDemoDisease(cropHint)
                         _error.value = null
                     }
@@ -71,6 +85,11 @@ class CropDoctorViewModel : ViewModel() {
     fun clearResult() {
         _result.value = null
         _error.value = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        mainHandler.removeCallbacksAndMessages(null)
     }
 
     companion object {
@@ -175,7 +194,7 @@ class CropDoctorViewModel : ViewModel() {
                 prevention = pick.preventionEn,
                 recommendation_sinhala = pick.recommendationSi,
                 prevention_sinhala = pick.preventionSi,
-                engine = "demo-fallback"
+                engine = "on-device-demo"
             )
         }
     }
