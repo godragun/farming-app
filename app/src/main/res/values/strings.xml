@@ -160,6 +160,10 @@
     <string name="auto_fragment_cart_checkout_all_46">Checkout All</string>
     <string name="auto_fragment_chatbot_agri_chatbot_ask_abo_47">Agri Chatbot - Ask about crops, weather, pests, fertilizer</string>
     <string name="auto_fragment_chatbot_send_48">Send</string>
+    <string name="chatbot_voice_btn">🎤 Voice</string>
+    <string name="chatbot_voice_listening">Listening in Sinhala (Whisper Small Sinhala v3)… Tap to stop</string>
+    <string name="chatbot_voice_transcribing">Transcribing Sinhala voice via Whisper…</string>
+    <string name="chatbot_voice_mic_denied">Microphone permission is required for voice questions</string>
     <string name="auto_fragment_dashboard_str_49_49">-</string>
     <string name="auto_fragment_dashboard_c_50">- C</string>
     <string name="auto_fragment_dashboard_str_51_51">🌾</string>

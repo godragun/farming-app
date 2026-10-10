@@ -30,26 +30,45 @@
             android:orientation="vertical" />
     </ScrollView>
 
+    <!-- Voice status banner -->
+    <TextView
+        android:id="@+id/chatbotVoiceStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/colorAccent"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="6dp">
 
         <EditText
             android:id="@+id/chatInput"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Ask a farming question..."
+            android:hint="Ask a farming question / ප්‍රශ්නයක් අසන්න…"
             android:inputType="textMultiLine"
             android:maxLines="3" />
+
+        <Button
+            android:id="@+id/btnChatbotVoice"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="@string/chatbot_voice_btn"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/sendBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="@string/auto_fragment_chatbot_send_48"
             android:textAllCaps="false" />
     </LinearLayout>

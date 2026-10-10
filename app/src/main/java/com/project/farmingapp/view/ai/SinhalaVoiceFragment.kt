@@ -110,6 +110,11 @@ class SinhalaVoiceFragment : Fragment() {
                 requireContext().toast(err)
             }
         }
+        viewModel.transcribedText.observe(viewLifecycleOwner) { text ->
+            if (!text.isNullOrBlank()) {
+                inputEdit.setText(text)
+            }
+        }
         viewModel.result.observe(viewLifecycleOwner) { res ->
             if (res == null) return@observe
             resultSi.text = res.response_sinhala.orEmpty()

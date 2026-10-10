@@ -23,6 +23,11 @@
     <string name="nav_crop_articles">බෝග ලිපි</string>
     <string name="nav_my_orders">මගේ ඇණවුම්</string>
     <string name="nav_agri_chatbot">කෘෂි චැට්බොට්</string>
+    <string name="chatbot_header_hint">කෘෂි චැට්බොට් - බෝග, කාලගුණය, පළිබෝධ, පොහොර ගැන ඕනෑම දෙයක් අසන්න</string>
+    <string name="chatbot_voice_btn">🎤 හඬ</string>
+    <string name="chatbot_voice_listening">සිංහලෙන් කතා කරන්න (Whisper Small Sinhala v3)… නැවැත්වීමට ඔබන්න</string>
+    <string name="chatbot_voice_transcribing">සිංහල හඬ පෙළ බවට පරිවර්තනය වෙමින්…</string>
+    <string name="chatbot_voice_mic_denied">හඬ ප්‍රශ්න ඇසීමට මයික්‍රෆෝන අවසරය අවශ්‍ය වේ</string>
     <string name="nav_sinhala_voice">සිංහල හඬ AI</string>
     <string name="nav_crop_doctor">AI බෝග වෛද්‍ය</string>
     <string name="sinhala_voice_title">සිංහල කෘෂිකාර්මික හඬ AI</string>

@@ -67,8 +67,8 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 | Satellite map (Leaflet WebView) | Done |
 | Field surveys (photo + voice notes, offline Room → sync) | Done |
 | Community posts, articles, e-commerce / cart / orders | Done |
-| Rule-based Agri Chatbot | Done (not ML) |
-| **Sinhala Voice AI screen** | Done (talks to FastAPI) |
+| **Agri Chatbot (Sinhala Voice + Text)** | Done (Speech input via Whisper Small Sinhala v3 + Sinhala/English Q&A) |
+| **Sinhala Voice AI screen** | Done (talks to FastAPI + Whisper Small Sinhala v3) |
 | **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; Voice handoff) |
 | **Leaf Scanner (Roboflow Direct)** | Done (Direct APK → Roboflow Serverless ViT Workflow) |
 | AI Crop Suitability + map zones | Not yet |
@@ -164,6 +164,18 @@ The Gradle build injects this into `BuildConfig.ROBOFLOW_API_KEY`.
 
 #### Access in App
 Open Navigation Drawer → **🌿 Leaf Scanner (Roboflow)**. Take a photo or select an image from the gallery and tap **Analyze**.
+
+### Sinhala Voice Detection & Chatbot: Whisper Small Sinhala v3
+
+Fine-tuned ASR model: [`Lingalingeswaran/whisper-small-sinhala_v3`](https://huggingface.co/Lingalingeswaran/whisper-small-sinhala_v3)
+
+- **Model ID**: `Lingalingeswaran/whisper-small-sinhala_v3`
+- **Architecture**: Whisper Small (241M parameters) fine-tuned on Sinhala speech datasets
+- **Integrated Screens**:
+  1. **Sinhala Voice AI (`SinhalaVoiceFragment`)**: Spoken Sinhala is transcribed and queried against agricultural intent models.
+  2. **Agri Chatbot (`ChatbotFragment`)**: Features a **'🎤 Voice'** microphone button that captures Sinhala voice, transcribes it via Whisper Sinhala v3, and delivers answers on paddy, tea, coconut, chilli, fertilizer, weather, pests, and seasons in both Sinhala and English.
+- **Client Implementation**: [`WhisperSinhalaClient`](file:///c:/Users/VICTUS/Desktop/farming%20app/Farming-App/app/src/main/java/com/project/farmingapp/model/ai/WhisperSinhalaApi.kt) with direct Hugging Face serverless API endpoints + local AI backend fallback.
+- **Optional API Token**: Add `HUGGINGFACE_API_KEY=hf_...` in `local.properties` (optional for higher rate limits).
 
 ---
 

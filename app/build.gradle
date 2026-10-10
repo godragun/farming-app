@@ -26,6 +26,8 @@ android {
         if (localFile.exists()) localProps.load(new FileInputStream(localFile))
         buildConfigField "String", "ROBOFLOW_API_KEY",
             "\"${localProps.getProperty("ROBOFLOW_API_KEY", "")}\""
+        buildConfigField "String", "HUGGINGFACE_API_KEY",
+            "\"${localProps.getProperty("HUGGINGFACE_API_KEY", "")}\""
     }
 
     buildTypes {

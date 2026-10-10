@@ -56,6 +56,9 @@ class VoiceAiViewModel : ViewModel() {
             })
     }
 
+    private val _transcribedText = MutableLiveData<String?>()
+    val transcribedText: LiveData<String?> = _transcribedText
+
     fun askAudio(audioFile: File, fallbackText: String? = null) {
         if (!audioFile.exists() || audioFile.length() == 0L) {
             _error.value = "Audio file missing"
@@ -75,26 +78,55 @@ class VoiceAiViewModel : ViewModel() {
                     call: Call<VoiceAssistantResponse>,
                     response: Response<VoiceAssistantResponse>
                 ) {
-                    _loading.value = false
                     if (response.isSuccessful && response.body() != null) {
-                        _result.value = response.body()
-                    } else {
-                        // Fallback: if Whisper missing, try text-only when user typed something
-                        val typed = fallbackText?.trim().orEmpty()
-                        if (typed.isNotEmpty()) {
-                            askText(typed)
-                        } else {
-                            _error.value =
-                                "Voice AI failed (${response.code()}). Type the question or install Whisper on the server."
+                        _loading.value = false
+                        val body = response.body()
+                        val transcribed = body?.transcription_sinhala ?: body?.transcription_english
+                        if (!transcribed.isNullOrBlank()) {
+                            _transcribedText.value = transcribed
                         }
+                        _result.value = body
+                    } else {
+                        // Fallback: Transcribe directly via Hugging Face Whisper Sinhala v3
+                        tryDirectWhisperTranscription(audioFile, fallbackText)
                     }
                 }
 
                 override fun onFailure(call: Call<VoiceAssistantResponse>, t: Throwable) {
-                    _loading.value = false
-                    _error.value =
-                        "Cannot reach AI server. Is FastAPI running? (${t.message})"
+                    // Fallback: Transcribe directly via Hugging Face Whisper Sinhala v3
+                    tryDirectWhisperTranscription(audioFile, fallbackText)
                 }
             })
+    }
+
+    private fun tryDirectWhisperTranscription(audioFile: File, fallbackText: String?) {
+        val hfApiKey = try {
+            com.project.farmingapp.BuildConfig.HUGGINGFACE_API_KEY
+        } catch (_: Exception) {
+            ""
+        }
+        java.util.concurrent.Executors.newSingleThreadExecutor().execute {
+            try {
+                val transcribed = com.project.farmingapp.model.ai.WhisperSinhalaClient.transcribeAudio(
+                    audioFile = audioFile,
+                    hfApiKey = hfApiKey
+                )
+                if (transcribed.isNotBlank()) {
+                    _transcribedText.postValue(transcribed)
+                    askText(transcribed)
+                    return@execute
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("VoiceAiVM", "Direct Whisper transcription failed: ${e.message}")
+            }
+
+            val typed = fallbackText?.trim().orEmpty()
+            if (typed.isNotEmpty()) {
+                askText(typed)
+            } else {
+                _loading.postValue(false)
+                _error.postValue("Voice recognition unavailable. Please type your farming question.")
+            }
+        }
     }
 }
