@@ -50,6 +50,7 @@
     <string name="crop_doctor_ready">ඡායාරූපය සූදානම් — Analyze ඔබන්න</string>
     <string name="crop_doctor_analyzing">රෝග AI වෙත යවමින්…</string>
     <string name="crop_doctor_done">නිර්ණය සූදානම්</string>
+    <string name="crop_doctor_low_confidence">රෝගය විශ්වාසයෙන් හඳුනාගත නොහැක (%1$d%%). දිවා ආලෝකයේදී එක් ආසාදිත කොළයක් පැහැදිලිව ඡායාරූපගත කරන්න.</string>
     <string name="crop_doctor_need_photo">පළමුව ඡායාරූපයක් ගන්න</string>
     <string name="crop_doctor_photo_failed">ඡායාරූපය අසාර්ථකයි. නැවත උත්සාහ කරන්න.</string>
     <string name="crop_doctor_camera_denied">කැමරා අවසරය අවශ්‍යයි</string>
@@ -62,6 +63,26 @@
     <string name="nav_community_network">ප්‍රජා ජාලය</string>
     <string name="nav_settings">සැකසුම්</string>
     <string name="nav_log_out">ඉවත් වන්න</string>
+    <string name="nav_leaf_scanner">🌿 Leaf Scanner (Roboflow)</string>
+
+    <!-- Leaf Scanner — Roboflow direct integration -->
+    <string name="leaf_scanner_title">කොළ සෞඛ්‍ය ස්කෑනරය</string>
+    <string name="leaf_scanner_subtitle">කොළ ඡායාරූපයක් ගන්න හෝ තෝරන්න. එය Roboflow Leaf &amp; Deceased Leaves වර්ගීකරණයට යවනු ලැබේ.</string>
+    <string name="leaf_scanner_preview_desc">කොළ ඡායාරූප පෙරදසුන</string>
+    <string name="leaf_scanner_take_photo">කැමරාව</string>
+    <string name="leaf_scanner_gallery">ගැලරිය</string>
+    <string name="leaf_scanner_analyze">විශ්ලේෂණය කරන්න</string>
+    <string name="leaf_scanner_result_heading">වර්ගීකරණ ප්‍රතිඵලය</string>
+    <string name="leaf_scanner_result_label">කොළ තත්ත්වය: %1$s (%2$d%%)</string>
+    <string name="leaf_scanner_confidence">විශ්වාසනීයත්වය: %1$d%%</string>
+    <string name="leaf_scanner_low_confidence">විශ්වාසනීයත්වය අඩුයි (%1$d%%). කරුණාකර තනි කොළයක පැහැදිලි ඡායාරූපයක් ලබාගන්න.</string>
+    <string name="leaf_scanner_all_predictions">ශ්‍රේණිගත අනාවැකි:</string>
+    <string name="leaf_scanner_ready">ඡායාරූපය සූදානම් — Analyze ඔබන්න</string>
+    <string name="leaf_scanner_analyzing">Roboflow AI වෙත යවමින්…</string>
+    <string name="leaf_scanner_done">විශ්ලේෂණය අවසන්</string>
+    <string name="leaf_scanner_need_photo">පළමුව ඡායාරූපයක් ගන්න හෝ තෝරන්න</string>
+    <string name="leaf_scanner_photo_failed">ඡායාරූපය ලබාගැනීම අසාර්ථකයි. නැවත උත්සාහ කරන්න.</string>
+    <string name="leaf_scanner_camera_denied">කැමරා අවසරය අවශ්‍ය වේ</string>
 
     <!-- Bottom Navigation -->
     <string name="bottom_nav_home">මුල් පිටුව</string>

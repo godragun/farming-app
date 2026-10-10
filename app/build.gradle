@@ -18,6 +18,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Roboflow API key — set ROBOFLOW_API_KEY=rf_your_key in local.properties.
+        // Never hardcode the key here.
+        def localProps = new Properties()
+        def localFile = rootProject.file("local.properties")
+        if (localFile.exists()) localProps.load(new FileInputStream(localFile))
+        buildConfigField "String", "ROBOFLOW_API_KEY",
+            "\"${localProps.getProperty("ROBOFLOW_API_KEY", "")}\""
     }
 
     buildTypes {
@@ -30,6 +38,7 @@ android {
     buildFeatures {
         viewBinding true
         dataBinding true
+        buildConfig true
     }
 
     compileOptions {
@@ -119,6 +128,7 @@ dependencies {
     // The upstream artifacts currently conflict on namespace under AGP 9+, causing resource/manifest failures.
 
     testImplementation "junit:junit:4.13.2"
+    testImplementation "org.json:json:20240303"
     androidTestImplementation "androidx.test.ext:junit:1.2.1"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.6.1"
 }

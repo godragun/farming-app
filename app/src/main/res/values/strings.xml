@@ -50,6 +50,7 @@
     <string name="crop_doctor_ready">Photo ready — tap Analyze</string>
     <string name="crop_doctor_analyzing">Sending photo to disease AI…</string>
     <string name="crop_doctor_done">Diagnosis ready</string>
+    <string name="crop_doctor_low_confidence">Unable to confidently identify a disease (%1$d%%). Photograph one affected leaf in daylight, fill the frame, and avoid blur.</string>
     <string name="crop_doctor_need_photo">Take a photo first</string>
     <string name="crop_doctor_photo_failed">Photo capture failed. Try again.</string>
     <string name="crop_doctor_camera_denied">Camera permission needed</string>
@@ -62,6 +63,26 @@
     <string name="nav_community_network">Community Network</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_log_out">Log Out</string>
+    <string name="nav_leaf_scanner">🌿 Leaf Scanner (Roboflow)</string>
+
+    <!-- Leaf Scanner — Roboflow direct integration -->
+    <string name="leaf_scanner_title">Leaf Health Scanner</string>
+    <string name="leaf_scanner_subtitle">Take or select a leaf photo. The image is sent to the Roboflow Leaf &amp; Deceased Leaves classifier (ViT model).</string>
+    <string name="leaf_scanner_preview_desc">Leaf image preview</string>
+    <string name="leaf_scanner_take_photo">Camera</string>
+    <string name="leaf_scanner_gallery">Gallery</string>
+    <string name="leaf_scanner_analyze">Analyze</string>
+    <string name="leaf_scanner_result_heading">Classification Result</string>
+    <string name="leaf_scanner_result_label">Leaf condition: %1$s (%2$d%%)</string>
+    <string name="leaf_scanner_confidence">Model confidence: %1$d%%</string>
+    <string name="leaf_scanner_low_confidence">Confidence too low (%1$d%%). Try a clearer, closer photo of a single leaf.</string>
+    <string name="leaf_scanner_all_predictions">All ranked predictions:</string>
+    <string name="leaf_scanner_ready">Image ready — tap Analyze</string>
+    <string name="leaf_scanner_analyzing">Sending to Roboflow AI…</string>
+    <string name="leaf_scanner_done">Analysis complete</string>
+    <string name="leaf_scanner_need_photo">Please take or select a photo first</string>
+    <string name="leaf_scanner_photo_failed">Photo capture failed. Try again.</string>
+    <string name="leaf_scanner_camera_denied">Camera permission is required</string>
 
     <!-- Bottom Navigation -->
     <string name="bottom_nav_home">Home</string>

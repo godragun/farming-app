@@ -137,13 +137,18 @@ class CropDoctorFragment : Fragment() {
             if (res == null) return@observe
             resultCard.visibility = View.VISIBLE
             val confPct = ((res.confidence ?: 0.0) * 100).toInt()
-            resultMeta.text = getString(
-                R.string.crop_doctor_meta,
-                res.crop ?: "-",
-                res.disease ?: "-",
-                confPct,
-                res.severity ?: "-"
-            )
+            val low = res.diagnosis_available == false
+            resultMeta.text = if (low) {
+                getString(R.string.crop_doctor_low_confidence, confPct)
+            } else {
+                getString(
+                    R.string.crop_doctor_meta,
+                    res.crop ?: "-",
+                    res.disease ?: "-",
+                    confPct,
+                    res.confidence_level ?: res.severity ?: "-"
+                )
+            }
             recommendationSi.text = res.recommendation_sinhala
                 ?: res.recommendation
                 ?: ""

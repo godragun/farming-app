@@ -70,6 +70,7 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 | Rule-based Agri Chatbot | Done (not ML) |
 | **Sinhala Voice AI screen** | Done (talks to FastAPI) |
 | **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; Voice handoff) |
+| **Leaf Scanner (Roboflow Direct)** | Done (Direct APK → Roboflow Serverless ViT Workflow) |
 | AI Crop Suitability + map zones | Not yet |
 
 ### Python AI backend (separate private repo)
@@ -86,7 +87,7 @@ AI Python code lives **only** in that repo — not inside this Android project.
 | Agricultural Sinhala/English intent (crops, symptoms, fertilizer, weather…) | Done |
 | Text path for testing without Whisper | Done |
 | Optional Whisper STT + gTTS Sinhala speech | Scaffolded (Whisper optional install) |
-| Disease detection API (`POST /predict-disease` via Roboflow) | Done (set keys in `.env`; demo mode available) |
+| Disease detection API (`POST /predict-disease` via Roboflow) | Live inference only. Missing model or failure returns an error. Confidence under 0.55 sets `diagnosis_available=false`. |
 | Crop suitability API | Not yet |
 
 ### Cloud data
@@ -142,6 +143,27 @@ Optional: Supabase for login, surveys, media storage, saving AI results
 | Production | `https://your-deployed-api.../` |
 
 Config file: `app/src/main/java/com/project/farmingapp/model/ai/AgriAiApi.kt` → `AgriAiConfig.BASE_URL`.
+
+### Direct Roboflow Workflow: Leaf Health Scanner (ViT Model)
+
+In addition to the FastAPI backend, the app has direct serverless Roboflow integration for leaf and deceased leaf classification:
+
+- **Workflow Name**: `leaves and deceased leaves vleaves-and-deceased-leaves-z3m7h-1-vit-base-patch16-224-in21k-t1 Logic`
+- **Workspace**: `garbagedetectionws`
+- **Workflow Slug**: `leaves-and-deceased-leaves-vleaves-and-deceased-leaves-z3m7h-1-vit-base-patch16-224-in21k-t1-logic`
+- **Serverless Endpoint**: `https://serverless.roboflow.com/garbagedetectionws/workflows/leaves-and-deceased-leaves-vleaves-and-deceased-leaves-z3m7h-1-vit-base-patch16-224-in21k-t1-logic`
+- **Input**: Base64 JPEG (max 640×640)
+- **Output**: Ranked predictions, top classification class, confidence score, and low-confidence filtering
+
+#### Setup API Key
+Add your key to `local.properties` (gitignored, never committed to version control):
+```properties
+ROBOFLOW_API_KEY=rf_your_key_here
+```
+The Gradle build injects this into `BuildConfig.ROBOFLOW_API_KEY`.
+
+#### Access in App
+Open Navigation Drawer → **🌿 Leaf Scanner (Roboflow)**. Take a photo or select an image from the gallery and tap **Analyze**.
 
 ---
 

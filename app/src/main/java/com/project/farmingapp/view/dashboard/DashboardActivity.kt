@@ -74,6 +74,7 @@ import com.project.farmingapp.view.socialmedia.SMCreatePostFragment
 import com.project.farmingapp.view.socialmedia.SocialMediaPostsFragment
 import com.project.farmingapp.view.chatbot.ChatbotFragment
 import com.project.farmingapp.view.ai.CropDoctorFragment
+import com.project.farmingapp.view.ai.LeafScannerFragment
 import com.project.farmingapp.view.ai.SinhalaVoiceFragment
 import com.project.farmingapp.view.survey.SavedSurveysFragment
 import com.project.farmingapp.view.survey.SurveyDetailFragment
@@ -403,6 +404,9 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             }
             R.id.miItemCropDoctor -> {
                 openCropDoctor(cropHint = null, autoOpenCamera = false)
+            }
+            R.id.miItemLeafScanner -> {
+                openScreen(LeafScannerFragment(), "leafScannerFrag")
             }
             R.id.miItemSurvey -> {
                 supportFragmentManager.popBackStack(

@@ -17,10 +17,11 @@ import java.util.concurrent.TimeUnit
  *
  * Emulator (local) → http://10.0.2.2:8000/
  * Physical phone (same Wi‑Fi) → http://<PC_LAN_IP>:8000/
- * Production (Render) → https://farming-app-backend-xyw1.onrender.com/
+ * Your PC via Cloudflare tunnel (current) → trycloudflare.com URL below
  */
 object AgriAiConfig {
-    const val BASE_URL = "https://farming-app-backend-xyw1.onrender.com/"
+    // Your backend on this PC, exposed publicly. Keep uvicorn + cloudflared running.
+    const val BASE_URL = "https://specifics-knit-insight-house.trycloudflare.com/"
 }
 
 data class VoiceTextRequest(val text: String)
@@ -44,15 +45,20 @@ data class VoiceAssistantResponse(
 )
 
 data class DiseasePredictionResponse(
+    val diagnosis_available: Boolean? = null,
     val crop: String? = null,
     val disease: String? = null,
     val raw_label: String? = null,
     val confidence: Double? = null,
+    val confidence_level: String? = null,
     val severity: String? = null,
+    val explanation: String? = null,
     val recommendation: String? = null,
     val prevention: String? = null,
     val recommendation_sinhala: String? = null,
     val prevention_sinhala: String? = null,
+    val source: String? = null,
+    val model_version: String? = null,
     val engine: String? = null
 )
 
