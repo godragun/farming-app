@@ -82,12 +82,21 @@ class SignupActivity : AppCompatActivity(), AuthListener {
     override fun onSuccess(authRepo: LiveData<String>) {
         authRepo.observe(this, Observer {
             binding.progressSignup.hide()
-            if (it.toString() == "Success") {
-                toast("Account Created")
+            val result = it?.toString()?.trim().orEmpty()
+            if (result.equals("Success", ignoreCase = true)) {
                 if (SupabaseSession.isLoggedIn()) {
+                    toast("Account Created")
                     AuthHelper.exitGuestMode(this)
+                    startActivity(Intent(this, DashboardActivity::class.java))
+                    finish()
+                } else {
+                    // Account created but the server wants the email confirmed before sign-in.
+                    toast("Account created. Please confirm your email, then log in.")
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
                 }
-                startActivity(Intent(this, DashboardActivity::class.java))
+            } else {
+                toast(if (result.isNotEmpty()) result else "Sign up failed")
             }
         })
     }

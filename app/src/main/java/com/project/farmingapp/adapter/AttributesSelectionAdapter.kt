@@ -49,18 +49,19 @@ class AttributesSelectionAdapter(var context: Context, var allData: List<Map<Str
             cellClickListener.onCellClickListener("1 ${key}")
 
             holder.attributeTitle.text = key
-            var allValues = values as ArrayList<String>
-            var currentValue = allValues[0].toString().split(" ")
-            holder.attribute1.text = currentValue[0].toString()
-            holder.attribute1Price.text = currentValue[1].toString()
-
-            currentValue = allValues[1].toString().split(" ")
-            holder.attribute2.text = currentValue[0].toString()
-            holder.attribute2Price.text = currentValue[1].toString()
-
-            currentValue = allValues[2].toString().split(" ")
-            holder.attribute3.text = currentValue[0].toString()
-            holder.attribute3Price.text = currentValue[1].toString()
+            // Each option is "<label> <price>"; tolerate missing options/parts instead of crashing.
+            val allValues = (values as? List<*>)?.map { it?.toString().orEmpty() } ?: emptyList()
+            fun part(option: Int, piece: Int): String =
+                allValues.getOrNull(option)?.trim()?.split(" ")?.getOrNull(piece).orEmpty()
+            holder.attribute1.text = part(0, 0)
+            holder.attribute1Price.text = part(0, 1)
+            holder.attribute2.text = part(1, 0)
+            holder.attribute2Price.text = part(1, 1)
+            holder.attribute3.text = part(2, 0)
+            holder.attribute3Price.text = part(2, 1)
+            holder.cardSize1.visibility = if (allValues.size > 0) View.VISIBLE else View.GONE
+            holder.cardSize2.visibility = if (allValues.size > 1) View.VISIBLE else View.GONE
+            holder.cardSize3.visibility = if (allValues.size > 2) View.VISIBLE else View.GONE
 
 //            holder.itemView.attribute1.text = currentValue[0].toString()
 //            holder.itemView.attribute1Price.text = currentValue[1].toString()

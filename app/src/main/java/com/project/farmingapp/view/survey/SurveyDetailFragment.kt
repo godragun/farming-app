@@ -52,7 +52,10 @@ class SurveyDetailFragment : Fragment() {
 
         binding.detailSyncNowBtn.setOnClickListener { viewModel.syncAll() }
 
+        viewModel.consumeSyncResult()
         viewModel.syncResult.observe(viewLifecycleOwner) { event ->
+            if (event == null) return@observe
+            if (event != FieldSurveyViewModel.SyncEvent.Syncing) viewModel.consumeSyncResult()
             val msg = when (event) {
                 FieldSurveyViewModel.SyncEvent.Syncing -> "Uploading…"
                 is FieldSurveyViewModel.SyncEvent.Success -> "✔ Synced!"
@@ -67,9 +70,11 @@ class SurveyDetailFragment : Fragment() {
 
     private fun loadSurvey() {
         val repo = FieldSurveyRepository(requireContext())
-        lifecycleScope.launch {
-            val survey = withContext(Dispatchers.IO) { repo.getSurveyById(surveyId) } ?: return@launch
-            bindSurvey(survey) // back on Main
+        viewLifecycleOwner.lifecycleScope.launch {
+            val survey = try {
+                withContext(Dispatchers.IO) { repo.getSurveyById(surveyId) }
+            } catch (e: Exception) { null } ?: return@launch
+            if (_binding != null) bindSurvey(survey) // back on Main
         }
     }
 
@@ -113,20 +118,30 @@ class SurveyDetailFragment : Fragment() {
     }
 
     private fun playAudio(path: String) {
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(path)
-            setOnPreparedListener {
-                it.start()
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(path)
+                setOnPreparedListener { it.start() }
+                setOnCompletionListener {
+                    _binding?.detailPlayAudioBtn?.text = "▶  Play Voice Note"
+                    it.release()
+                    mediaPlayer = null
+                }
+                setOnErrorListener { mp, _, _ ->
+                    _binding?.detailPlayAudioBtn?.text = "▶  Play Voice Note"
+                    mp.release()
+                    mediaPlayer = null
+                    true
+                }
+                prepareAsync()
             }
-            setOnCompletionListener {
-                binding.detailPlayAudioBtn.text = "▶  Play Voice Note"
-                it.release()
-                mediaPlayer = null
-            }
-            prepareAsync()
+            binding.detailPlayAudioBtn.text = "⏸  Playing…"
+        } catch (e: Exception) {
+            mediaPlayer?.release()
+            mediaPlayer = null
+            context?.let { Toast.makeText(it, "Could not play the voice note", Toast.LENGTH_SHORT).show() }
         }
-        binding.detailPlayAudioBtn.text = "⏸  Playing…"
     }
 
     private fun formatDate(millis: Long): String {

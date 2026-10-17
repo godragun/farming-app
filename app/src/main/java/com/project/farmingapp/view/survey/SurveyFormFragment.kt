@@ -230,7 +230,7 @@ class SurveyFormFragment : Fragment() {
         }
 
         // Fetch location asynchronously in background
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 LogUtil.locationDebug("Starting location fetch with 15s timeout...")
                 val location = locationHelper.getCurrentLocation(timeoutMs = 15000)
@@ -567,17 +567,26 @@ class SurveyFormFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        // Drop any event left over from a previous form so we never react to stale results.
+        viewModel.consumeSaveResult()
+        viewModel.consumeSyncResult()
+
         viewModel.saveResult.observe(viewLifecycleOwner) { event ->
+            if (event == null) return@observe
+            viewModel.consumeSaveResult()
             when (event) {
                 is FieldSurveyViewModel.SaveEvent.Saved -> {
                     LogUtil.surveyDebug("Survey save successful: ID=${event.id}")
                     toast("Survey saved offline ✔")
                     navigateToSavedSurveys()
                 }
+                is FieldSurveyViewModel.SaveEvent.Failed -> toast("Could not save survey: ${event.message}")
             }
         }
 
         viewModel.syncResult.observe(viewLifecycleOwner) { event ->
+            if (event == null) return@observe
+            if (event != FieldSurveyViewModel.SyncEvent.Syncing) viewModel.consumeSyncResult()
             when (event) {
                 FieldSurveyViewModel.SyncEvent.Syncing -> {
                     LogUtil.syncDebug("Sync in progress...")
@@ -615,8 +624,10 @@ class SurveyFormFragment : Fragment() {
             ?.commit()
     }
 
-    private fun toast(msg: String) =
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+    private fun toast(msg: String) {
+        val ctx = context ?: return
+        Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+    }
 
     /**
      * CRITICAL: Proper cleanup on fragment destroy

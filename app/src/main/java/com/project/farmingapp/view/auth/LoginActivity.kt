@@ -77,14 +77,20 @@ class LoginActivity : AppCompatActivity(), AuthListener {
 
         binding.forgotPasswdTextLogin.setOnClickListener {
             val userEmail = binding.emailEditLogin.text.toString()
-            if (userEmail.isNullOrEmpty()) {
+            if (userEmail.isBlank()) {
                 showAgriMessage("Please enter your Email")
             } else {
-                Executors.newSingleThreadExecutor().execute {
-                    val result = SupabaseAuth.sendPasswordReset(userEmail)
-                    runOnUiThread {
-                        showAgriMessage(result.message)
+                val executor = Executors.newSingleThreadExecutor()
+                executor.execute {
+                    val message = try {
+                        SupabaseAuth.sendPasswordReset(userEmail.trim()).message
+                    } catch (e: Exception) {
+                        e.message ?: "Could not send reset email"
                     }
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed) showAgriMessage(message)
+                    }
+                    executor.shutdown()
                 }
             }
         }
@@ -126,6 +132,7 @@ class LoginActivity : AppCompatActivity(), AuthListener {
                     AuthHelper.exitGuestMode(this)
                 }
                 startActivity(Intent(this, DashboardActivity::class.java))
+                finish()
             } else {
                 showAgriMessage(if (result.isNotEmpty()) result else "Login failed")
             }

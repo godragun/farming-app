@@ -111,7 +111,14 @@ class RazorPayActivity : AppCompatActivity() {
             return
         }
 
-        val uid = AuthHelper.requireUid()
+        val uid = runCatching { AuthHelper.requireUid() }.getOrNull()
+        if (uid == null) {
+            // Session expired: keep the order on the device instead of crashing.
+            LocalOrderStore.add(this, postId.toString(), orderFields)
+            Toast.makeText(this, "Order saved offline. Sign in again to sync.", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         val totalCost = (itemCost ?: 0) * (quantity ?: 1) + (deliveryCost ?: 0)
         val address = "$locality, $city, $state - $pincode"
         val raw = JSONObject()

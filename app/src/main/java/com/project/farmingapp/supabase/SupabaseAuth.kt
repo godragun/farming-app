@@ -13,7 +13,45 @@ data class SupabaseAuthResult(
 
 object SupabaseAuth {
 
+    /**
+     * All Supabase calls are blocking network I/O. Any IOException (no internet, DNS failure,
+     * timeout, TLS error) or malformed response must become a normal failed result — never an
+     * uncaught exception, which would kill the app when thrown on a worker thread.
+     */
+    private inline fun guarded(action: () -> SupabaseAuthResult): SupabaseAuthResult =
+        try {
+            action()
+        } catch (e: java.net.UnknownHostException) {
+            SupabaseAuthResult(false, "No internet connection. Please check your network and try again.")
+        } catch (e: java.net.SocketTimeoutException) {
+            SupabaseAuthResult(false, "The server took too long to respond. Please try again.")
+        } catch (e: java.io.IOException) {
+            SupabaseAuthResult(false, "Network error. Please check your connection and try again.")
+        } catch (e: Exception) {
+            SupabaseAuthResult(false, e.message?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again.")
+        }
+
     fun signUpWithEmail(
+        context: Context,
+        email: String,
+        password: String,
+        profile: Map<String, Any?>
+    ): SupabaseAuthResult = guarded { signUpWithEmailUnsafe(context, email, password, profile) }
+
+    fun loginWithEmail(context: Context, email: String, password: String): SupabaseAuthResult =
+        guarded { loginWithEmailUnsafe(context, email, password) }
+
+    fun signInWithGoogleIdToken(
+        context: Context,
+        idToken: String,
+        email: String,
+        profile: Map<String, Any?>
+    ): SupabaseAuthResult = guarded { signInWithGoogleIdTokenUnsafe(context, idToken, email, profile) }
+
+    fun sendPasswordReset(email: String): SupabaseAuthResult =
+        guarded { sendPasswordResetUnsafe(email) }
+
+    private fun signUpWithEmailUnsafe(
         context: Context,
         email: String,
         password: String,
@@ -62,7 +100,7 @@ object SupabaseAuth {
         }
     }
 
-    fun loginWithEmail(context: Context, email: String, password: String): SupabaseAuthResult {
+    private fun loginWithEmailUnsafe(context: Context, email: String, password: String): SupabaseAuthResult {
         val body = JSONObject()
             .put("email", email)
             .put("password", password)
@@ -99,7 +137,7 @@ object SupabaseAuth {
      * Exchange a Google ID token for a Supabase session.
      * Requires Google provider enabled in Supabase Auth settings.
      */
-    fun signInWithGoogleIdToken(
+    private fun signInWithGoogleIdTokenUnsafe(
         context: Context,
         idToken: String,
         email: String,
@@ -139,7 +177,7 @@ object SupabaseAuth {
         }
     }
 
-    fun sendPasswordReset(email: String): SupabaseAuthResult {
+    private fun sendPasswordResetUnsafe(email: String): SupabaseAuthResult {
         val body = JSONObject().put("email", email)
         SupabaseHttp.postJson(
             url = "${SupabaseConfig.authUrl}/recover",

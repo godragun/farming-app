@@ -63,7 +63,10 @@ class SavedSurveysFragment : Fragment() {
             binding.unsyncedCountText.text = if (count == 0) "All synced ✔" else "$count unsynced survey(s)"
         }
 
+        viewModel.consumeSyncResult()
         viewModel.syncResult.observe(viewLifecycleOwner) { event ->
+            if (event == null) return@observe
+            if (event != FieldSurveyViewModel.SyncEvent.Syncing) viewModel.consumeSyncResult()
             val (msg, color) = when (event) {
                 FieldSurveyViewModel.SyncEvent.Syncing ->
                     "Uploading…" to R.color.colorPrimary
@@ -81,10 +84,12 @@ class SavedSurveysFragment : Fragment() {
     }
 
     private fun showSyncBanner(message: String, colorRes: Int) {
-        binding.syncStatusBanner.text = message
-        binding.syncStatusBanner.setBackgroundColor(requireContext().getColor(colorRes))
-        binding.syncStatusBanner.visibility = View.VISIBLE
-        binding.syncStatusBanner.postDelayed({ binding.syncStatusBanner.visibility = View.GONE }, 3000)
+        val b = _binding ?: return
+        val ctx = context ?: return
+        b.syncStatusBanner.text = message
+        b.syncStatusBanner.setBackgroundColor(ctx.getColor(colorRes))
+        b.syncStatusBanner.visibility = View.VISIBLE
+        b.syncStatusBanner.postDelayed({ _binding?.syncStatusBanner?.visibility = View.GONE }, 3000)
     }
 
     private fun openNewSurvey() {

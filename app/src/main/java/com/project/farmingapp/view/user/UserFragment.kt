@@ -82,9 +82,11 @@ class UserFragment : Fragment(), CellClickListener {
 
         userDataViewModel = ViewModelProvider(requireActivity())[UserDataViewModel::class.java]
 
-        viewModel.getAllPosts(AuthHelper.requireEmail())
+        currentEmail()?.let { viewModel.getAllPosts(it) }
     }
 
+    /** Email of the signed-in user (or guest), or null if the session is gone. Never throws. */
+    private fun currentEmail(): String? = AuthHelper.runCatching { requireEmail() }.getOrNull()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -208,37 +210,37 @@ class UserFragment : Fragment(), CellClickListener {
 
 
         userDataViewModel.userliveData.observe(viewLifecycleOwner, Observer {
-            Log.d("User Data in VM Frag", it.get("name").toString())
+            val b = _binding ?: return@Observer
+            if (it == null) return@Observer
             Log.d("Data in User", it.toString())
-            binding.userNameUserProfileFrag.text = it!!.getString("name")
-            val city = it?.getString("city")
-            if(city == null){
-                binding.userCityUserProfileFrag.text = "City: "
-            } else{
-                binding.userCityUserProfileFrag.text = "City: " + it.getString("city")
+            b.userNameUserProfileFrag.text = it.getString("name").orEmpty()
+            val city = it.getString("city")
+            if (city == null) {
+                b.userCityUserProfileFrag.text = "City: "
+            } else {
+                b.userCityUserProfileFrag.text = "City: $city"
             }
 
-            if(it?.get("profileImage") == null || it?.getString("profileImage").isNullOrBlank()){
-                binding.uploadProfilePictureImage.visibility = View.VISIBLE
-            } else{
-                binding.uploadProfilePictureImage.visibility = View.GONE
-                Glide.with(activity!!.applicationContext).load(it?.get("profileImage"))
-                    .into(binding.userImageUserFrag)
+            val ctx = context?.applicationContext ?: return@Observer
+            if (it.getString("profileImage").isNullOrBlank()) {
+                b.uploadProfilePictureImage.visibility = View.VISIBLE
+            } else {
+                b.uploadProfilePictureImage.visibility = View.GONE
+                Glide.with(ctx).load(it.getString("profileImage")).into(b.userImageUserFrag)
             }
 
-
-            if(it?.get("backImage") == null || it?.getString("backImage").isNullOrBlank()){
-                binding.uploadUserBackgroundImage.visibility = View.VISIBLE
-            } else{
-                binding.uploadUserBackgroundImage.visibility = View.GONE
-                Glide.with(activity!!.applicationContext).load(it?.getString("backImage"))
-                    .into(binding.userBackgroundImage)
+            if (it.getString("backImage").isNullOrBlank()) {
+                b.uploadUserBackgroundImage.visibility = View.VISIBLE
+            } else {
+                b.uploadUserBackgroundImage.visibility = View.GONE
+                Glide.with(ctx).load(it.getString("backImage")).into(b.userBackgroundImage)
             }
 
-            val posts = it.get("posts") as List<String>
-            binding.userPostsCountUserProfileFrag.text = "Posts: " + posts.size.toString()
-            binding.userEmailUserProfileFrag.text = AuthHelper.requireEmail()
-            val about = it?.getString("about")
+            // "posts" is null for brand-new profiles; a hard cast here crashed the screen.
+            val postCount = (it.get("posts") as? List<*>)?.size ?: 0
+            b.userPostsCountUserProfileFrag.text = "Posts: $postCount"
+            b.userEmailUserProfileFrag.text = currentEmail().orEmpty()
+            val about = it.getString("about")
 
             if (about == null || about == "") {
                 binding.aboutValueUserProfileFrag.visibility = View.GONE
@@ -271,13 +273,16 @@ class UserFragment : Fragment(), CellClickListener {
             binding.imageEdit.visibility = View.VISIBLE
             binding.cityEditUserProfile.visibility = View.GONE
             binding.imageChecked.visibility = View.GONE
-            userDataViewModel.updateUserField(
-                activity!!.applicationContext,
-                AuthHelper.requireEmail(),
-                binding.aboutValueEditUserProfileFrag.text.toString(),
-                binding.cityEditUserProfile.text.toString()
-            )
-            userDataViewModel.getUserData(AuthHelper.requireEmail())
+            val email = currentEmail()
+            if (email != null) {
+                userDataViewModel.updateUserField(
+                    activity!!.applicationContext,
+                    email,
+                    binding.aboutValueEditUserProfileFrag.text.toString(),
+                    binding.cityEditUserProfile.text.toString()
+                )
+                userDataViewModel.getUserData(email)
+            }
             binding.aboutValueEditUserProfileFrag.visibility = View.GONE
             binding.aboutValueUserProfileFrag.visibility = View.VISIBLE
         }
@@ -293,45 +298,41 @@ class UserFragment : Fragment(), CellClickListener {
             }
 
             filePath = data.data
-            val capturedPath = filePath ?: return
-            lifecycleScope.launch {
-                val bm: Bitmap? = try {
-                    withContext(Dispatchers.IO) {
-                        MediaStore.Images.Media.getBitmap(activity!!.contentResolver, capturedPath)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    null
-                }
-                bitmap = bm
-                if (bm != null) {
-                    Log.d("UserFragment", bm.toString())
-                    if (uploadProfOrBack == 0) {
-                        binding.uploadProgressBarProfile.visibility = View.VISIBLE
-                        binding.uploadProfilePictureImage.visibility = View.GONE
-                    } else if (uploadProfOrBack == 1) {
-                        binding.uploadBackProgressProfile.visibility = View.VISIBLE
-                        binding.uploadUserBackgroundImage.visibility = View.GONE
-                    }
-                    uploadImage2()
-                }
+            val picked = filePath ?: return
+            // Show the picked image straight from its Uri via Glide. The previous code decoded the
+            // whole photo into a Bitmap (MediaStore.getBitmap), which runs out of memory on large
+            // camera photos - an OutOfMemoryError is not an Exception, so it killed the app.
+            val b = _binding ?: return
+            if (uploadProfOrBack == 0) {
+                b.uploadProgressBarProfile.visibility = View.VISIBLE
+                b.uploadProfilePictureImage.visibility = View.GONE
+                Glide.with(this).load(picked).into(b.userImageUserFrag)
+            } else if (uploadProfOrBack == 1) {
+                b.uploadBackProgressProfile.visibility = View.VISIBLE
+                b.uploadUserBackgroundImage.visibility = View.GONE
+                Glide.with(this).load(picked).into(b.userBackgroundImage)
             }
+            uploadImage2()
         }
 
     }
 
-
     private fun uploadImage2() {
         if (filePath == null) return
         val uri = filePath ?: return
-        val userId = AuthHelper.requireUid()
-        binding.uploadProgressBarProfile.visibility = View.VISIBLE
-        binding.uploadBackProgressProfile.visibility = View.VISIBLE
+        val userId = AuthHelper.runCatching { requireUid() }.getOrNull()
+        if (userId == null) {
+            Toast.makeText(activity?.applicationContext, "Please log in to update your profile", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val appContext = context?.applicationContext ?: return
+        _binding?.uploadProgressBarProfile?.visibility = View.VISIBLE
+        _binding?.uploadBackProgressProfile?.visibility = View.VISIBLE
 
         lifecycleScope.launch {
             try {
-                val cacheFile = withContext(Dispatchers.IO) { copyUriToCacheFile(uri, "profile_upload") }
-                val mime = requireContext().contentResolver.getType(uri) ?: "image/jpeg"
+                val cacheFile = withContext(Dispatchers.IO) { copyUriToCacheFile(appContext, uri, "profile_upload") }
+                val mime = appContext.contentResolver.getType(uri) ?: "image/jpeg"
                 val publicUrl = withContext(Dispatchers.IO) {
                     SupabaseUploader.uploadFile(
                         file = cacheFile,
@@ -343,24 +344,26 @@ class UserFragment : Fragment(), CellClickListener {
                 cacheFile.delete()
                 uploadUserPhotos(publicUrl, UUID.randomUUID())
             } catch (e: Exception) {
-                Toast.makeText(activity?.applicationContext, "Upload error: ${e.message}", Toast.LENGTH_SHORT).show()
-                binding.uploadProgressBarProfile.visibility = View.GONE
-                binding.uploadBackProgressProfile.visibility = View.GONE
-                binding.uploadProfilePictureImage.visibility = View.VISIBLE
-                binding.uploadUserBackgroundImage.visibility = View.VISIBLE
+                Toast.makeText(appContext, "Upload error: ${e.message}", Toast.LENGTH_SHORT).show()
+                _binding?.let { b ->
+                    b.uploadProgressBarProfile.visibility = View.GONE
+                    b.uploadBackProgressProfile.visibility = View.GONE
+                    b.uploadProfilePictureImage.visibility = View.VISIBLE
+                    b.uploadUserBackgroundImage.visibility = View.VISIBLE
+                }
             }
         }
     }
 
-    private fun copyUriToCacheFile(uri: Uri, prefix: String): File {
-        val mime = requireContext().contentResolver.getType(uri).orEmpty()
+    private fun copyUriToCacheFile(context: android.content.Context, uri: Uri, prefix: String): File {
+        val mime = context.contentResolver.getType(uri).orEmpty()
         val ext = when {
             mime.contains("png") -> "png"
             mime.contains("webp") -> "webp"
             else -> "jpg"
         }
-        val out = File(requireContext().cacheDir, "${prefix}_${System.currentTimeMillis()}.$ext")
-        requireContext().contentResolver.openInputStream(uri).use { input ->
+        val out = File(context.cacheDir, "${prefix}_${System.currentTimeMillis()}.$ext")
+        context.contentResolver.openInputStream(uri).use { input ->
             if (input == null) throw IOException("Failed to open input stream")
             FileOutputStream(out).use { output -> input.copyTo(output) }
         }
@@ -369,7 +372,7 @@ class UserFragment : Fragment(), CellClickListener {
 
     private fun uploadUserPhotos(uri: String, postID: UUID) {
         val field = if (uploadProfOrBack == 0) "profileImage" else "backImage"
-        val email = AuthHelper.requireEmail()
+        val email = currentEmail() ?: return
         executor.execute {
             try {
                 val snake = FieldAlias.toSnakeRow(mapOf(field to uri))
@@ -383,8 +386,7 @@ class UserFragment : Fragment(), CellClickListener {
                     binding.uploadBackProgressProfile.visibility = View.GONE
                     binding.imageEdit.visibility = View.VISIBLE
                     binding.imageChecked.visibility = View.GONE
-                    if (uploadProfOrBack == 0) binding.userImageUserFrag.setImageBitmap(bitmap)
-                    else binding.userBackgroundImage.setImageBitmap(bitmap)
+                    // The picked image is already shown (Glide); nothing else to decode here.
                     userDataViewModel.getUserData(email)
                 }
             } catch (_: Exception) {
@@ -413,9 +415,12 @@ class UserFragment : Fragment(), CellClickListener {
 
             }
             .setNegativeButton("Delete") { dialogInterface, i ->
-                userDataViewModel.deleteUserPost(AuthHelper.requireEmail(), name)
-                userDataViewModel.getUserData(AuthHelper.requireEmail())
-                viewModel.getAllPosts(AuthHelper.requireEmail())
+                val email = currentEmail()
+                if (email != null) {
+                    userDataViewModel.deleteUserPost(email, name)
+                    userDataViewModel.getUserData(email)
+                    viewModel.getAllPosts(email)
+                }
             }
             .setNeutralButton("Cancel"){
                 dialogInterface, i ->
@@ -428,13 +433,14 @@ class UserFragment : Fragment(), CellClickListener {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel.liveData3.observe(this, Observer {
+        viewModel.liveData3.observe(viewLifecycleOwner, Observer {
+            val b = _binding ?: return@Observer
+            val ctx = context ?: return@Observer
             Log.d("All Posts", it.toString())
-            val adapter = PostListUserProfileAdapter(requireContext(), it, this)
-            binding.userProfilePostsRecycler.adapter = adapter
+            val adapter = PostListUserProfileAdapter(ctx, it, this)
+            b.userProfilePostsRecycler.adapter = adapter
 
-            binding.userProfilePostsRecycler.layoutManager =
-                LinearLayoutManager(activity!!.applicationContext)
+            b.userProfilePostsRecycler.layoutManager = LinearLayoutManager(ctx)
             adapter.notifyDataSetChanged()
 
         })

@@ -163,24 +163,40 @@ class SMCreatePostFragment : Fragment() {
                     data2["uploadType"] = "video"
                 }
 
+                // NOTE: the picked media is streamed straight from its Uri when uploading.
+                // Decoding it into a full-size Bitmap here was never used and could run out of
+                // memory on large photos (and fails outright for videos).
                 Log.d("File Type 3", data2["uploadType"].toString())
-                bitmap = MediaStore.Images.Media.getBitmap(requireActivity().contentResolver, filePath)
-            } catch (e: IOException) {
-                e.printStackTrace()
+            } catch (e: Exception) {
+                Log.w("SMCreatePost", "Could not inspect picked file", e)
             }
         }
     }
 
     private fun uploadImage() {
-        binding.progressCreatePost.visibility = View.VISIBLE
-        binding.progressTitle.visibility = View.VISIBLE
-        if (filePath != null) {
-            val uri = filePath!!
-            val userId = AuthHelper.requireUid()
+        val titleText = _binding?.postTitleSM?.text?.toString()?.trim().orEmpty()
+        val descText = _binding?.descPostSM?.text?.toString()?.trim().orEmpty()
+        _binding?.progressCreatePost?.visibility = View.VISIBLE
+        _binding?.progressTitle?.visibility = View.VISIBLE
+        val uri = filePath
+        if (uri != null) {
+            val appContext = requireContext().applicationContext
+            val userId = AuthHelper.runCatching { requireUid() }.getOrNull()
+            if (userId == null) {
+                // Session expired: keep the user's text instead of crashing.
+                LocalPostDraftStore.addDraft(titleText, descText)
+                Toast.makeText(appContext, "Please log in again. Post saved offline.", Toast.LENGTH_LONG).show()
+                _binding?.progressCreatePost?.visibility = View.GONE
+                _binding?.progressTitle?.visibility = View.GONE
+                openPostsList()
+                return
+            }
             lifecycleScope.launch {
                 try {
-                    val cacheFile = withContext(Dispatchers.IO) { copyUriToCacheFile(uri, "post_upload") }
-                    val mime = requireContext().contentResolver.getType(uri) ?: "image/jpeg"
+                    val cacheFile = withContext(Dispatchers.IO) {
+                        copyUriToCacheFile(appContext, uri, "post_upload")
+                    }
+                    val mime = appContext.contentResolver.getType(uri) ?: "image/jpeg"
                     val url = withContext(Dispatchers.IO) {
                         SupabaseUploader.uploadFile(
                             file = cacheFile,
@@ -192,14 +208,15 @@ class SMCreatePostFragment : Fragment() {
                     cacheFile.delete()
                     addUploadRecordWithImageToDb(url, UUID.randomUUID())
                 } catch (e: Exception) {
-                    binding.progressCreatePost.visibility = View.GONE
-                    binding.progressTitle.visibility = View.GONE
-                    LocalPostDraftStore.addDraft(
-                        binding.postTitleSM.text.toString().trim(),
-                        binding.descPostSM.text.toString().trim()
-                    )
-                    Toast.makeText(requireContext(), "Upload failed. Saved offline.", Toast.LENGTH_LONG).show()
-                    openPostsList()
+                    // The view may already be gone (user navigated away mid-upload).
+                    Log.w("SMCreatePost", "Upload failed", e)
+                    LocalPostDraftStore.addDraft(titleText, descText)
+                    Toast.makeText(appContext, "Upload failed. Saved offline.", Toast.LENGTH_LONG).show()
+                    if (isAdded) {
+                        _binding?.progressCreatePost?.visibility = View.GONE
+                        _binding?.progressTitle?.visibility = View.GONE
+                        openPostsList()
+                    }
                 }
             }
         } else {
@@ -208,8 +225,8 @@ class SMCreatePostFragment : Fragment() {
         }
     }
 
-    private fun copyUriToCacheFile(uri: Uri, prefix: String): File {
-        val mime = requireContext().contentResolver.getType(uri).orEmpty()
+    private fun copyUriToCacheFile(context: android.content.Context, uri: Uri, prefix: String): File {
+        val mime = context.contentResolver.getType(uri).orEmpty()
         val ext = when {
             mime.contains("png") -> "png"
             mime.contains("webp") -> "webp"
@@ -217,8 +234,8 @@ class SMCreatePostFragment : Fragment() {
             mime.contains("wav") -> "wav"
             else -> "jpg"
         }
-        val out = File(requireContext().cacheDir, "${prefix}_${System.currentTimeMillis()}.$ext")
-        requireContext().contentResolver.openInputStream(uri).use { input ->
+        val out = File(context.cacheDir, "${prefix}_${System.currentTimeMillis()}.$ext")
+        context.contentResolver.openInputStream(uri).use { input ->
             if (input == null) throw IOException("Failed to open input stream")
             FileOutputStream(out).use { output -> input.copyTo(output) }
         }
@@ -231,15 +248,28 @@ class SMCreatePostFragment : Fragment() {
             data2["imageID"] = postID.toString()
         }
 
-        val postTimeStamp = System.currentTimeMillis()
-        data2["userID"] = AuthHelper.requireEmail()
-        data2["timeStamp"] = postTimeStamp
-        data2["title"] = binding.postTitleSM.text.toString()
-        data2["description"] = binding.descPostSM.text.toString()
+        val appContext = context?.applicationContext
+        val email = AuthHelper.runCatching { requireEmail() }.getOrNull()
+        val titleText = _binding?.postTitleSM?.text?.toString().orEmpty()
+        val descText = _binding?.descPostSM?.text?.toString().orEmpty()
+        if (email == null) {
+            LocalPostDraftStore.addDraft(titleText.trim(), descText.trim())
+            appContext?.let { Toast.makeText(it, "Please log in again. Post saved offline.", Toast.LENGTH_LONG).show() }
+            _binding?.progressCreatePost?.visibility = View.GONE
+            _binding?.progressTitle?.visibility = View.GONE
+            if (isAdded) openPostsList()
+            return
+        }
 
+        data2["userID"] = email
+        data2["timeStamp"] = System.currentTimeMillis()
+        data2["title"] = titleText
+        data2["description"] = descText
+
+        val payload = HashMap<String, Any>(data2)
         executor.execute {
             try {
-                val snake = FieldAlias.toSnakeRow(data2.mapValues { it.value as Any? })
+                val snake = FieldAlias.toSnakeRow(payload.mapValues { it.value as Any? })
                 val row = JSONObject()
                 snake.forEach { (k, v) ->
                     when (v) {
@@ -252,7 +282,6 @@ class SMCreatePostFragment : Fragment() {
                 val postRecordID = inserted?.id.orEmpty()
                 if (postRecordID.isBlank()) throw IllegalStateException("Missing post id")
 
-                val email = AuthHelper.requireEmail()
                 val user = SupabaseDb.selectOne("users", SupabaseDb.eq("email", email), idKey = "email")
                 val posts = (user?.getList<String>("posts") ?: emptyList()).toMutableList()
                 posts.add(postRecordID)
@@ -263,29 +292,26 @@ class SMCreatePostFragment : Fragment() {
                 )
 
                 activity?.runOnUiThread {
-                    if (!isAdded) return@runOnUiThread
-                    Toast.makeText(requireContext(), "Post Created", Toast.LENGTH_LONG).show()
-                    binding.progressCreatePost.visibility = View.GONE
-                    binding.progressTitle.visibility = View.GONE
+                    appContext?.let { Toast.makeText(it, "Post Created", Toast.LENGTH_LONG).show() }
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    _binding?.progressCreatePost?.visibility = View.GONE
+                    _binding?.progressTitle?.visibility = View.GONE
                     userDataViewModel.getUserData(email)
                     openPostsList()
                 }
             } catch (e: Exception) {
+                Log.w("SMCreatePost", "Saving post failed", e)
+                LocalPostDraftStore.addDraft(titleText.trim(), descText.trim())
                 activity?.runOnUiThread {
-                    if (!isAdded) return@runOnUiThread
-                    LocalPostDraftStore.addDraft(
-                        binding.postTitleSM.text.toString().trim(),
-                        binding.descPostSM.text.toString().trim()
-                    )
-                    Toast.makeText(requireContext(), "Post saved offline.", Toast.LENGTH_LONG).show()
-                    binding.progressCreatePost.visibility = View.GONE
-                    binding.progressTitle.visibility = View.GONE
+                    appContext?.let { Toast.makeText(it, "Post saved offline.", Toast.LENGTH_LONG).show() }
+                    if (!isAdded || _binding == null) return@runOnUiThread
+                    _binding?.progressCreatePost?.visibility = View.GONE
+                    _binding?.progressTitle?.visibility = View.GONE
                     openPostsList()
                 }
             }
         }
     }
-
     private fun openPostsList() {
         socialMediaPostsFragment = SocialMediaPostsFragment()
         requireActivity().supportFragmentManager

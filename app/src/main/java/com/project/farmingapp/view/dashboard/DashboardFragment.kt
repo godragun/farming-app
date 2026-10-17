@@ -118,6 +118,11 @@ class dashboardFragment : Fragment(), CellClickListener {
                     .placeholder(R.drawable.ic_launcher_foreground)
                     .error(R.drawable.ic_launcher_foreground)
                     .into(binding.weathIconImageWeathFrag)
+            } else {
+                binding.weathTempTextWeathFrag.text = "--"
+                binding.humidityTextWeathFrag.text = "Weather unavailable (offline)"
+                binding.windTextWeathFrag.text = ""
+                binding.weatherCityTitle.text = latestWeatherCity
             }
         })
 

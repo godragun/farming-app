@@ -104,12 +104,25 @@ class WeatherFragment : Fragment(), WeatherListener {
 
         viewModel.updateNewData()
         viewModel.newDataTrial.observe(viewLifecycleOwner, Observer { weatherData ->
-            bindWeatherData(weatherData)
+            if (_binding == null) return@Observer
+            try {
+                bindWeatherData(weatherData)
+            } catch (e: Exception) {
+                Log.e("WeatherFrag", "Could not display weather", e)
+            }
         })
     }
 
     private fun bindWeatherData(newWeatherData: WeatherRootList?) {
-        if (newWeatherData == null || newWeatherData.list.isEmpty()) return
+        if (newWeatherData == null || newWeatherData.list.isEmpty()) {
+            binding.heroTemp.text = "--"
+            binding.heroCondition.text = "Weather unavailable. Check your internet connection."
+            binding.heroFeelsLike.text = ""
+            binding.heroHumidity.text = "--"
+            binding.heroWind.text = "--"
+            binding.heroMinMax.text = "--"
+            return
+        }
 
         val first = newWeatherData.list[0]
 

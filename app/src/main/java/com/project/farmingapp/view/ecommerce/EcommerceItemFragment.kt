@@ -435,7 +435,8 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
         val timeMs = System.currentTimeMillis()
 
         // Guest/demo and offline fallback: keep cart functional without remote writes.
-        if (AuthHelper.guestMode) {
+        val sessionUid = AuthHelper.runCatching { requireUid() }.getOrNull()
+        if (AuthHelper.guestMode || sessionUid == null) {
             LocalCartStore.addOrUpdate(requireContext(), itemId, safeQuantity, currentDateTime)
             Toast.makeText(activity!!.applicationContext, "Item Added", Toast.LENGTH_SHORT).show()
             binding.progressEcommItem.visibility = View.GONE
@@ -445,7 +446,7 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
             return
         }
 
-        val uid = AuthHelper.requireUid()
+        val uid = sessionUid
         executor.execute {
             try {
                 val row = JSONObject()
@@ -464,8 +465,8 @@ class EcommerceItemFragment : Fragment(), CellClickListener {
                 }
             } catch (_: Exception) {
                 activity?.runOnUiThread {
+                    LocalCartStore.addOrUpdate(activity!!.applicationContext, itemId, safeQuantity, currentDateTime)
                     if (!isAdded || _binding == null) return@runOnUiThread
-                    LocalCartStore.addOrUpdate(requireContext(), itemId, safeQuantity, currentDateTime)
                     Toast.makeText(
                         activity!!.applicationContext,
                         "Saved to local cart (offline mode)",

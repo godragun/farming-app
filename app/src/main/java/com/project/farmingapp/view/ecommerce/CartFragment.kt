@@ -115,7 +115,13 @@ class CartFragment : Fragment(), CartItemBuy {
     }
 
     private fun loadRemoteCart() {
-        val uid = AuthHelper.requireUid()
+        val uid = AuthHelper.runCatching { requireUid() }.getOrNull()
+        if (uid == null) {
+            // Session lost: show whatever is stored on the device rather than crashing.
+            usingLocalStore = true
+            renderItems(LocalCartStore.getAll(requireContext()))
+            return
+        }
         executor.execute {
             try {
                 val docs = SupabaseDb.select("cart_items", SupabaseDb.eq("uid", uid))
@@ -197,40 +203,59 @@ class CartFragment : Fragment(), CartItemBuy {
     }
 
     private fun renderItems(newItems: HashMap<String, Any>) {
+        val ctx = context ?: return
         items = newItems
         totalCount = items.size
         totalPrice = 0
+
+        val offlineCatalog = OfflineEcommerceData.getItems(ctx)
+        val onlineQuantities = LinkedHashMap<String, Int>()
         for ((key, value) in items) {
             val currVal = value as? Map<*, *> ?: continue
             val quantity = currVal["quantity"].toString().toIntOrNull() ?: 1
             if (key.startsWith("offline_")) {
-                val offlineItem = OfflineEcommerceData.getItems(requireContext())
-                    .firstOrNull { it.id == key }
+                val offlineItem = offlineCatalog.firstOrNull { it.id == key }
                 if (offlineItem != null) {
                     totalPrice += (quantity * offlineItem.price) + offlineItem.deliveryCharge
                 }
-                updateSummary()
-                continue
+            } else {
+                onlineQuantities[key] = quantity
             }
-            Log.d("Total Items", key)
-            Log.d("Total Items", value.toString())
-            ecommViewModel.getSpecificItem(key)
-                .observe(viewLifecycleOwner, Observer {
-                    if (it == null || !it.exists()) {
-                        return@Observer
-                    }
-                    val onlinePrice = it.get("price").toString().toIntOrNull() ?: 0
-                    val onlineDelivery = it.get("delCharge").toString().toIntOrNull() ?: 0
-                    totalPrice += quantity * onlinePrice + onlineDelivery
-                    updateSummary()
-                })
         }
 
         updateSummary()
         val adapter = CartItemsAdapter(this@CartFragment, items, this@CartFragment, usingLocalStore)
         recyclerCart?.adapter = adapter
-        recyclerCart?.layoutManager = LinearLayoutManager(requireContext())
+        recyclerCart?.layoutManager = LinearLayoutManager(ctx)
         progressCart?.visibility = View.GONE
         loadingTitleText?.visibility = View.GONE
+
+        // Price each online product on its own. (The old code observed one shared LiveData once per
+        // item, so every observer added every product's price and totals were wrong.)
+        if (onlineQuantities.isNotEmpty() && !executor.isShutdown) {
+            val snapshot = LinkedHashMap(onlineQuantities)
+            executor.execute {
+                var extra = 0
+                for ((productId, quantity) in snapshot) {
+                    try {
+                        val doc = SupabaseDb.selectOne("products", SupabaseDb.eq("id", productId))
+                        if (doc != null && doc.exists()) {
+                            val price = doc.get("price")?.toString()?.toIntOrNull() ?: 0
+                            val delivery = doc.get("delCharge")?.toString()?.toIntOrNull()
+                                ?: doc.get("del_charge")?.toString()?.toIntOrNull()
+                                ?: 0
+                            extra += quantity * price + delivery
+                        }
+                    } catch (e: Exception) {
+                        Log.w("CartFragment", "Could not price product $productId", e)
+                    }
+                }
+                activity?.runOnUiThread {
+                    if (!isAdded || items !== newItems) return@runOnUiThread
+                    totalPrice += extra
+                    updateSummary()
+                }
+            }
+        }
     }
 }

@@ -33,6 +33,18 @@ class CartItemsAdapter(
     var quantity = 0
     private val executor = Executors.newSingleThreadExecutor()
 
+    /** Runs [block] on the UI thread only if the cart screen is still showing; never throws. */
+    private fun ui(block: () -> Unit) {
+        val act = context.activity ?: return
+        act.runOnUiThread {
+            if (context.isAdded && context.view != null) {
+                try { block() } catch (e: Exception) { Log.w("CartItemsAdapter", "UI update failed", e) }
+            }
+        }
+    }
+
+    private fun appContext(): android.content.Context? = context.context?.applicationContext
+
     class CartItemsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val buyBtn: com.google.android.material.button.MaterialButton = itemView.findViewById(R.id.cartItemBuyBtn)
         val removeBtn: ImageView = itemView.findViewById(R.id.removeCartBtn)
@@ -65,9 +77,10 @@ class CartItemsAdapter(
         }
 
         holder.buyBtn.setOnClickListener {
-            val qty = holder.quantityText.text.toString().toInt()
+            // Text is empty until the product details finish loading; do not crash on early taps.
+            val qty = holder.quantityText.text.toString().toIntOrNull() ?: return@setOnClickListener
             val itemPrice = parseAmount(holder.itemPrice.text.toString())
-            val deliveryCharge = holder.deliveryCharge.text.toString().toInt()
+            val deliveryCharge = holder.deliveryCharge.text.toString().toIntOrNull() ?: 0
             Log.d("totalPrice", quantity.toString())
             Log.d("totalPrice", itemCost.toString())
             Log.d("totalPrice", deliveryCharge.toString())
@@ -76,7 +89,7 @@ class CartItemsAdapter(
 
         holder.removeBtn.setOnClickListener {
             if (useLocalStore) {
-                LocalCartStore.remove(context.requireContext(), itemId)
+                appContext()?.let { LocalCartStore.remove(it, itemId) }
                 allData.remove(itemId)
                 notifyDataSetChanged()
             } else {
@@ -86,13 +99,13 @@ class CartItemsAdapter(
                             "cart_items",
                             "${SupabaseDb.eq("uid", uid)}&${SupabaseDb.eq("product_id", itemId)}"
                         )
-                        context.requireActivity().runOnUiThread {
+                        ui {
                             allData.remove(itemId)
                             notifyDataSetChanged()
                         }
                     } catch (_: Exception) {
-                        context.requireActivity().runOnUiThread {
-                            LocalCartStore.remove(context.requireContext(), itemId)
+                        appContext()?.let { LocalCartStore.remove(it, itemId) }
+                        ui {
                             allData.remove(itemId)
                             notifyDataSetChanged()
                         }
@@ -102,17 +115,17 @@ class CartItemsAdapter(
         }
 
         holder.increaseQtyBtn.setOnClickListener {
-            holder.quantityText.text =
-                (holder.quantityText.text.toString().toInt() + 1).toString()
-            val updatedQty = holder.quantityText.text.toString().toInt()
+            val current = holder.quantityText.text.toString().toIntOrNull() ?: return@setOnClickListener
+            val updatedQty = current + 1
+            holder.quantityText.text = updatedQty.toString()
             updateQuantity(itemId, uid, updatedQty)
         }
 
         holder.decreaseQtyBtn.setOnClickListener {
-            if (holder.quantityText.text.toString().toInt() != 1) {
-                holder.quantityText.text =
-                    (holder.quantityText.text.toString().toInt() - 1).toString()
-                val updatedQty = holder.quantityText.text.toString().toInt()
+            val current = holder.quantityText.text.toString().toIntOrNull() ?: return@setOnClickListener
+            if (current > 1) {
+                val updatedQty = current - 1
+                holder.quantityText.text = updatedQty.toString()
                 updateQuantity(itemId, uid, updatedQty)
             }
         }
@@ -121,7 +134,7 @@ class CartItemsAdapter(
         val curr = currentData.value as Map<String, Any>
 
         val offlineItem = if (itemId.startsWith("offline_")) {
-            OfflineEcommerceData.getItems(context.requireContext()).firstOrNull { it.id == itemId }
+            appContext()?.let { OfflineEcommerceData.getItems(it).firstOrNull { item -> item.id == itemId } }
         } else null
 
         if (offlineItem != null) {
@@ -147,10 +160,10 @@ class CartItemsAdapter(
         executor.execute {
             try {
                 val product = SupabaseDb.selectOne("products", SupabaseDb.eq("id", itemId))
-                context.requireActivity().runOnUiThread {
+                ui {
                     if (product == null || !product.exists()) {
                         bindUnavailable(holder, curr)
-                        return@runOnUiThread
+                        return@ui
                     }
                     itemCost = product.get("price")?.toString()?.toIntOrNull() ?: 0
                     deliveryCharge = product.get("delCharge")?.toString()?.toIntOrNull()
@@ -174,9 +187,7 @@ class CartItemsAdapter(
                     holder.buyBtn.text = "Buy Now: " + formatLkr(itemCost * quantity + deliveryCharge)
                 }
             } catch (_: Exception) {
-                context.requireActivity().runOnUiThread {
-                    bindUnavailable(holder, curr)
-                }
+                ui { bindUnavailable(holder, curr) }
             }
         }
     }
@@ -194,7 +205,7 @@ class CartItemsAdapter(
 
     private fun updateQuantity(itemId: String, uid: String, updatedQty: Int) {
         if (useLocalStore) {
-            LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
+            appContext()?.let { LocalCartStore.updateQuantity(it, itemId, updatedQty) }
         } else {
             executor.execute {
                 try {
@@ -204,7 +215,7 @@ class CartItemsAdapter(
                         JSONObject().put("quantity", updatedQty)
                     )
                 } catch (_: Exception) {
-                    LocalCartStore.updateQuantity(context.requireContext(), itemId, updatedQty)
+                    appContext()?.let { LocalCartStore.updateQuantity(it, itemId, updatedQty) }
                 }
             }
         }

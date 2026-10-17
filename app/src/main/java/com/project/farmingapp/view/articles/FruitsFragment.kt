@@ -105,57 +105,12 @@ class FruitsFragment : Fragment(), ArticleListener {
         marketChart = root.findViewById(R.id.marketPriceChartFruitFragArt)
         marketChart?.let { configureMarketChart(it) }
 
-        viewModel.message1.observe(viewLifecycleOwner, Observer {
-            progressArticle?.show()
-
-            val attributes: Map<String, String> = it.get("attributes") as Map<String, String>
-            val desc = it.get("description").toString()
-
-            Log.d("I'm Called", "Yes")
-            val diseases: List<String> = it.get("diseases") as List<String>
-
-            Log.d("Diseases2", it.get("diseases").toString())
-            tempTextFruitFragArt?.text = attributes["Temperature"].toString()
-            monthTextFruitFragArt?.text = attributes["Time"].toString()
-
-            titleTextFruitFragArt?.text = it.get("title").toString()
-            descTextValueFruitFragArt?.text = desc
-            processTextValueFruitFragArt?.text = it.get("process").toString()
-            soilTextValueFruitFragArt?.text = it.get("soil").toString()
-            stateTextValueFruitFragArt?.text = it.get("state").toString()
-
-            val images: List<String> = it.get("images") as List<String>
-            Glide.with(this)
-                .load(images[0])
-                .into(imageFruitFragArt!!)
-
-            attr1ValueFruitFragArt?.text = attributes["Weight"].toString()
-            attr2ValueFruitFragArt?.text = attributes["Vitamins"].toString()
-            attr3ValueFruitFragArt?.text = attributes["Tree Height"].toString()
-            attr4ValueFruitFragArt?.text = attributes["growthTime"].toString()
-
-            val diseaseText = diseaseTextValueFruitFragArt
-            diseaseText?.text = ""
-            for (i in 0..diseases.size - 1) {
-
-                diseaseText?.text =
-                    diseaseText?.text.toString() +
-                            (i + 1).toString() + ". " + diseases[i].toString() + "\n"
-            }
-            progressArticle?.hide()
-
-            // Market prices: if Firestore contains a field, use it; otherwise fall back to stable demo series.
-            val title = it.get("title")?.toString().orEmpty()
-            val prices = (it.get("marketPrices") as? List<*>)?.mapNotNull { v ->
-                when (v) {
-                    is Number -> v.toFloat()
-                    is String -> v.toFloatOrNull()
-                    else -> null
-                }
-            }.orEmpty()
-            renderMarketPrices(title, prices.takeIf { p -> p.size >= 2 })
+        viewModel.message1.observe(viewLifecycleOwner, Observer { data ->
+            // Offline articles are bound from arguments; ignore stale online data in the shared ViewModel.
+            if (arguments?.getBoolean("offline_article", false) == true) return@Observer
+            if (data == null) return@Observer
+            bindOnlineArticle(data)
         })
-
         return root
     }
 
@@ -229,71 +184,73 @@ class FruitsFragment : Fragment(), ArticleListener {
         val newData = viewModel.message3.value
         if (newData.isNullOrEmpty()) {
             progressArticle?.hide()
-            Toast.makeText(requireContext(), "Article details unavailable online. Showing offline article.", Toast.LENGTH_SHORT).show()
+            context?.let { Toast.makeText(it, "Article details unavailable online. Showing offline article.", Toast.LENGTH_SHORT).show() }
             bindOfflineArticle()
             return
         }
 
-        Log.d("New data length", newData.size.toString())
-        val newDataLength = newData.size
-
-        for (a in 0 until newDataLength) {
-            if (newData[a].data!!.get("title") == this.tag) {
-
-
-                var data = newData[a].data
-
-                val attributes: Map<String, String> =
-                    data!!.get("attributes") as Map<String, String>
-                val desc = data!!.get("description").toString()
-                val diseases: List<String> = data!!.get("diseases") as List<String>
-
-                Log.d("I'm Called3", attributes.get("Temperature").toString())
-                Log.d("I'm Called", "Yes")
-                Log.d("Diseases2", data!!.get("diseases").toString())
-
-                tempTextFruitFragArt?.text = attributes.get("Temperature").toString()
-                monthTextFruitFragArt?.text = attributes.get("Time").toString()
-
-                titleTextFruitFragArt?.text = data!!.get("title").toString()
-                descTextValueFruitFragArt?.text = desc
-                processTextValueFruitFragArt?.text = data!!.get("process").toString()
-                soilTextValueFruitFragArt?.text = data!!.get("soil").toString()
-                stateTextValueFruitFragArt?.text = data!!.get("state").toString()
-
-                val images: List<String> = data!!.get("images") as List<String>
-                Glide.with(this)
-                    .load(images[0])
-                    .into(imageFruitFragArt!!)
-
-                attr1ValueFruitFragArt?.text = attributes.get("Weight").toString()
-                attr2ValueFruitFragArt?.text = attributes.get("Vitamins").toString()
-                attr3ValueFruitFragArt?.text = attributes.get("Tree Height").toString()
-                attr4ValueFruitFragArt?.text = attributes.get("growthTime").toString()
-
-                diseaseTextValueFruitFragArt?.text = ""
-                for (i in 0..diseases.size - 1) {
-
-                    diseaseTextValueFruitFragArt?.text =
-                        diseaseTextValueFruitFragArt?.text.toString() +
-                                (i + 1).toString() + ". " + diseases[i].toString() + "\n"
-                }
-                progressArticle?.hide()
-
-                val title = data.get("title")?.toString().orEmpty()
-                val prices = (data.get("marketPrices") as? List<*>)?.mapNotNull { v ->
-                    when (v) {
-                        is Number -> v.toFloat()
-                        is String -> v.toFloatOrNull()
-                        else -> null
-                    }
-                }.orEmpty()
-                renderMarketPrices(title, prices.takeIf { p -> p.size >= 2 })
-            }
+        val match = newData.firstOrNull { doc -> doc.data["title"]?.toString() == this.tag }
+        if (match == null) {
+            progressArticle?.hide()
+            bindOfflineArticle()
+            return
         }
-
+        bindOnlineArticle(match.data)
     }
 
+    /** Binds an article document defensively: any missing/odd field is skipped instead of crashing. */
+    private fun bindOnlineArticle(data: Map<String, Any?>) {
+        try {
+            progressArticle?.show()
+            val attributes: Map<*, *> = data["attributes"] as? Map<*, *> ?: emptyMap<String, String>()
+            fun attr(key: String): String = attributes[key]?.toString() ?: "-"
+            val diseases: List<String> =
+                (data["diseases"] as? List<*>)?.mapNotNull { d -> d?.toString() }.orEmpty()
+            val images: List<String> =
+                (data["images"] as? List<*>)?.mapNotNull { i -> i?.toString() }.orEmpty()
+
+            tempTextFruitFragArt?.text = attr("Temperature")
+            monthTextFruitFragArt?.text = attr("Time")
+            titleTextFruitFragArt?.text = data["title"]?.toString().orEmpty()
+            descTextValueFruitFragArt?.text = data["description"]?.toString().orEmpty()
+            processTextValueFruitFragArt?.text = data["process"]?.toString().orEmpty()
+            soilTextValueFruitFragArt?.text = data["soil"]?.toString().orEmpty()
+            stateTextValueFruitFragArt?.text = data["state"]?.toString().orEmpty()
+
+            val imageView = imageFruitFragArt
+            val firstImage = images.firstOrNull()
+            if (imageView != null) {
+                if (firstImage.isNullOrBlank()) {
+                    imageView.setImageResource(R.drawable.ic_launcher_foreground)
+                } else {
+                    Glide.with(this).load(firstImage).into(imageView)
+                }
+            }
+
+            attr1ValueFruitFragArt?.text = attr("Weight")
+            attr2ValueFruitFragArt?.text = attr("Vitamins")
+            attr3ValueFruitFragArt?.text = attr("Tree Height")
+            attr4ValueFruitFragArt?.text = attr("growthTime")
+
+            diseaseTextValueFruitFragArt?.text =
+                diseases.mapIndexed { i, d -> "${i + 1}. $d" }.joinToString("\n")
+
+            val title = data["title"]?.toString().orEmpty()
+            val prices = (data["marketPrices"] as? List<*>)?.mapNotNull { v ->
+                when (v) {
+                    is Number -> v.toFloat()
+                    is String -> v.toFloatOrNull()
+                    else -> null
+                }
+            }.orEmpty()
+            renderMarketPrices(title, prices.takeIf { p -> p.size >= 2 })
+        } catch (e: Exception) {
+            Log.e("FruitsFragment", "Could not display article", e)
+            bindOfflineArticle()
+        } finally {
+            progressArticle?.hide()
+        }
+    }
     override fun onStarted() {
         Log.d("FruitsFragment", "onStarted")
     }
@@ -305,7 +262,7 @@ class FruitsFragment : Fragment(), ArticleListener {
     }
 
     override fun onFailure(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        context?.let { Toast.makeText(it, message, Toast.LENGTH_SHORT).show() }
     }
 
     private fun bindOfflineArticle() {
@@ -329,7 +286,7 @@ class FruitsFragment : Fragment(), ArticleListener {
 
         val imageAsset = args?.getString("offline_image_asset").orEmpty()
         if (imageAsset.isNotBlank()) {
-            Glide.with(this).load("file:///android_asset/$imageAsset").into(imageFruitFragArt!!)
+            imageFruitFragArt?.let { Glide.with(this).load("file:///android_asset/$imageAsset").into(it) }
         } else {
             imageFruitFragArt?.setImageResource(R.drawable.ic_launcher_foreground)
         }

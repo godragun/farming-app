@@ -35,17 +35,24 @@ class AuthViewModel : ViewModel() {
     val userPosts = arrayListOf<String>()
 
     fun signupButtonClicked(view: View) {
-        authListener!!.onStarted()
-        if (name.isNullOrEmpty() || mobNo.toString().length != 10 || mobNo == null ||
-            password.isNullOrEmpty() || confPassword.isNullOrEmpty() || city.isNullOrEmpty()
+        val listener = authListener ?: return
+        listener.onStarted()
+        val emailInput = email?.trim().orEmpty()
+        val passwordInput = password.orEmpty()
+        if (name.isNullOrBlank() || mobNo?.trim()?.length != 10 || emailInput.isEmpty() ||
+            passwordInput.isEmpty() || confPassword.isNullOrEmpty() || city.isNullOrBlank()
         ) {
-            authListener!!.onFailure("Error Occurred")
+            listener.onFailure("Please fill in all fields (mobile number must be 10 digits).")
             return
         }
-        val data = hashMapOf(
+        if (passwordInput != confPassword) {
+            listener.onFailure("Passwords do not match.")
+            return
+        }
+        val data = hashMapOf<String, java.io.Serializable?>(
             "name" to name,
             "mobNo" to mobNo,
-            "email" to email,
+            "email" to emailInput,
             "city" to city,
             "userType" to userType,
             "posts" to userPosts,
@@ -53,50 +60,56 @@ class AuthViewModel : ViewModel() {
         )
         val authRepo = AuthRepository().signInWithEmail(
             view.context.applicationContext,
-            email!!,
-            password!!,
+            emailInput,
+            passwordInput,
             data
         )
-        authListener?.onSuccess(authRepo)
+        listener.onSuccess(authRepo)
     }
 
     fun returnActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        authListener!!.onStarted()
+        if (requestCode != RC_SIGN_IN) return
+        val listener = authListener ?: return
+        listener.onStarted()
 
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            if (task.isSuccessful) {
-                try {
-                    val account = task.getResult(ApiException::class.java)!!
-                    val data2 = hashMapOf(
-                        "userType" to userType,
-                        "posts" to userPosts,
-                        "name" to account.displayName.toString(),
-                        "profileImage" to account.photoUrl.toString()
-                    )
-                    authRepository = AuthRepository()
-                    val returned = authRepository.signInToGoogle(
-                        // Context is required; Google callback runs from Activity — use application via listener host.
-                        // AuthListener callers pass Activity; we need context from GoogleSignIn client context.
-                        // Fallback: store is handled in Activity by exiting guest after Success.
-                        googleSignInClient.applicationContext,
-                        account.idToken!!,
-                        account.email.toString(),
-                        data2
-                    )
-                    Log.d("AuthView", returned.value.toString())
-                    authListener?.onSuccess(returned)
-                } catch (e: ApiException) {
-                    authListener!!.onFailure(e.message.toString())
-                } catch (e: UninitializedPropertyAccessException) {
-                    authListener!!.onFailure("Google sign-in client not ready")
-                }
+        try {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(data)
+                .getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            if (account == null || idToken.isNullOrBlank()) {
+                listener.onFailure("Google sign-in did not return a valid account. Please try again.")
+                return
             }
+            val data2 = hashMapOf<String, java.io.Serializable?>(
+                "userType" to userType,
+                "posts" to userPosts,
+                "name" to (account.displayName ?: ""),
+                "profileImage" to (account.photoUrl?.toString() ?: "")
+            )
+            authRepository = AuthRepository()
+            val returned = authRepository.signInToGoogle(
+                googleSignInClient.applicationContext,
+                idToken,
+                account.email.orEmpty(),
+                data2
+            )
+            listener.onSuccess(returned)
+        } catch (e: ApiException) {
+            // Includes the user cancelling the account picker (status code 12501).
+            listener.onFailure(
+                if (e.statusCode == 12501) "Google sign-in was cancelled."
+                else "Google sign-in failed (code ${e.statusCode}). Please try again."
+            )
+        } catch (e: UninitializedPropertyAccessException) {
+            listener.onFailure("Google sign-in client not ready")
+        } catch (e: Exception) {
+            listener.onFailure(e.message ?: "Google sign-in failed")
         }
     }
 
     fun loginButtonClicked(view: View) {
-        authListener!!.onStarted()
+        val listener = authListener ?: return
+        listener.onStarted()
         val emailInput = loginmail?.trim().orEmpty()
         val passwordInput = loginpwd?.trim().orEmpty()
         if (emailInput.isEmpty() || passwordInput.isEmpty()) {

@@ -75,7 +75,13 @@ class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
             return
         }
 
-        val uid = AuthHelper.requireUid()
+        val uid = AuthHelper.runCatching { requireUid() }.getOrNull()
+        if (uid == null) {
+            @Suppress("UNCHECKED_CAST")
+            orders = LocalOrderStore.getAll(requireContext()) as HashMap<String, Any>
+            bindOrders()
+            return
+        }
         executor.execute {
             try {
                 val docs = SupabaseDb.select(
@@ -136,8 +142,9 @@ class MyOrdersFragment : Fragment(), CellClickListener, CartItemBuy {
             this@MyOrdersFragment,
             this@MyOrdersFragment
         )
-        binding.myOrderRecycler.adapter = myOrdersAdapter
-        binding.myOrderRecycler.layoutManager = LinearLayoutManager(activity!!.applicationContext)
+        val b = _binding ?: return
+        b.myOrderRecycler.adapter = myOrdersAdapter
+        b.myOrderRecycler.layoutManager = LinearLayoutManager(b.root.context)
     }
 
     override fun onCellClickListener(name: String) {

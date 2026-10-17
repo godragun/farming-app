@@ -68,7 +68,7 @@ class LeafScannerViewModel : ViewModel() {
 
         executor.execute {
             try {
-                val base64 = encodeImageBase64(imageFile)
+                val base64 = com.project.farmingapp.model.ai.LeafImageEncoder.encodeBase64(imageFile)
                 Log.d(TAG, "Encoded ${base64.length} chars, calling Roboflow…")
 
                 val scanResult = RoboflowLeafClient.classifyBase64(
@@ -77,6 +77,11 @@ class LeafScannerViewModel : ViewModel() {
                 )
                 Log.d(TAG, "Result: top=${scanResult.top} conf=${scanResult.confidence}")
 
+                if (scanResult.top.isBlank() && scanResult.allPredictions.isEmpty()) {
+                    // Roboflow answered but recognised nothing (e.g. photo contains no leaf).
+                    postError("No leaf could be recognised in this photo. Take a clear, close photo of a single leaf.")
+                    return@execute
+                }
                 _loading.postValue(false)
                 _result.postValue(scanResult)
             } catch (e: LeafScanError.MissingApiKey) {
@@ -99,6 +104,9 @@ class LeafScannerViewModel : ViewModel() {
             } catch (e: LeafScanError.ParseError) {
                 Log.e(TAG, "Parse error", e.cause)
                 postError("Unexpected response from Roboflow. Please try again.")
+            } catch (e: OutOfMemoryError) {
+                Log.e(TAG, "Out of memory while preparing image", e)
+                postError("The photo is too large to process. Please take a smaller photo.")
             } catch (e: Exception) {
                 Log.e(TAG, "Unexpected error", e)
                 postError("Unexpected error: ${e.message}")
@@ -115,30 +123,6 @@ class LeafScannerViewModel : ViewModel() {
         _loading.postValue(false)
         _result.postValue(null)
         _error.postValue(msg)
-    }
-
-    /**
-     * Resize to max 640×640, then JPEG-compress (quality 85) and Base64-encode.
-     * Keeps payload small; Roboflow's ViT model doesn't benefit from >640px.
-     */
-    private fun encodeImageBase64(file: File): String {
-        val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(file.absolutePath, opts)
-
-        val maxSide = 640
-        val scale   = maxOf(opts.outWidth, opts.outHeight).coerceAtLeast(1)
-        val sample  = if (scale > maxSide) (scale / maxSide).coerceAtLeast(1) else 1
-
-        opts.inSampleSize     = sample
-        opts.inJustDecodeBounds = false
-        val bmp: Bitmap       = BitmapFactory.decodeFile(file.absolutePath, opts)
-            ?: throw LeafScanError.EmptyImage
-
-        val bos = ByteArrayOutputStream()
-        bmp.compress(Bitmap.CompressFormat.JPEG, 85, bos)
-        bmp.recycle()
-
-        return Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP)
     }
 
     override fun onCleared() {

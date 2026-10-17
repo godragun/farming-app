@@ -54,7 +54,8 @@ class FieldSurveyRepository(context: Context) {
             
             LogUtil.syncDebug("Found ${pending.size} pending survey(ies) to sync")
             
-            val uid = AuthHelper.requireUid()
+            val uid = runCatching { AuthHelper.requireUid() }.getOrNull()
+                ?: return@withContext SyncResult.Error("Sign in with an account to sync surveys. They stay saved on this device.")
             var syncedCount = 0
             
             pending.forEach { original ->

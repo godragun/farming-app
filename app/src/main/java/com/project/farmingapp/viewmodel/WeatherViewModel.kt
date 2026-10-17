@@ -108,9 +108,9 @@ class WeatherViewModel : ViewModel() {
                 isRequestInFlight = false
                 if (inFlightCall === call) inFlightCall = null
                 if (response.isSuccessful) {
-                    val body = response.body()
-                    if (body != null && body.list.isNotEmpty()) {
-                        newDataTrial.postValue(body)
+                    val clean = sanitize(response.body())
+                    if (clean != null) {
+                        newDataTrial.postValue(clean)
                     } else {
                         newDataTrial.postValue(fallbackWeather())
                     }
@@ -127,33 +127,24 @@ class WeatherViewModel : ViewModel() {
         })
     }
 
-    private fun fallbackWeather(): WeatherRootList {
-        val fallbackEntries = mutableListOf<com.project.farmingapp.model.data.WeatherList>()
-        repeat(40) { index ->
-            val day = (index / 8) + 1
-            val hour = (index % 8) * 3
-            val dayPart = day.toString().padStart(2, '0')
-            val hourPart = hour.toString().padStart(2, '0')
-            fallbackEntries.add(
-                com.project.farmingapp.model.data.WeatherList(
-                    main = com.project.farmingapp.model.data.WeatherMain(
-                        temp = 300f,
-                        humidity = 70,
-                        temp_min = 298f,
-                        temp_max = 302f
-                    ),
-                    weather = listOf(
-                        com.project.farmingapp.model.data.Weather(
-                            main = "Cloudy",
-                            description = "Demo weather",
-                            icon = "03d"
-                        )
-                    ),
-                    dt_txt = "2026-04-${dayPart} ${hourPart}:00:00",
-                    wind = com.project.farmingapp.model.data.WeatherWind(speed = 12f)
-                )
-            )
+    /**
+     * Gson ignores Kotlin null-safety, so a partial/odd API payload can contain null fields.
+     * Keep only complete entries so the UI never dereferences a null.
+     */
+    private fun sanitize(body: WeatherRootList?): WeatherRootList? {
+        val raw: List<com.project.farmingapp.model.data.WeatherList?>? = body?.list
+        val good = raw.orEmpty().filterNotNull().filter { e ->
+            val main: Any? = e.main
+            val wind: Any? = e.wind
+            val stamp: String? = e.dt_txt
+            val weather: List<Weather?>? = e.weather
+            main != null && wind != null &&
+                stamp != null && stamp.length >= 19 &&
+                weather != null && weather.firstOrNull() != null
         }
-        return WeatherRootList(fallbackEntries)
+        return if (good.isEmpty()) null else WeatherRootList(good)
     }
+
+    /** Empty list = "no weather available" (offline / server error). The UI shows a notice, never fake numbers. */
+    private fun fallbackWeather(): WeatherRootList = WeatherRootList(emptyList())
 }

@@ -46,7 +46,8 @@ class ChatbotFragment : Fragment() {
     private lateinit var voiceStatusText: TextView
     private lateinit var prefs: android.content.SharedPreferences
 
-    private val executor = Executors.newSingleThreadExecutor()
+    // Re-created in onCreateView: onDestroyView shuts it down, but Dashboard re-uses fragment instances.
+    private var executor = Executors.newSingleThreadExecutor()
 
     private var mediaRecorder: MediaRecorder? = null
     private var recordingPath: String = ""
@@ -77,6 +78,7 @@ class ChatbotFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        if (executor.isShutdown) executor = Executors.newSingleThreadExecutor()
         val view = inflater.inflate(R.layout.fragment_chatbot, container, false)
         chatContainer = view.findViewById(R.id.chatContainer)
         chatScroll = view.findViewById(R.id.chatScroll)
@@ -205,8 +207,11 @@ class ChatbotFragment : Fragment() {
             voiceStatusText.visibility = View.VISIBLE
             voiceStatusText.text = getString(R.string.chatbot_voice_listening)
         } catch (e: Exception) {
+            try { mediaRecorder?.release() } catch (_: Exception) {}
+            mediaRecorder = null
+            isRecording = false
             voiceStatusText.visibility = View.GONE
-            requireContext().toast(e.message ?: "Record failed")
+            context?.toast(e.message ?: "Record failed")
         }
     }
 
@@ -226,29 +231,38 @@ class ChatbotFragment : Fragment() {
         val audioFile = File(recordingPath)
         val hfApiKey = try { BuildConfig.HUGGINGFACE_API_KEY } catch (_: Exception) { "" }
 
-        executor.execute {
-            var transcribedText = ""
-            try {
-                transcribedText = WhisperSinhalaClient.transcribeAudio(audioFile, hfApiKey)
-            } catch (e: WhisperTranscriptionError.ModelLoading) {
-                activity?.runOnUiThread {
-                    voiceStatusText.visibility = View.GONE
-                    requireContext().toast("Model loading on Hugging Face (${e.estimatedTime.toInt()}s). Please retry.")
+        if (executor.isShutdown) return
+        try {
+            executor.execute {
+                var transcribedText = ""
+                try {
+                    transcribedText = WhisperSinhalaClient.transcribeAudio(audioFile, hfApiKey)
+                } catch (e: WhisperTranscriptionError.ModelLoading) {
+                    activity?.runOnUiThread {
+                        val ctx = context
+                        if (!isAdded || view == null || ctx == null) return@runOnUiThread
+                        voiceStatusText.visibility = View.GONE
+                        ctx.toast("Model loading on Hugging Face (${e.estimatedTime.toInt()}s). Please retry.")
+                    }
+                    return@execute
+                } catch (e: Exception) {
+                    android.util.Log.w("ChatbotFrag", "Direct whisper error: ${e.message}")
                 }
-                return@execute
-            } catch (e: Exception) {
-                android.util.Log.w("ChatbotFrag", "Direct whisper error: ${e.message}")
-            }
 
-            activity?.runOnUiThread {
-                voiceStatusText.visibility = View.GONE
-                if (transcribedText.isNotBlank()) {
-                    chatInput.setText(transcribedText)
-                    processUserQuery(transcribedText)
-                } else {
-                    requireContext().toast("හඬ හඳුනාගැනීම අසාර්ථක විය. කරුණාකර ප්‍රශ්නය ටයිප් කරන්න.")
+                activity?.runOnUiThread {
+                    val ctx = context
+                    if (!isAdded || view == null || ctx == null) return@runOnUiThread
+                    voiceStatusText.visibility = View.GONE
+                    if (transcribedText.isNotBlank()) {
+                        chatInput.setText(transcribedText)
+                        processUserQuery(transcribedText)
+                    } else {
+                        ctx.toast("හඬ හඳුනාගැනීම අසාර්ථක විය. කරුණාකර ප්‍රශ්නය ටයිප් කරන්න.")
+                    }
                 }
             }
+        } catch (_: java.util.concurrent.RejectedExecutionException) {
+            // Fragment view was destroyed; nothing to update.
         }
     }
 
@@ -281,11 +295,14 @@ class ChatbotFragment : Fragment() {
 
     private fun addMessageBubble(message: String, isUser: Boolean) {
         activity?.runOnUiThread {
-            val tv = TextView(requireContext())
+            // Replies can arrive after the user left this screen; the fragment is detached by then.
+            val ctx = context
+            if (!isAdded || view == null || ctx == null) return@runOnUiThread
+            val tv = TextView(ctx)
             tv.text = message
             tv.setPadding(24, 18, 24, 18)
-            tv.setTextColor(resources.getColor(R.color.fontColor, null))
-            tv.background = resources.getDrawable(R.drawable.round_borderless_general, null)
+            tv.setTextColor(ContextCompat.getColor(ctx, R.color.fontColor))
+            tv.background = ContextCompat.getDrawable(ctx, R.drawable.round_borderless_general)
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
