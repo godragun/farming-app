@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.project.farmingapp.model.ai.AgriAiClient
 import com.project.farmingapp.model.ai.VoiceAssistantResponse
 import com.project.farmingapp.model.ai.VoiceTextRequest
+import com.project.farmingapp.view.chatbot.ChatbotKnowledgeEngine
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -44,14 +45,12 @@ class VoiceAiViewModel : ViewModel() {
                     if (response.isSuccessful && response.body() != null) {
                         _result.value = response.body()
                     } else {
-                        _error.value = "AI server error: ${response.code()}"
+                        answerLocally(text)
                     }
                 }
 
                 override fun onFailure(call: Call<VoiceAssistantResponse>, t: Throwable) {
-                    _loading.value = false
-                    _error.value =
-                        "Cannot reach AI server. Is FastAPI running? (${t.message})"
+                    answerLocally(text)
                 }
             })
     }
@@ -128,5 +127,27 @@ class VoiceAiViewModel : ViewModel() {
                 _error.postValue("Voice recognition unavailable. Please type your farming question.")
             }
         }
+    }
+
+    /** Offline farming answer when the FastAPI voice server is unreachable. */
+    private fun answerLocally(text: String) {
+        val reply = ChatbotKnowledgeEngine.generateResponse(text)
+        val needsPhoto = text.contains("කොළ") ||
+            text.contains("leaf", ignoreCase = true) ||
+            text.contains("disease", ignoreCase = true) ||
+            text.contains("රෝග")
+        _loading.postValue(false)
+        _error.postValue(null)
+        _result.postValue(
+            VoiceAssistantResponse(
+                transcription_sinhala = text,
+                intent = "local_knowledge",
+                needs_photo = needsPhoto,
+                next_action = if (needsPhoto) "request_leaf_photo" else null,
+                response_sinhala = reply,
+                response_english = reply,
+                stt_engine = "on_device"
+            )
+        )
     }
 }

@@ -58,6 +58,18 @@ class RoboflowLeafApiTest {
     }
 
     @Test
+    fun parseResponse_unwrapsLiveOutputsEnvelope() {
+        val live = """
+            {"outputs":[{"predictions":{"image":{"width":480,"height":320},"predictions":[{"class":"Tomato_healthy","class_id":0,"confidence":0.91}],"top":"Tomato_healthy","confidence":0.91,"prediction_type":"classification"}}]}
+        """.trimIndent()
+        val result = RoboflowLeafClient.parseResponse(live)
+        assertEquals("Tomato_healthy", result.top)
+        assertEquals(0.91, result.confidence, 0.001)
+        assertTrue(result.diagnosisAvailable)
+        assertEquals(1, result.allPredictions.size)
+    }
+
+    @Test
     fun parseResponse_lowConfidenceSetsDiagnosisAvailableFalse() {
         val lowConfJson = """
             [

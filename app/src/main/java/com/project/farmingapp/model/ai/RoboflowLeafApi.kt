@@ -218,29 +218,29 @@ object RoboflowLeafClient {
     /**
      * Parse the Roboflow workflow response.
      *
-     * Real response shape (verified by MCP workflow_run call):
+     * Live serverless shape (HTTP 200):
      * ```json
-     * [
-     *   {
-     *     "predictions": {
-     *       "image": { "width": 640, "height": 480 },
-     *       "predictions": [
-     *         { "class": "Pepper_bell_healthy", "class_id": 1, "confidence": 0.892 }
-     *       ],
-     *       "top": "Pepper_bell_healthy",
-     *       "confidence": 0.892
-     *     },
-     *     "output": { ... }
-     *   }
-     * ]
+     * { "outputs": [ { "predictions": { "top": "...", "confidence": 0.0,
+     *     "predictions": [ { "class": "...", "class_id": 0, "confidence": 0.1 } ] } } ] }
      * ```
+     * A bare list of the same entries is also accepted.
      */
     internal fun parseResponse(
         raw: String,
         minConfidence: Double = RoboflowLeafConfig.MIN_CONFIDENCE
     ): LeafScanResult {
-        val rootArray = org.json.JSONArray(raw)
-        // Workflow always returns one entry per input image. We send one image.
+        val trimmed = raw.trim()
+        val rootArray = if (trimmed.startsWith("[")) {
+            org.json.JSONArray(trimmed)
+        } else {
+            val root = JSONObject(trimmed)
+            root.optJSONArray("outputs")
+                ?: root.optJSONArray("results")
+                ?: org.json.JSONArray().put(root)
+        }
+        if (rootArray.length() == 0) {
+            throw org.json.JSONException("Workflow response had no outputs")
+        }
         val entry = rootArray.getJSONObject(0)
 
         val predictionsObj = entry.getJSONObject("predictions")

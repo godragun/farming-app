@@ -1,8 +1,11 @@
 package com.project.farmingapp.view.chatbot
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.speech.RecognizerIntent
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.view.Gravity
@@ -51,8 +54,22 @@ class ChatbotFragment : Fragment() {
 
     private val audioPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) toggleRecording()
+            if (granted) startSinhalaSpeech()
             else requireContext().toast(getString(R.string.chatbot_voice_mic_denied))
+        }
+
+    private val speechLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val spoken = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+                ?.trim()
+                .orEmpty()
+            voiceStatusText.visibility = View.GONE
+            if (spoken.isNotEmpty()) {
+                chatInput.setText(spoken)
+                processUserQuery(spoken)
+            }
         }
 
     override fun onCreateView(
@@ -138,6 +155,22 @@ class ChatbotFragment : Fragment() {
         ) {
             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         } else {
+            startSinhalaSpeech()
+        }
+    }
+
+    private fun startSinhalaSpeech() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "si-LK")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "si-LK")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.chatbot_voice_listening))
+        }
+        try {
+            voiceStatusText.visibility = View.VISIBLE
+            voiceStatusText.text = getString(R.string.chatbot_voice_listening)
+            speechLauncher.launch(intent)
+        } catch (_: ActivityNotFoundException) {
             toggleRecording()
         }
     }

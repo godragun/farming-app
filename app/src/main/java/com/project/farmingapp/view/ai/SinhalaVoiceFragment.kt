@@ -1,7 +1,10 @@
 package com.project.farmingapp.view.ai
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.speech.RecognizerIntent
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Bundle
@@ -53,8 +56,24 @@ class SinhalaVoiceFragment : Fragment() {
 
     private val audioPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) toggleRecording()
+            if (granted) startSinhalaSpeech()
             else requireContext().toast(getString(R.string.sinhala_voice_mic_denied))
+        }
+
+    private val speechLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val spoken = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+                ?.trim()
+                .orEmpty()
+            if (spoken.isNotEmpty()) {
+                inputEdit.setText(spoken)
+                statusText.text = getString(R.string.sinhala_voice_thinking)
+                viewModel.askText(spoken)
+            } else {
+                statusText.text = getString(R.string.sinhala_voice_record)
+            }
         }
 
     override fun onCreateView(
@@ -149,6 +168,22 @@ class SinhalaVoiceFragment : Fragment() {
         ) {
             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         } else {
+            startSinhalaSpeech()
+        }
+    }
+
+    /** Phone speech recognizer (Sinhala). File recording is the fallback. */
+    private fun startSinhalaSpeech() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "si-LK")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "si-LK")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.sinhala_voice_listening))
+        }
+        try {
+            speechLauncher.launch(intent)
+            statusText.text = getString(R.string.sinhala_voice_listening)
+        } catch (_: ActivityNotFoundException) {
             toggleRecording()
         }
     }
