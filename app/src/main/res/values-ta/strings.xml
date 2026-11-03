@@ -49,4 +49,31 @@
     <string name="fieldguard_channel_wildlife">FieldGuard வனவிலங்கு</string>
     <string name="fieldguard_channel_wildlife_desc">உயர் முன்னுரிமை வனவிலங்கு / யானை எச்சரிக்கைகள்</string>
     <string name="fieldguard_channel_default">FieldGuard</string>
+
+    <!-- FieldGuard IoT dashboard (simulated) -->
+    <string name="fieldguard_iot_open_nodes">IoT முனைகள் (பாவனை)</string>
+    <string name="fieldguard_iot_nodes_title">Agri Lanka IoT முனைகள்</string>
+    <string name="fieldguard_iot_nodes_subtitle">15 நிமிடத்துக்கு ஒருமுறை பாவனை அளவீடுகள். அனைத்தும் Simulated — நேரடி வன்பொருள் அல்ல.</string>
+    <string name="fieldguard_iot_simulated_badge">பாவனை முனை</string>
+    <string name="fieldguard_iot_demo_controls">டெமோ கட்டுப்பாடுகள்</string>
+    <string name="fieldguard_iot_demo_humid">ஈர குளிர் இரவுகள்</string>
+    <string name="fieldguard_iot_demo_dry">வறண்ட வெப்ப வாரம்</string>
+    <string name="fieldguard_iot_demo_offline">முனை ஆஃப்லைன்</string>
+    <string name="fieldguard_iot_demo_motion">இரவில் இயக்கம்</string>
+    <string name="fieldguard_iot_demo_reset">இயல்புக்கு</string>
+    <string name="fieldguard_iot_demo_motion_hint">வடிவம் பயன்படுத்தப்பட்டது. யானை-இரவு காட்சியைத் திறக்கிறது…</string>
+    <string name="fieldguard_iot_node_polonnaruwa_title">பொலன்னறுவை நெல்</string>
+    <string name="fieldguard_iot_node_polonnaruwa_desc">நீர்ப்பாசன நெல் — பொலன்னறுவை</string>
+    <string name="fieldguard_iot_node_badulla_title">பதுளை காய்கறிகள்</string>
+    <string name="fieldguard_iot_node_badulla_desc">மலைப்பிரதேச காய்கறிகள் — பதுளை</string>
+    <string name="fieldguard_iot_node_anuradhapura_title">அனுராதபுரம் காடு ஓர நெல்</string>
+    <string name="fieldguard_iot_node_anuradhapura_desc">காடு ஓர நெல் — அனுராதபுரம்</string>
+    <string name="fieldguard_iot_readings_fmt">வெப்பம் %1$.1f°C · ஈரப்பதம் %2$.1f%% · %3$s</string>
+    <string name="fieldguard_iot_meta_fmt">பேட்டரி %1$d%% · இணைப்பு %2$s · %3$s · கடைசி %4$s</string>
+    <string name="fieldguard_iot_motion_yes">PIR இயக்கம்</string>
+    <string name="fieldguard_iot_motion_no">இயக்கம் இல்லை</string>
+    <string name="fieldguard_iot_online">ஆன்லைன்</string>
+    <string name="fieldguard_iot_offline">ஆஃப்லைன்</string>
+    <string name="fieldguard_iot_waiting">பாவனை அளவீடுகளுக்காக காத்திருக்கிறது…</string>
+    <string name="fieldguard_iot_detail_soon">%1$s விவரம் அடுத்த படியில்</string>
 </resources>

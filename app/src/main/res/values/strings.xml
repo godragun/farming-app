@@ -372,4 +372,31 @@
     <string name="fieldguard_channel_wildlife">FieldGuard wildlife</string>
     <string name="fieldguard_channel_wildlife_desc">High-priority wildlife / elephant alerts</string>
     <string name="fieldguard_channel_default">FieldGuard</string>
+
+    <!-- FieldGuard IoT dashboard (simulated) -->
+    <string name="fieldguard_iot_open_nodes">IoT nodes (simulated)</string>
+    <string name="fieldguard_iot_nodes_title">Agri Lanka IoT nodes</string>
+    <string name="fieldguard_iot_nodes_subtitle">Demo field nodes with simulated readings every 15 minutes. All data is labelled Simulated — not live hardware.</string>
+    <string name="fieldguard_iot_simulated_badge">Simulated node</string>
+    <string name="fieldguard_iot_demo_controls">Demo controls</string>
+    <string name="fieldguard_iot_demo_humid">Humid cool nights</string>
+    <string name="fieldguard_iot_demo_dry">Dry hot week</string>
+    <string name="fieldguard_iot_demo_offline">Node offline</string>
+    <string name="fieldguard_iot_demo_motion">Motion at night</string>
+    <string name="fieldguard_iot_demo_reset">Reset normal</string>
+    <string name="fieldguard_iot_demo_motion_hint">Pattern applied. Opening elephant-at-night incident scenario…</string>
+    <string name="fieldguard_iot_node_polonnaruwa_title">Polonnaruwa paddy</string>
+    <string name="fieldguard_iot_node_polonnaruwa_desc">Irrigated paddy — Polonnaruwa district</string>
+    <string name="fieldguard_iot_node_badulla_title">Badulla vegetables</string>
+    <string name="fieldguard_iot_node_badulla_desc">Highland vegetables — Badulla district</string>
+    <string name="fieldguard_iot_node_anuradhapura_title">Anuradhapura forest-edge paddy</string>
+    <string name="fieldguard_iot_node_anuradhapura_desc">Paddy near forest edge — Anuradhapura district</string>
+    <string name="fieldguard_iot_readings_fmt">Temp %1$.1f°C · Humidity %2$.1f%% · %3$s</string>
+    <string name="fieldguard_iot_meta_fmt">Battery %1$d%% · Link %2$s · %3$s · Last seen %4$s</string>
+    <string name="fieldguard_iot_motion_yes">PIR motion</string>
+    <string name="fieldguard_iot_motion_no">No motion</string>
+    <string name="fieldguard_iot_online">Online</string>
+    <string name="fieldguard_iot_offline">Offline</string>
+    <string name="fieldguard_iot_waiting">Waiting for simulated readings…</string>
+    <string name="fieldguard_iot_detail_soon">Node detail for %1$s coming in next step</string>
 </resources>

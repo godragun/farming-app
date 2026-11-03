@@ -6,12 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [FieldGuardIncident::class, FieldGuardQueuedAlert::class],
-    version = 1,
+    entities = [FieldGuardIncident::class, FieldGuardQueuedAlert::class, IotReading::class],
+    version = 2,
     exportSchema = false
 )
 abstract class FieldGuardDatabase : RoomDatabase() {
     abstract fun dao(): FieldGuardDao
+    abstract fun iotDao(): IotDao
 
     companion object {
         @Volatile

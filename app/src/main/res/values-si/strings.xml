@@ -373,4 +373,31 @@
     <string name="fieldguard_channel_wildlife">FieldGuard වනජීවී</string>
     <string name="fieldguard_channel_wildlife_desc">ඉහළ ප්‍රමුඛතා වනජීවී / අලි අනතුරු ඇඟවීම්</string>
     <string name="fieldguard_channel_default">FieldGuard</string>
+
+    <!-- FieldGuard IoT dashboard (simulated) -->
+    <string name="fieldguard_iot_open_nodes">IoT නෝඩ (අනුකරණ)</string>
+    <string name="fieldguard_iot_nodes_title">Agri Lanka IoT නෝඩ</string>
+    <string name="fieldguard_iot_nodes_subtitle">විනාඩි 15කට වරක් අනුකරණ කියවීම් සහිත නිරූපණ නෝඩ. සියලු දත්ත Simulated ලෙස ලේබල් කර ඇත — සජීවී දෘඩාංග නොවේ.</string>
+    <string name="fieldguard_iot_simulated_badge">අනුකරණ නෝඩය</string>
+    <string name="fieldguard_iot_demo_controls">නිරූපණ පාලන</string>
+    <string name="fieldguard_iot_demo_humid">තෙත් සිසිල් රාත්‍රි</string>
+    <string name="fieldguard_iot_demo_dry">වියළි උණුසුම් සතිය</string>
+    <string name="fieldguard_iot_demo_offline">නෝඩය ඕෆ්ලයින්</string>
+    <string name="fieldguard_iot_demo_motion">රාත්‍රියේ චලනය</string>
+    <string name="fieldguard_iot_demo_reset">සාමාන්‍යට</string>
+    <string name="fieldguard_iot_demo_motion_hint">රටාව යොදන ලදී. අලි-රාත්‍රි අවස්ථාව විවෘත කරමින්…</string>
+    <string name="fieldguard_iot_node_polonnaruwa_title">පොළොන්නරුව වී</string>
+    <string name="fieldguard_iot_node_polonnaruwa_desc">වාරි වී — පොළොන්නරුව දිස්ත්‍රික්කය</string>
+    <string name="fieldguard_iot_node_badulla_title">බදුල්ල එළවළු</string>
+    <string name="fieldguard_iot_node_badulla_desc">කඳුකර එළවළු — බදුල්ල දිස්ත්‍රික්කය</string>
+    <string name="fieldguard_iot_node_anuradhapura_title">අනුරාධපුර වනාන්තර මායිම් වී</string>
+    <string name="fieldguard_iot_node_anuradhapura_desc">වනාන්තර මායිම අසල වී — අනුරාධපුර දිස්ත්‍රික්කය</string>
+    <string name="fieldguard_iot_readings_fmt">උෂ්ණත්වය %1$.1f°C · ආර්ද්‍රතාව %2$.1f%% · %3$s</string>
+    <string name="fieldguard_iot_meta_fmt">බැටරි %1$d%% · සම්බන්ධතාව %2$s · %3$s · අවසන් වරට %4$s</string>
+    <string name="fieldguard_iot_motion_yes">PIR චලනය</string>
+    <string name="fieldguard_iot_motion_no">චලනය නැත</string>
+    <string name="fieldguard_iot_online">සබැඳි</string>
+    <string name="fieldguard_iot_offline">අසබැඳි</string>
+    <string name="fieldguard_iot_waiting">අනුකරණ කියවීම් එනතුරු…</string>
+    <string name="fieldguard_iot_detail_soon">%1$s සඳහා නෝඩ විස්තර ඊළඟ පියවරේදී</string>
 </resources>

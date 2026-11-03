@@ -59,6 +59,15 @@
             android:text="@string/fieldguard_use_camera"
             android:textColor="@color/white" />
 
+        <Button
+            android:id="@+id/fieldguardIotNodesBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="@string/fieldguard_iot_open_nodes"
+            android:textColor="@color/white" />
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

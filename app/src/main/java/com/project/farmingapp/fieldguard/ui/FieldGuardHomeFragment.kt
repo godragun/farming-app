@@ -45,6 +45,10 @@ class FieldGuardHomeFragment : Fragment() {
             it.pulseTapFeedback()
             open(FieldGuardIncidentFragment.newInstance(DemoScenarios.CAMERA), "fieldGuardIncident")
         }
+        binding.fieldguardIotNodesBtn.setOnClickListener {
+            it.pulseTapFeedback()
+            open(FieldGuardNodesFragment.newInstance(), "fieldGuardNodes")
+        }
 
         binding.fieldguardScenarioList.removeAllViews()
         DemoScenarios.ALL.forEach { scenario ->
