@@ -37,6 +37,7 @@ import com.project.farmingapp.view.ecommerce.CartFragment
 import com.project.farmingapp.view.ecommerce.EcommerceItemFragment
 import com.project.farmingapp.view.ecommerce.OfflineEcommerceData
 import com.project.farmingapp.view.weather.WeatherFragment
+import com.project.farmingapp.fieldguard.ui.FieldGuardHomeFragment
 import com.project.farmingapp.view.survey.SavedSurveysFragment
 import com.project.farmingapp.view.survey.SurveyFormFragment
 import com.project.farmingapp.viewmodel.ArticleViewModel
@@ -200,6 +201,10 @@ class dashboardFragment : Fragment(), CellClickListener {
         binding.viewSurveysBtn.setOnClickListener {
             binding.viewSurveysBtn.pulseTapFeedback()
             openFragment(SavedSurveysFragment(), "savedSurveysFrag")
+        }
+        binding.openFieldguardBtn.setOnClickListener {
+            binding.openFieldguardBtn.pulseTapFeedback()
+            openFragment(FieldGuardHomeFragment.newInstance(), "fieldGuardFrag")
         }
         surveyViewModel.unsyncedCount.observe(viewLifecycleOwner) { count ->
             if (count > 0) {

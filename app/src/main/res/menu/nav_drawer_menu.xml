@@ -49,6 +49,10 @@
             android:id="@+id/miItemLeafScanner"
             android:icon="@drawable/ic_baseline_photo_camera_24"
             android:title="@string/nav_leaf_scanner" />
+        <item
+            android:id="@+id/miItemFieldGuard"
+            android:icon="@drawable/ic_baseline_photo_camera_24"
+            android:title="@string/nav_fieldguard" />
     </group>
 
     <group android:id="@+id/navGroupSocial">

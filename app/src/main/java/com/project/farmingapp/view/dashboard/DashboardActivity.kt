@@ -408,6 +408,12 @@ class DashboardActivity : AppCompatActivity(), NavigationView.OnNavigationItemSe
             R.id.miItemLeafScanner -> {
                 openScreen(LeafScannerFragment(), "leafScannerFrag")
             }
+            R.id.miItemFieldGuard -> {
+                openScreen(
+                    com.project.farmingapp.fieldguard.ui.FieldGuardHomeFragment.newInstance(),
+                    "fieldGuardFrag"
+                )
+            }
             R.id.miItemSurvey -> {
                 supportFragmentManager.popBackStack(
                     "surveyFormFrag",
