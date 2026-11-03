@@ -3,7 +3,17 @@
 
 sdk.dir=C\:\\Users\\YOUR_USER\\AppData\\Local\\Android\\Sdk
 
-# Existing Agri Lanka keys (optional for FieldGuard demos)
+# Weather (OpenWeatherMap)
+OPENWEATHER_API_KEY=
+
+# Market data (data.gov.in APMC)
+APMC_API_KEY=
+
+# Supabase (use the ANON / public key only — never service_role)
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+
+# Optional AI integrations
 ROBOFLOW_API_KEY=
 HUGGINGFACE_API_KEY=
 

@@ -14,10 +14,14 @@ class WeatherRepository {
     val data = MutableLiveData<WeatherRootList>()
 
     fun getWeather(): LiveData<String> {
-        val response: Call<WeatherRootList> =
-            WeatherApi.weatherInstances.getWeather("23.0225", "72.5714")
-
         val weathRes = MutableLiveData<String>()
+        if (!WeatherApi.hasApiKey()) {
+            Log.w("WeatherRepository", "OPENWEATHER_API_KEY missing in local.properties")
+            weathRes.value = "FAILED"
+            return weathRes
+        }
+        val response: Call<WeatherRootList> =
+            WeatherApi.getWeather("23.0225", "72.5714")
 
         response.enqueue(object : Callback<WeatherRootList> {
             override fun onFailure(call: Call<WeatherRootList>, t: Throwable) {

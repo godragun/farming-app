@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.project.farmingapp.supabase.SupabaseAuth
 import com.project.farmingapp.supabase.SupabaseAuthResult
+import com.project.farmingapp.supabase.SupabaseConfig
 import java.io.Serializable
 import java.util.concurrent.Executors
 
@@ -23,8 +24,12 @@ class AuthRepository {
     private fun run(data: MutableLiveData<String>, call: () -> SupabaseAuthResult) {
         executor.execute {
             val message = try {
-                val result = call()
-                if (result.success) "Success" else result.message.ifBlank { "Request failed" }
+                if (!SupabaseConfig.isConfigured()) {
+                    "Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to local.properties."
+                } else {
+                    val result = call()
+                    if (result.success) "Success" else result.message.ifBlank { "Request failed" }
+                }
             } catch (e: Exception) {
                 Log.e("AuthRepository", "Auth request failed", e)
                 e.message?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again."

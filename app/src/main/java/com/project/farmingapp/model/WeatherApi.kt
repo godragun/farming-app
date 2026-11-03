@@ -1,5 +1,6 @@
 package com.project.farmingapp.model
 
+import com.project.farmingapp.BuildConfig
 import com.project.farmingapp.model.data.WeatherRootList
 import okhttp3.OkHttpClient
 import retrofit2.Call
@@ -9,16 +10,20 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
+const val BASE_URL = "https://api.openweathermap.org/"
 
-const val BASE_URL ="https://api.openweathermap.org/"
-const val API_KEY ="e9256fd3636e53b70e7c4495df486bb2"
 interface weatherInterface {
-    @GET("data/2.5/forecast?appid=$API_KEY")
-    fun getWeather(@Query("lat")lat:String, @Query("lon")lon:String): Call<WeatherRootList>
+    @GET("data/2.5/forecast")
+    fun getWeather(
+        @Query("lat") lat: String,
+        @Query("lon") lon: String,
+        @Query("appid") appid: String
+    ): Call<WeatherRootList>
 }
 
 object WeatherApi {
-    val weatherInstances:weatherInterface
+    val weatherInstances: weatherInterface
+
     init {
         val http = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
@@ -32,6 +37,12 @@ object WeatherApi {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        weatherInstances =retrofit.create(weatherInterface::class.java)
+        weatherInstances = retrofit.create(weatherInterface::class.java)
+    }
+
+    fun hasApiKey(): Boolean = BuildConfig.OPENWEATHER_API_KEY.isNotBlank()
+
+    fun getWeather(lat: String, lon: String): Call<WeatherRootList> {
+        return weatherInstances.getWeather(lat, lon, BuildConfig.OPENWEATHER_API_KEY)
     }
 }

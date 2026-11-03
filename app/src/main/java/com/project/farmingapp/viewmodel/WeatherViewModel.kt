@@ -81,9 +81,16 @@ class WeatherViewModel : ViewModel() {
         isRequestInFlight = true
         lastRequestAtMs = now
 
+        if (!WeatherApi.hasApiKey()) {
+            isRequestInFlight = false
+            Log.w("WeatherViewModel", "OPENWEATHER_API_KEY missing in local.properties — using fallback weather")
+            newDataTrial.postValue(fallbackWeather())
+            return
+        }
+
         inFlightCall?.cancel()
         val response: Call<WeatherRootList> =
-            WeatherApi.weatherInstances.getWeather("${coordinates.value?.get(0)}", "${coordinates.value?.get(1)}")
+            WeatherApi.getWeather("${coordinates.value?.get(0)}", "${coordinates.value?.get(1)}")
         inFlightCall = response
 
         Log.d("New Weather Updated", "Yes")

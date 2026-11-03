@@ -38,6 +38,16 @@ class LlmClient(
     fun testConnection(): ConnectionTestResult {
         val start = System.currentTimeMillis()
         return try {
+            if (!hasApiKey() && !looksLikeLocalServer(baseUrl)) {
+                return ConnectionTestResult(
+                    ok = false,
+                    reply = "",
+                    latencyMs = 0,
+                    model = model,
+                    baseUrl = configuredBaseUrl(),
+                    error = "LLM_API_KEY missing in local.properties (required for Meta Model API)"
+                )
+            }
             val messages = listOf(
                 textMessage("system", "You are FieldGuard AI connectivity check. Reply with one short sentence confirming you are online."),
                 textMessage("user", "Ping. Reply briefly that FieldGuard can reach you.")

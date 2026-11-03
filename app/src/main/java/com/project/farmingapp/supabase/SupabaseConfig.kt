@@ -1,14 +1,22 @@
 package com.project.farmingapp.supabase
 
+import com.project.farmingapp.BuildConfig
+
 /**
- * Client-safe Supabase project settings.
- * Anon key is intended for mobile clients; never put the service-role key here.
+ * Client-safe Supabase project settings from BuildConfig / local.properties.
+ * Never put a service_role key in the APK — anon only.
  */
 object SupabaseConfig {
-    const val URL = "https://nkjzjbjkcpcbefkypvdl.supabase.co"
-    const val ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ranpqYmprY3BjYmVma3lwdmRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODMzMDQsImV4cCI6MjA5MjM1OTMwNH0.yI46mLkjTM9Qs3etBoJSCqCDjPRMuibUlvDSabFiG5w"
+    @JvmField
+    val URL: String = BuildConfig.SUPABASE_URL
+
+    /** Public anon key only. Empty when not configured in local.properties. */
+    @JvmField
+    val ANON_KEY: String = BuildConfig.SUPABASE_ANON_KEY
+
     const val MEDIA_BUCKET = "media"
+
+    fun isConfigured(): Boolean = URL.isNotBlank() && ANON_KEY.isNotBlank()
 
     val restUrl: String get() = "$URL/rest/v1"
     val authUrl: String get() = "$URL/auth/v1"

@@ -19,26 +19,32 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // Roboflow API key — set ROBOFLOW_API_KEY=rf_your_key in local.properties.
-        // Never hardcode the key here.
+        // Secrets from local.properties (gitignored). Never hardcode keys in source.
         def localProps = new Properties()
         def localFile = rootProject.file("local.properties")
         if (localFile.exists()) localProps.load(new FileInputStream(localFile))
+        def esc = { String v ->
+            (v ?: "").replace("\\", "\\\\").replace("\"", "\\\"")
+        }
         buildConfigField "String", "ROBOFLOW_API_KEY",
-            "\"${localProps.getProperty("ROBOFLOW_API_KEY", "")}\""
+            "\"${esc(localProps.getProperty("ROBOFLOW_API_KEY", ""))}\""
         buildConfigField "String", "HUGGINGFACE_API_KEY",
-            "\"${localProps.getProperty("HUGGINGFACE_API_KEY", "")}\""
-        // FieldGuard AI — OpenAI-compatible Chat Completions (Meta Model API or local Muse Glimmer).
-        // Set LLM_API_KEY in local.properties only; never commit real keys.
+            "\"${esc(localProps.getProperty("HUGGINGFACE_API_KEY", ""))}\""
+        buildConfigField "String", "OPENWEATHER_API_KEY",
+            "\"${esc(localProps.getProperty("OPENWEATHER_API_KEY", ""))}\""
+        buildConfigField "String", "APMC_API_KEY",
+            "\"${esc(localProps.getProperty("APMC_API_KEY", ""))}\""
+        buildConfigField "String", "SUPABASE_URL",
+            "\"${esc(localProps.getProperty("SUPABASE_URL", ""))}\""
+        buildConfigField "String", "SUPABASE_ANON_KEY",
+            "\"${esc(localProps.getProperty("SUPABASE_ANON_KEY", ""))}\""
+        // FieldGuard AI — OpenAI-compatible Chat Completions (Meta or local Muse Glimmer).
         def llmBase = localProps.getProperty("LLM_BASE_URL", "https://api.meta.ai/v1")
-            .replace("\\", "\\\\").replace("\"", "\\\"")
         def llmModel = localProps.getProperty("LLM_MODEL", "muse-spark-1.3")
-            .replace("\\", "\\\\").replace("\"", "\\\"")
         def llmKey = localProps.getProperty("LLM_API_KEY", "")
-            .replace("\\", "\\\\").replace("\"", "\\\"")
-        buildConfigField "String", "LLM_BASE_URL", "\"${llmBase}\""
-        buildConfigField "String", "LLM_MODEL", "\"${llmModel}\""
-        buildConfigField "String", "LLM_API_KEY", "\"${llmKey}\""
+        buildConfigField "String", "LLM_BASE_URL", "\"${esc(llmBase)}\""
+        buildConfigField "String", "LLM_MODEL", "\"${esc(llmModel)}\""
+        buildConfigField "String", "LLM_API_KEY", "\"${esc(llmKey)}\""
     }
 
     buildTypes {
