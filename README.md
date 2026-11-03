@@ -306,6 +306,50 @@ Farming-App/                    # Android Studio APK (this repo)
 
 ---
 
+## FieldGuard AI (Meta Hackathon)
+
+**Problem:** Sri Lankan smallholders need a cautious, evidence-based response when a field-node camera fires at night (wildlife, ambiguous motion, or a neighbour walking by) — not a reckless alert and not a silent miss.
+
+**Demo GIF:** *(add a short screen recording at `output images of app/fieldguard-demo.gif` after recording on device.)*
+
+### Architecture
+
+```
+Agri Lanka app (FieldGuard package)
+    → OpenAI-compatible Chat Completions (tool calling + image)
+        → Meta Model API (https://api.meta.ai/v1, muse-spark-1.3)
+           or local Muse Glimmer via llama.cpp (http://<laptop-ip>:8080/v1)
+    → Tools in the APK: frames, sensors (simulated), Room record, notification,
+      simulated IoT indicator, offline queue (WorkManager), cooldown, optional nav hints
+```
+
+Agent loop: max **6** steps. On failure the UI shows the **real error** — never a fake AI answer.
+
+### How to run
+
+1. Copy `local.properties.example` → `local.properties` (already gitignored).
+2. Set:
+   - **Meta Model API:** `LLM_BASE_URL=https://api.meta.ai/v1`, `LLM_MODEL=muse-spark-1.3`, `LLM_API_KEY=<your key>`
+   - **Local Muse Glimmer:** `LLM_BASE_URL=http://<your-lan-ip>:8080/v1`, `LLM_MODEL=muse-glimmer`, `LLM_API_KEY=` (often empty)
+3. Build/run the app → dashboard card **FieldGuard AI – farm incident agent** (or drawer).
+4. Open **Model settings** → **Test connection** (one real request; shows reply + latency).
+5. Run a demo scenario or **Use my camera**.
+
+See also: `PROVENANCE.md`, `LIMITATIONS.md`, `ASSETS.md`.
+
+### Scenario table
+
+| Scenario | Expected | Actual (fill after demo) |
+|----------|----------|---------------------------|
+| Elephant at night | alert + indicator + record | |
+| Ambiguous movement | more frames → uncertain record, no alert | |
+| Farmer daylight | log only, no wildlife alert | |
+| Network down | send_alert fails → queue_alert → retry | |
+| Duplicate cooldown | no second alert within 10 min | |
+| Use my camera | agent on real photo | |
+
+---
+
 ## Known notes
 
 - Prices use **LKR**; default map/weather location is **Colombo** if GPS is unavailable.  
@@ -313,6 +357,7 @@ Farming-App/                    # Android Studio APK (this repo)
 - Prefer API 33/34 emulators over API 36 for this project.  
 - Google Sign-In needs a valid OAuth web client id + Supabase Google provider.  
 - Heavy ML is better hosted on Render/Railway/Fly.io than Vercel serverless.
+- **FieldGuard** secrets (`LLM_API_KEY`) must stay in `local.properties` only — never commit them to this public repo.
 
 ---
 
