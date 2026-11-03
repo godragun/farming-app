@@ -42,6 +42,12 @@ object SupabaseUploader {
         subfolder: String,
         originalFileName: String? = null
     ): String = suspendCancellableCoroutine { cont ->
+        if (!SupabaseConfig.isConfigured()) {
+            cont.resumeWithException(
+                IOException("Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to local.properties.")
+            )
+            return@suspendCancellableCoroutine
+        }
         if (!file.exists() || file.length() == 0L) {
             cont.resumeWithException(IOException("File missing or empty: ${file.absolutePath}"))
             return@suspendCancellableCoroutine

@@ -7,7 +7,17 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# Secrets / credentials (keep *.example files tracked)
+local.properties
+*.keystore
+*.jks
+keystore.properties
+secrets.properties
+.env
+.env.*
 app/google-services.json
+google-services.json
 
 # AI Python backend lives in separate private repo:
 # https://github.com/godragun/farming-app-backend
@@ -19,3 +29,5 @@ ai-backend/
 crops/
 # Tooling leftovers
 .github/java-upgrade/
+# Local secret-migration scratch (never commit)
+scripts/_migrate_secrets_to_local_props.py
