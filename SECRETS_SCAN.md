@@ -32,10 +32,22 @@ Repo: https://github.com/godragun/farming-app (public)
 | Pre-existing | `app/src/main/java/.../APMCApi.kt` | generic-api-key | Predates FieldGuard |
 | Pre-existing | `app/src/main/java/.../supabase/SupabaseConfig.kt` | jwt | Supabase anon JWT in source (client-style); predates FieldGuard |
 
+## Git history scan (`gitleaks detect` on branch)
+
+Scanned 26 commits. Findings are **pre-existing** (not introduced by FieldGuard commits):
+
+| Rule | File | Introduced in |
+|------|------|----------------|
+| jwt | `supabase/SupabaseConfig.kt` | older commit `8fb7619` |
+| gcp-api-key | `app/google-services.json` (later gitignored) | older commit `ab4a7bd` |
+| jwt | `SupabaseUploadHelper.java` | older commit `ab4a7bd` |
+| generic-api-key | `APMCApi.kt` | older commit `ab4a7bd` |
+| generic-api-key | `WeatherApi.kt` | older commit `ab4a7bd` |
+
 ## FieldGuard-specific result
 
-- **No `LLM_API_KEY` (or Meta key) in tracked source or git history.**
-- Hackathon code does not add new committed secrets.
+- **No `LLM_API_KEY` (or Meta key) in tracked source or FieldGuard commits.**
+- Hackathon commits do not add new secrets.
 
 ## Recommendations before / after public push
 
