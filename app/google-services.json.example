@@ -13,7 +13,12 @@
           "package_name": "com.project.farmingapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "000000000000-placeholder.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "REPLACE_WITH_FIREBASE_ANDROID_API_KEY"
@@ -21,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "000000000000-placeholder.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

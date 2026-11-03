@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FieldGuard + Agri Lanka:
+  - Meta Model API uses HTTPS (api.meta.ai).
+  - Cleartext is permitted so existing Agri Lanka local/tunnel backends and
+    local Muse Glimmer (llama.cpp on LAN IP :8080) keep working.
+  Point LLM_BASE_URL at https://api.meta.ai/v1 in production-like demos.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

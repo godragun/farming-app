@@ -27,15 +27,16 @@
   <img src="output%20images%20of%20app/front%20page%207.png" width="200" />
 </p>
 
-**Agri Lanka** is an Android app for Sri Lankan farmers and field workers. It combines everyday farming tools (weather, surveys, map, market info) with a growing **AI decision-support** layer.
+**Agri Lanka** is an Android app for Sri Lankan farmers and field workers. It combines everyday farming tools (weather, surveys, map, market info, community, shop) with **AI decision-support**: crop disease photos, Sinhala voice, leaf scanning, and **FieldGuard AI** (Meta Hackathon) — an agentic farm-incident responder plus a simulated IoT nodes dashboard.
 
-Built for **AI Challenge Sri Lanka 2026 – AI Buildathon** direction:
+Built around:
 
-1. What is wrong with my crop? *(disease AI — planned next)*  
-2. Can I talk to the system in Sinhala? *(voice AI — started)*  
-3. Where is the best place to grow this crop? *(suitability AI — planned)*
+1. What is wrong with my crop? *(Crop Doctor + Leaf Scanner — done)*  
+2. Can I talk to the system in Sinhala? *(Voice AI + chatbot — done)*  
+3. What happened at my field node? *(FieldGuard incident agent + simulated IoT — in progress for Meta Hackathon)*  
+4. Where is the best place to grow this crop? *(suitability AI — planned)*
 
-The app stays usable offline for core fieldwork. AI features call a **Python FastAPI** server (laptop during development, cloud later). The APK does **not** run ML models inside the phone.
+Core fieldwork stays usable offline (surveys, guest mode, local Room). Cloud AI uses **Supabase**, optional **FastAPI**, **Roboflow**, and for FieldGuard an **OpenAI-compatible** model API (Meta Model API or local Muse Glimmer). Secrets stay in gitignored `local.properties` — never commit keys to this public repo.
 
 ---
 
@@ -51,6 +52,7 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 - [Secrets](#secrets)
 - [Running the AI backend](#running-the-ai-backend)
 - [Project structure](#project-structure)
+- [FieldGuard AI (Meta Hackathon)](#fieldguard-ai-meta-hackathon)
 - [Roadmap](#roadmap)
 - [Known notes](#known-notes)
 
@@ -63,15 +65,18 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 | Area | Status |
 |------|--------|
 | Login / Signup / Guest mode | Done (Supabase Auth; guest password `guest`) |
-| English + Sinhala UI strings | Done (`values` / `values-si`, Settings toggle) |
+| English + Sinhala + Tamil FieldGuard strings | Done (`values` / `values-si` / `values-ta`; language in Settings) |
 | Dashboard + weather (GPS / OpenWeatherMap) | Done |
 | Satellite map (Leaflet WebView) | Done |
 | Field surveys (photo + voice notes, offline Room → sync) | Done |
 | Community posts, articles, e-commerce / cart / orders | Done |
-| **Agri Chatbot (Sinhala Voice + Text)** | Done (Speech input via Whisper Small Sinhala v3 + Sinhala/English Q&A) |
-| **Sinhala Voice AI screen** | Done (talks to FastAPI + Whisper Small Sinhala v3) |
-| **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; Voice handoff) |
-| **Leaf Scanner (Roboflow Direct)** | Done (Direct APK → Roboflow Serverless ViT Workflow) |
+| **Agri Chatbot (Sinhala Voice + Text)** | Done (Whisper Small Sinhala v3 + Q&A) |
+| **Sinhala Voice AI screen** | Done (FastAPI + Whisper) |
+| **AI Crop Doctor (disease photo)** | Done (camera → FastAPI → Roboflow; voice handoff) |
+| **Leaf Scanner (Roboflow Direct)** | Done (APK → Roboflow Serverless ViT workflow) |
+| **FieldGuard AI – farm incident agent** | Done (tool-calling agent, demo scenarios, camera, history, settings) |
+| **FieldGuard IoT dashboard (simulated)** | Done (3 district nodes, 15‑min Room history, demo climate controls) |
+| FieldGuard node detail charts / AI analytics | Next (hackathon steps 2–5) |
 | AI Crop Suitability + map zones | Not yet |
 
 ### Python AI backend (separate private repo)
@@ -106,14 +111,20 @@ AI Python code lives **only** in that repo — not inside this Android project.
 After install / run, a user can:
 
 1. **Sign in** with email/password (Supabase), Google (if configured), or **guest** (password `guest`).
-2. Switch **English / Sinhala** UI and **dark / light** mode in Settings.
-3. See **live weather** for their GPS location (Colombo fallback).
-4. Open a **satellite map** (pan/zoom Leaflet).
+2. Switch **English / Sinhala** UI and **dark / light** mode in Settings (FieldGuard also has Tamil strings).
+3. See **live weather** for their GPS location (Colombo fallback) from the home dashboard.
+4. Open a **satellite / district map** (Leaflet WebView) for crop-zone style exploration.
 5. Create **field surveys** with farmer details, crop, soil, irrigation, GPS, **camera photo**, and **voice note** — saved offline in Room and synced to Supabase when online.
 6. Browse **crop articles**, **market/APMC** context, and an **input catalog** (e-commerce) with cart/orders (offline demo products if cloud empty).
 7. Use the **community feed** to post field observations (images via Supabase Storage).
-8. Use the floating / drawer **Agri Chatbot** for simple rule-based farming tips.
-9. Open drawer → **Sinhala Voice AI**: type (or record) a farming question in Sinhala/English → get intent, crop/symptom slots, and a Sinhala reply from the Python server. Disease-style questions set `needs_photo` (ready to connect Crop Doctor later).
+8. Use the floating / drawer **Agri Chatbot** (text + Sinhala speech).
+9. Open drawer → **Sinhala Voice AI**: type or record a farming question → intent, crop/symptom slots, Sinhala/English reply from the Python server; disease-style questions can hand off to Crop Doctor.
+10. Open **Crop Doctor** or **Leaf Scanner**: take/select a leaf photo → Roboflow / FastAPI classification with confidence shown as a model estimate.
+11. Open **FieldGuard AI** (dashboard card or drawer):
+    - Run **demo incident scenarios** (elephant at night, ambiguous motion, farmer daylight, network down, cooldown) or **Use my camera**.
+    - Watch a live **agent trace** (real LLM tool calls — no fake AI fallback).
+    - See the **Simulated IoT node** LED/buzzer panel, Android alerts, Room incident history, and model **Test connection** settings.
+    - Open **IoT nodes (simulated)**: three district nodes (Polonnaruwa paddy, Badulla vegetables, Anuradhapura forest-edge paddy) with 7‑day / 15‑minute Room history, battery/link/online status, and demo controls (humid cool nights, dry hot week, node offline, motion at night).
 
 ---
 
@@ -312,15 +323,76 @@ Farming-App/                    # Android Studio APK (this repo)
 │   ├── view/           # Fragments & Activities (dashboard, survey, ai, …)
 │   ├── viewmodel/
 │   ├── model/          # Repositories, WeatherApi, ai/AgriAiApi
+│   ├── fieldguard/     # Meta Hackathon: agent, IoT simulator, Room, UI
 │   ├── supabase/       # Supabase Auth/DB/HTTP helpers
 │   └── utilities/      # AuthHelper, LeafletMapWebViewHelper, …
+├── app/src/main/assets/fieldguard/   # Demo scenario image placeholders
 ├── supabase/           # schema.sql, policies.sql
+├── local.properties.example
+├── PROVENANCE.md / LIMITATIONS.md / ASSETS.md / SECRETS_SCAN.md
 └── README.md
 
 # Separate private repo (AI hosting):
-# C:\Users\VICTUS\Desktop\farming app backend
 # → https://github.com/godragun/farming-app-backend
 ```
+
+---
+
+## FieldGuard AI (Meta Hackathon)
+
+**Problem:** Sri Lankan smallholders need a cautious, evidence-based response when a field-node camera fires at night (wildlife, ambiguous motion, or a neighbour walking by) — not a reckless alert and not a silent miss.
+
+**Branch:** `hackathon/fieldguard`  
+**Package:** `com.project.farmingapp.fieldguard`  
+**Demo GIF:** *(add `output images of app/fieldguard-demo.gif` after recording.)*  
+**Screenshots (IoT / analytics):** *(placeholders — add device captures when ready.)*
+
+### What FieldGuard does now
+
+| Piece | Status |
+|-------|--------|
+| Agentic incident loop (max 6 steps, real tool calling + images) | Done |
+| Tools: frames, sensors, record, alert, indicator, queue, cooldown, nav hints | Done |
+| Demo scenarios + camera capture + live AGENT TRACE | Done |
+| Incident history (Room) + FieldGuard settings / Test connection | Done |
+| Safety: elephant alert text, cooldown, no fake AI fallback | Done |
+| Simulated IoT dashboard (3 nodes, 15‑min readings, 7‑day Room store, demo controls) | Done |
+| Node detail charts, AI analytics tools/reports | Next |
+
+### Architecture
+
+```
+Agri Lanka app (FieldGuard package)
+    → OpenAI-compatible Chat Completions (tool calling + image)
+        → Meta Model API (https://api.meta.ai/v1, muse-spark-1.3)
+           or local Muse Glimmer via llama.cpp (http://<laptop-ip>:8080/v1)
+    → Tools in the APK: frames, sensors (simulated), Room record, notification,
+      simulated IoT indicator, offline queue (WorkManager), cooldown, optional nav hints
+    → IoT NodeSimulator → Room iot_readings (labelled Simulated node)
+```
+
+On model/HTTP failure the UI shows the **real error** — never a fake AI answer. Confidence is always the **model's estimate**, never “accuracy”.
+
+### How to run FieldGuard
+
+1. Copy `local.properties.example` → `local.properties` (gitignored).
+2. Set LLM + other keys as needed (see [Secrets](#secrets)).
+3. Build/run → home card **FieldGuard AI – farm incident agent** (or drawer).
+4. **Model settings** → **Test connection**.
+5. Run a demo scenario, **Use my camera**, or **IoT nodes (simulated)**.
+
+See also: `PROVENANCE.md`, `LIMITATIONS.md`, `ASSETS.md`.
+
+### Incident scenario table
+
+| Scenario | Expected | Actual (fill after demo) |
+|----------|----------|---------------------------|
+| Elephant at night | alert + indicator + record | |
+| Ambiguous movement | more frames → uncertain record, no alert | |
+| Farmer daylight | log only, no wildlife alert | |
+| Network down | send_alert fails → queue_alert → retry | |
+| Duplicate cooldown | no second alert within 10 min | |
+| Use my camera | agent on real photo | |
 
 ---
 
@@ -329,21 +401,24 @@ Farming-App/                    # Android Studio APK (this repo)
 | Step | Goal |
 |------|------|
 | ✅ | App features + Supabase + Sinhala UI |
-| ✅ | Sinhala Voice AI backend + Android screen |
-| 🔜 | Crop disease model + `/predict-disease` + Crop Doctor screen |
-| 🔜 | Connect voice `needs_photo` → camera → disease result |
+| ✅ | Sinhala Voice AI + Crop Doctor + Leaf Scanner |
+| ✅ | FieldGuard incident agent (Meta Hackathon) |
+| ✅ | FieldGuard simulated IoT nodes list |
+| 🔜 | FieldGuard node detail charts + AI analytics reports |
 | 🔜 | Crop suitability ML + map colour zones |
-| 🔜 | Deploy FastAPI to cloud; point APK at HTTPS URL |
+| 🔜 | History secret purge (see `HISTORY_CLEANUP.md`) after owner confirm |
 
 ---
 
 ## Known notes
 
 - Prices use **LKR**; default map/weather location is **Colombo** if GPS is unavailable.  
-- Surveys stay on-device until sync; AI needs the FastAPI server reachable.  
+- Surveys stay on-device until sync; voice/Crop Doctor need the FastAPI server reachable when used.  
 - Prefer API 33/34 emulators over API 36 for this project.  
 - Google Sign-In needs a valid OAuth web client id + Supabase Google provider.  
 - Heavy ML is better hosted on Render/Railway/Fly.io than Vercel serverless.
+- All API keys live in `local.properties` / local `google-services.json` only — never commit them.
+- FieldGuard IoT data is **simulated** for demos; not live hardware.
 
 ---
 
