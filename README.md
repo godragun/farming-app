@@ -48,6 +48,7 @@ The app stays usable offline for core fieldwork. AI features call a **Python Fas
 - [Sinhala Voice AI (current)](#sinhala-voice-ai-current)
 - [Supabase backend](#supabase-backend)
 - [Running the Android app](#running-the-android-app)
+- [Secrets](#secrets)
 - [Running the AI backend](#running-the-ai-backend)
 - [Project structure](#project-structure)
 - [Roadmap](#roadmap)
@@ -246,6 +247,36 @@ Do **not** put the service-role key in the Android app (anon key only).
 6. Guest login: any email + password `guest`.
 
 Cleartext HTTP is enabled for local AI testing (`usesCleartextTraffic` in the manifest). Use HTTPS in production.
+
+---
+
+## Secrets
+
+This repository is **public**. Never commit real keys.
+
+### `local.properties`
+
+1. Copy `local.properties.example` → `local.properties` (gitignored).
+2. Fill: `OPENWEATHER_API_KEY`, `APMC_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, optional `ROBOFLOW_API_KEY` / `HUGGINGFACE_API_KEY` / `LLM_API_KEY`.
+3. Gradle injects them into `BuildConfig`. Missing keys become empty strings; features show a clear message or fall back instead of crashing.
+4. Use the Supabase **anon** key only — never `service_role` in the APK.
+
+### `google-services.json`
+
+1. Download from [Firebase Console](https://console.firebase.google.com/) → Project settings → Your apps → Android (`com.project.farmingapp`).
+2. Place at `app/google-services.json` (gitignored).
+3. See `app/google-services.json.example` for the expected shape (placeholders only).
+
+### Pre-commit hook (gitleaks)
+
+```powershell
+pip install pre-commit
+pre-commit install
+```
+
+Config: `.pre-commit-config.yaml`. CI also runs `.github/workflows/gitleaks.yml` on every push/PR.
+
+History rewrite steps (not run automatically): see `HISTORY_CLEANUP.md`.
 
 ---
 

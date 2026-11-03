@@ -1,0 +1,11 @@
+# Install: pip install pre-commit && pre-commit install
+# Runs gitleaks before every commit to block accidental secret leaks.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+        name: gitleaks
+        entry: gitleaks protect --verbose --redact --staged
+        language: golang
+        pass_filenames: false
